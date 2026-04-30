@@ -42,10 +42,16 @@ export default function PatronDashboard() {
   const [pStock, setPStock] = useState('');
   const [pAlert, setPAlert] = useState('5');
 
-  // Formulaire vente
+  // Formulaire vente (ancien, gardé pour compat)
   const [sEmployee, setSEmployee] = useState('');
   const [sProduct, setSProduct] = useState('');
   const [sQty, setSQty] = useState('1');
+
+  // Panier (onglet Ventes)
+  const [cart, setCart] = useState([]);
+  const [cartEmployee, setCartEmployee] = useState('');
+  const [invoices, setInvoices] = useState([]);
+  const [expandedInv, setExpandedInv] = useState(null);
 
   // Redirection si pas patron
   useEffect(() => {
@@ -82,13 +88,56 @@ export default function PatronDashboard() {
     setSales(await r.json());
   }, []);
 
+  const loadInvoices = useCallback(async () => {
+    const r = await fetch('/api/invoices');
+    setInvoices(await r.json());
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     loadOverview();
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); }
+    if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
     if (tab === 'produits') loadProducts();
-    if (tab === 'stocks') loadProducts();
-  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales]);
+    if (tab === 'stocks')   loadProducts();
+  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices]);
+
+  // ── Gestion du panier (onglet Ventes) ────────────────────
+  function addToCart(product) {
+    if (product.stock_quantity === 0) return;
+    setCart((prev) => {
+      const exists = prev.find((i) => i.product_id === product.id);
+      if (exists) return prev.map((i) => i.product_id === product.id ? { ...i, quantity: Math.min(i.quantity + 1, product.stock_quantity) } : i);
+      return [...prev, { product_id: product.id, name: product.name, price: product.price, quantity: 1, max: product.stock_quantity }];
+    });
+  }
+  function removeFromCart(product_id) { setCart((prev) => prev.filter((i) => i.product_id !== product_id)); }
+  function setCartQty(product_id, qty) {
+    const n = parseInt(qty); if (isNaN(n) || n < 1) return;
+    setCart((prev) => prev.map((i) => i.product_id === product_id ? { ...i, quantity: Math.min(n, i.max) } : i));
+  }
+  const cartTotal = cart.reduce((a, i) => a + i.price * i.quantity, 0);
+
+  async function submitCart() {
+    if (cart.length === 0) return showToast('Le panier est vide.', 'error');
+    if (!cartEmployee) return showToast('Sélectionne un employé.', 'error');
+    setLoading(true);
+    const r = await fetch('/api/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employee_id: parseInt(cartEmployee), items: cart.map((i) => ({ product_id: i.product_id, quantity: i.quantity })) }),
+    });
+    const d = await r.json();
+    setLoading(false);
+    if (r.ok) { showToast(`✅ Facture #${d.invoice_id} créée — ${fmt(d.total_amount)}`); setCart([]); loadProducts(); loadInvoices(); loadOverview(); }
+    else showToast(d.error, 'error');
+  }
+
+  async function handleDeleteInvoice(id) {
+    if (!confirm('Annuler cette facture et remettre le stock ?')) return;
+    await fetch('/api/invoices', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    showToast('Facture annulée.'); loadInvoices(); loadProducts(); loadOverview();
+  }
 
   // ── Actions produits ──
   async function handleAddProduct(e) {
@@ -180,9 +229,10 @@ export default function PatronDashboard() {
 
   const tabs = [
     { key: 'overview', label: '🏠 Vue d\'ensemble' },
+    { key: 'ventes',   label: '🧾 Ventes' },
     { key: 'salaires', label: '💰 Salaires & Impôts' },
     { key: 'produits', label: '📦 Produits' },
-    { key: 'stocks', label: '📊 Stocks' },
+    { key: 'stocks',   label: '📊 Stocks' },
   ];
 
   return (
@@ -296,6 +346,122 @@ export default function PatronDashboard() {
                     </div>
                   )}
                 </>
+              )}
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════
+              ONGLET : VENTES (panier multi-produits)
+          ══════════════════════════════════════════ */}
+          {tab === 'ventes' && (
+            <div>
+              <h2 style={S.sectionTitle}>Créer une facture</h2>
+
+              <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+
+                {/* Catalogue */}
+                <div style={{ flex: 3, minWidth: 280 }}>
+                  <label style={S.label}>Employé concerné</label>
+                  <select value={cartEmployee} onChange={e => setCartEmployee(e.target.value)} style={{ ...S.select, marginBottom: 20, maxWidth: 300 }}>
+                    <option value="">-- Sélectionner un employé --</option>
+                    {employees.map(e => <option key={e.id} value={e.id}>{e.name} ({e.role === 'patron' ? 'Patron' : 'Employé'})</option>)}
+                  </select>
+
+                  <label style={S.label}>Produits</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
+                    {products.map((p) => {
+                      const inCart = cart.find((i) => i.product_id === p.id);
+                      const out = p.stock_quantity === 0;
+                      return (
+                        <button key={p.id} type="button" disabled={out} onClick={() => addToCart(p)}
+                          style={{ position: 'relative', background: inCart ? '#eff6ff' : '#f8fafc', border: `2px solid ${inCart ? '#2563eb' : '#e2e8f0'}`, borderRadius: 12, padding: '14px 10px', cursor: out ? 'not-allowed' : 'pointer', textAlign: 'center', opacity: out ? 0.45 : 1 }}>
+                          {inCart && <div style={{ position: 'absolute', top: -8, right: -8, background: '#2563eb', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{inCart.quantity}</div>}
+                          <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', marginBottom: 3 }}>{p.name}</div>
+                          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>{p.category}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb' }}>{fmt(p.price)}</div>
+                          <div style={{ fontSize: 10, marginTop: 4, fontWeight: 600, color: out ? '#dc2626' : p.stock_quantity <= p.stock_min_alert ? '#f59e0b' : '#16a34a' }}>
+                            {out ? '❌ Épuisé' : `Stock : ${p.stock_quantity}`}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Panier */}
+                <div style={{ flex: 1, minWidth: 250, background: '#fff', borderRadius: 14, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 20, position: 'sticky', top: 20 }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>🛒 Panier</h3>
+                  {cart.length === 0 ? (
+                    <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '16px 0' }}>Aucun article sélectionné.</p>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                        {cart.map((item) => (
+                          <div key={item.product_id} style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+                            <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b', marginBottom: 8 }}>{item.name}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <button style={S.qtyBtn2} onClick={() => item.quantity === 1 ? removeFromCart(item.product_id) : setCartQty(item.product_id, item.quantity - 1)}>−</button>
+                                <span style={{ width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{item.quantity}</span>
+                                <button style={S.qtyBtn2} onClick={() => setCartQty(item.product_id, item.quantity + 1)} disabled={item.quantity >= item.max}>+</button>
+                              </div>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: '#2563eb', flex: 1, textAlign: 'right' }}>{fmt(item.price * item.quantity)}</span>
+                              <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 14 }} onClick={() => removeFromCart(item.product_id)}>✕</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#374151' }}>
+                          <span>Total</span>
+                          <span style={{ fontSize: 20, fontWeight: 800, color: '#1e293b' }}>{fmt(cartTotal)}</span>
+                        </div>
+                        <button onClick={submitCart} disabled={loading} style={{ ...S.btnPrimary, width: '100%', padding: 12, fontSize: 14, opacity: loading ? 0.6 : 1 }}>
+                          {loading ? 'Validation…' : '✅ Valider la facture'}
+                        </button>
+                        <button onClick={() => setCart([])} style={{ width: '100%', padding: 8, background: 'none', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>
+                          🗑️ Vider le panier
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Historique toutes les factures */}
+              <h3 style={{ ...S.subTitle, marginTop: 36 }}>Historique des factures</h3>
+              {invoices.length === 0 ? (
+                <p style={S.empty}>Aucune facture enregistrée.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {invoices.map((inv) => (
+                    <div key={inv.id} style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', cursor: 'pointer' }}
+                        onClick={() => setExpandedInv(expandedInv === inv.id ? null : inv.id)}>
+                        <div>
+                          <span style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', marginRight: 10 }}>Facture #{inv.id}</span>
+                          <span style={{ fontSize: 12, color: '#64748b', marginRight: 8 }}>👤 {inv.employee_name}</span>
+                          <span style={{ fontSize: 12, color: '#94a3b8' }}>{fmtDate(inv.created_at)}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: '#2563eb' }}>{fmt(inv.total_amount)}</span>
+                          <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(inv.id); }}>🗑️ Annuler</button>
+                          <span style={{ fontSize: 12, color: '#94a3b8' }}>{expandedInv === inv.id ? '▲' : '▼'}</span>
+                        </div>
+                      </div>
+                      {expandedInv === inv.id && (
+                        <div style={{ padding: '0 18px 14px', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {inv.items.map((item, idx) => (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#374151', paddingTop: 6 }}>
+                              <span>{item.product_name} × {item.quantity} ({fmt(item.unit_price)} / unité)</span>
+                              <span style={{ fontWeight: 600 }}>{fmt(item.total_amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -702,4 +868,5 @@ const S = {
   modalBox: { background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
   modalTitle: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 20 },
   modalActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 },
+  qtyBtn2: { width: 28, height: 28, border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#374151' },
 };
