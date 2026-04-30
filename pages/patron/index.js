@@ -41,6 +41,7 @@ export default function PatronDashboard() {
   const [pPrice, setPPrice] = useState('');
   const [pStock, setPStock] = useState('');
   const [pAlert, setPAlert] = useState('5');
+  const [pImageUrl, setPImageUrl] = useState('');
 
   // Formulaire vente (ancien, gardé pour compat)
   const [sEmployee, setSEmployee] = useState('');
@@ -146,7 +147,7 @@ export default function PatronDashboard() {
     const r = await fetch('/api/patron/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: pName, category: pCategory, price: parseFloat(pPrice), stock_quantity: parseInt(pStock) || 0, stock_min_alert: parseInt(pAlert) || 5 }),
+      body: JSON.stringify({ name: pName, category: pCategory, price: parseFloat(pPrice), stock_quantity: parseInt(pStock) || 0, stock_min_alert: parseInt(pAlert) || 5, image_url: pImageUrl || null }),
     });
     setLoading(false);
     if (r.ok) { showToast('Produit ajouté !'); setShowAddProduct(false); resetProductForm(); loadProducts(); }
@@ -159,7 +160,7 @@ export default function PatronDashboard() {
     const r = await fetch('/api/patron/products', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: editingProduct.id, name: pName, category: pCategory, price: parseFloat(pPrice), stock_min_alert: parseInt(pAlert) || 5 }),
+      body: JSON.stringify({ id: editingProduct.id, name: pName, category: pCategory, price: parseFloat(pPrice), stock_min_alert: parseInt(pAlert) || 5, image_url: pImageUrl || null }),
     });
     setLoading(false);
     if (r.ok) { showToast('Produit modifié !'); setEditingProduct(null); resetProductForm(); loadProducts(); }
@@ -174,11 +175,11 @@ export default function PatronDashboard() {
 
   function openEditProduct(p) {
     setEditingProduct(p);
-    setPName(p.name); setPCategory(p.category); setPPrice(String(p.price)); setPAlert(String(p.stock_min_alert));
+    setPName(p.name); setPCategory(p.category); setPPrice(String(p.price)); setPAlert(String(p.stock_min_alert)); setPImageUrl(p.image_url || '');
     setShowAddProduct(false);
   }
 
-  function resetProductForm() { setPName(''); setPCategory(''); setPPrice(''); setPStock(''); setPAlert('5'); }
+  function resetProductForm() { setPName(''); setPCategory(''); setPPrice(''); setPStock(''); setPAlert('5'); setPImageUrl(''); }
 
   // ── Actions stock ──
   async function handleUpdateStock(id, qty) {
@@ -374,8 +375,12 @@ export default function PatronDashboard() {
                       const out = p.stock_quantity === 0;
                       return (
                         <button key={p.id} type="button" disabled={out} onClick={() => addToCart(p)}
-                          style={{ position: 'relative', background: inCart ? '#eff6ff' : '#f8fafc', border: `2px solid ${inCart ? '#2563eb' : '#e2e8f0'}`, borderRadius: 12, padding: '14px 10px', cursor: out ? 'not-allowed' : 'pointer', textAlign: 'center', opacity: out ? 0.45 : 1 }}>
+                          style={{ position: 'relative', background: inCart ? '#eff6ff' : '#f8fafc', border: `2px solid ${inCart ? '#2563eb' : '#e2e8f0'}`, borderRadius: 12, padding: '12px 10px', cursor: out ? 'not-allowed' : 'pointer', textAlign: 'center', opacity: out ? 0.45 : 1 }}>
                           {inCart && <div style={{ position: 'absolute', top: -8, right: -8, background: '#2563eb', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{inCart.quantity}</div>}
+                          {p.image_url
+                            ? <img src={p.image_url} alt={p.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 8, display: 'block', margin: '0 auto 8px' }} onError={e => e.target.style.display='none'} />
+                            : <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
+                          }
                           <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', marginBottom: 3 }}>{p.name}</div>
                           <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>{p.category}</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb' }}>{fmt(p.price)}</div>
@@ -657,6 +662,17 @@ export default function PatronDashboard() {
                       <label style={S.label}>Alerte stock bas (seuil)</label>
                       <input type="number" min="0" value={pAlert} onChange={e => setPAlert(e.target.value)} style={S.input} />
                     </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={S.label}>Image du produit <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(lien URL — ex: goopics, imgur…)</span></label>
+                      <input type="url" value={pImageUrl} onChange={e => setPImageUrl(e.target.value)} placeholder="https://i.goopics.net/abc123.png" style={S.input} />
+                      {pImageUrl && (
+                        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <img src={pImageUrl} alt="Aperçu" onError={e => e.target.style.display='none'}
+                            style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1px solid #e2e8f0' }} />
+                          <span style={{ fontSize: 12, color: '#64748b' }}>Aperçu de l'image</span>
+                        </div>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
                       <button type="button" style={S.btnSecondary} onClick={() => { setShowAddProduct(false); setEditingProduct(null); resetProductForm(); }}>Annuler</button>
                       <button type="submit" style={S.btnPrimary} disabled={loading}>{loading ? 'Enregistrement…' : (editingProduct ? 'Enregistrer les modifications' : 'Ajouter le produit')}</button>
@@ -683,13 +699,20 @@ export default function PatronDashboard() {
                     <tbody>
                       {products.map((p) => (
                         <tr key={p.id} style={S.tr}>
-                          <td style={S.td}><strong>{p.name}</strong></td>
+                          <td style={S.td}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              {p.image_url
+                                ? <img src={p.image_url} alt={p.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0', flexShrink: 0 }} onError={e => e.target.style.display='none'} />
+                                : <div style={{ width: 40, height: 40, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>📦</div>
+                              }
+                              <strong>{p.name}</strong>
+                            </div>
+                          </td>
                           <td style={S.td}><span style={S.chip}>{p.category}</span></td>
                           <td style={{ ...S.td, fontWeight: 600 }}>{fmt(p.price)}</td>
                           <td style={S.td}>
                             <span style={{ color: p.stock_quantity <= p.stock_min_alert ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
-                              {p.stock_quantity <= p.stock_min_alert ? '⚠️ ' : ''}
-                              {p.stock_quantity}
+                              {p.stock_quantity <= p.stock_min_alert ? '⚠️ ' : ''}{p.stock_quantity}
                             </span>
                           </td>
                           <td style={S.td}>

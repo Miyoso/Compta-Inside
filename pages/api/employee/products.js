@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
   const products = await sql`
-    SELECT id, name, category, price::float, stock_quantity
+    SELECT id, name, category, price::float, stock_quantity, stock_min_alert, image_url
     FROM products
     WHERE company_id = ${token.companyId}
     ORDER BY name ASC

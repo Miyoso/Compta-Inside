@@ -167,6 +167,10 @@ export default function EmployeeDashboard() {
                           }}
                         >
                           {inCart && <div style={S.cartBadge}>× {inCart.quantity}</div>}
+                          {p.image_url
+                            ? <img src={p.image_url} alt={p.name} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, margin: '0 auto 8px', display: 'block' }} onError={e => e.target.style.display='none'} />
+                            : <div style={{ fontSize: 34, marginBottom: 8 }}>📦</div>
+                          }
                           <div style={S.productName}>{p.name}</div>
                           <div style={S.productCat}>{p.category}</div>
                           <div style={S.productPrice}>{fmt(p.price)}</div>
