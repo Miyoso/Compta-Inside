@@ -23,6 +23,14 @@ export default function PatronDashboard() {
   const [employees, setEmployees] = useState([]);
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [purchasesData, setPurchasesData] = useState({ purchases: [], totalPurchases: 0 });
+
+  // Formulaire achat
+  const [acName, setAcName]       = useState('');
+  const [acProduct, setAcProduct] = useState('');
+  const [acQty, setAcQty]         = useState('1');
+  const [acPrice, setAcPrice]     = useState('');
+  const [acNotes, setAcNotes]     = useState('');
 
   // États UI
   const [loading, setLoading] = useState(false);
@@ -94,6 +102,11 @@ export default function PatronDashboard() {
     setInvoices(await r.json());
   }, []);
 
+  const loadPurchases = useCallback(async () => {
+    const r = await fetch('/api/patron/purchases');
+    setPurchasesData(await r.json());
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     loadOverview();
@@ -101,7 +114,40 @@ export default function PatronDashboard() {
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
     if (tab === 'produits') loadProducts();
     if (tab === 'stocks')   loadProducts();
-  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices]);
+    if (tab === 'achats')   { loadPurchases(); loadProducts(); }
+  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases]);
+
+  // ── Actions achats ─────────────────────────────────────────
+  async function handleAddPurchase(e) {
+    e.preventDefault();
+    setLoading(true);
+    const r = await fetch('/api/patron/purchases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: acName,
+        product_id: acProduct || null,
+        quantity: parseInt(acQty) || 1,
+        unit_price: parseFloat(acPrice),
+        notes: acNotes || null,
+      }),
+    });
+    const d = await r.json();
+    setLoading(false);
+    if (r.ok) {
+      showToast(`✅ Achat enregistré — ${fmt(d.total_amount)}${acProduct ? ' · Stock réapprovisionné' : ''}`);
+      setAcName(''); setAcProduct(''); setAcQty('1'); setAcPrice(''); setAcNotes('');
+      loadPurchases(); loadOverview(); if (acProduct) loadProducts();
+    } else {
+      showToast(d.error, 'error');
+    }
+  }
+
+  async function handleDeletePurchase(id) {
+    if (!confirm('Supprimer cet achat ? Le stock sera ajusté si applicable.')) return;
+    await fetch('/api/patron/purchases', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    showToast('Achat supprimé.'); loadPurchases(); loadOverview(); loadProducts();
+  }
 
   // ── Gestion du panier (onglet Ventes) ────────────────────
   function addToCart(product) {
@@ -231,6 +277,7 @@ export default function PatronDashboard() {
   const tabs = [
     { key: 'overview', label: '🏠 Vue d\'ensemble' },
     { key: 'ventes',   label: '🧾 Ventes' },
+    { key: 'achats',   label: '🛍️ Achats' },
     { key: 'salaires', label: '💰 Salaires & Impôts' },
     { key: 'produits', label: '📦 Produits' },
     { key: 'stocks',   label: '📊 Stocks' },
@@ -291,15 +338,20 @@ export default function PatronDashboard() {
                       <div style={S.kpiLabel}>Chiffre d'affaires</div>
                       <div style={S.kpiValue}>{fmt(overview.totalSales)}</div>
                     </div>
+                    <div style={{ ...S.kpiCard, borderColor: '#f59e0b' }}>
+                      <div style={S.kpiIcon}>🛍️</div>
+                      <div style={S.kpiLabel}>Achats matières premières</div>
+                      <div style={{ ...S.kpiValue, color: '#d97706' }}>− {fmt(overview.totalPurchases)}</div>
+                    </div>
                     <div style={{ ...S.kpiCard, borderColor: '#dc2626' }}>
                       <div style={S.kpiIcon}>🏛️</div>
-                      <div style={S.kpiLabel}>Impôts à payer (15%)</div>
+                      <div style={S.kpiLabel}>Impôts (15% sur {fmt(overview.taxableBase)})</div>
                       <div style={{ ...S.kpiValue, color: '#dc2626' }}>{fmt(overview.taxes)}</div>
                     </div>
-                    <div style={{ ...S.kpiCard, borderColor: '#f59e0b' }}>
+                    <div style={{ ...S.kpiCard, borderColor: '#8b5cf6' }}>
                       <div style={S.kpiIcon}>👥</div>
                       <div style={S.kpiLabel}>Salaires à distribuer</div>
-                      <div style={{ ...S.kpiValue, color: '#d97706' }}>{fmt(overview.totalSalaries)}</div>
+                      <div style={{ ...S.kpiValue, color: '#7c3aed' }}>{fmt(overview.totalSalaries)}</div>
                     </div>
                     <div style={{ ...S.kpiCard, borderColor: '#16a34a' }}>
                       <div style={S.kpiIcon}>📈</div>
@@ -467,6 +519,149 @@ export default function PatronDashboard() {
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════
+              ONGLET : ACHATS MATIÈRES PREMIÈRES
+          ══════════════════════════════════════════ */}
+          {tab === 'achats' && (
+            <div>
+              <h2 style={S.sectionTitle}>Achats — Matières premières</h2>
+
+              {/* Récap déduction fiscale */}
+              {overview && (
+                <div style={S.purchaseSummary}>
+                  <div style={S.pSumItem}>
+                    <div style={S.pSumLabel}>CA du mois</div>
+                    <div style={S.pSumValue}>{fmt(overview.totalSales)}</div>
+                  </div>
+                  <div style={{ ...S.pSumItem, color: '#dc2626' }}>
+                    <div style={S.pSumLabel}>Achats déduits</div>
+                    <div style={{ ...S.pSumValue, color: '#dc2626' }}>− {fmt(overview.totalPurchases)}</div>
+                  </div>
+                  <div style={{ ...S.pSumItem, color: '#64748b' }}>
+                    <div style={S.pSumLabel}>Base imposable</div>
+                    <div style={{ ...S.pSumValue, color: '#64748b' }}>{fmt(overview.taxableBase)}</div>
+                  </div>
+                  <div style={{ ...S.pSumItem, color: '#16a34a' }}>
+                    <div style={S.pSumLabel}>💚 Économie impôts (15%)</div>
+                    <div style={{ ...S.pSumValue, color: '#16a34a' }}>{fmt(overview.taxSaving)}</div>
+                  </div>
+                  <div style={{ ...S.pSumItem, color: '#dc2626' }}>
+                    <div style={S.pSumLabel}>🏛️ Impôts dus</div>
+                    <div style={{ ...S.pSumValue, color: '#dc2626' }}>{fmt(overview.taxes)}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Formulaire d'ajout d'achat */}
+              <div style={S.formCard}>
+                <h3 style={S.subTitle}>➕ Enregistrer un achat</h3>
+                <form onSubmit={handleAddPurchase} style={S.formGrid}>
+                  <div>
+                    <label style={S.label}>Nom de la matière première *</label>
+                    <input value={acName} onChange={e => setAcName(e.target.value)} required placeholder="Ex: Café en grains, Lait, Alcool…" style={S.input} />
+                  </div>
+                  <div>
+                    <label style={S.label}>Prix unitaire ($) *</label>
+                    <input type="number" min="0" step="0.01" value={acPrice} onChange={e => setAcPrice(e.target.value)} required placeholder="0.00" style={S.input} />
+                  </div>
+                  <div>
+                    <label style={S.label}>Quantité achetée</label>
+                    <input type="number" min="1" value={acQty} onChange={e => setAcQty(e.target.value)} style={S.input} />
+                  </div>
+                  <div>
+                    <label style={S.label}>
+                      Lier à un produit en stock{' '}
+                      <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel — réapprovisionne automatiquement)</span>
+                    </label>
+                    <select value={acProduct} onChange={e => setAcProduct(e.target.value)} style={S.select}>
+                      <option value="">-- Aucun (achat seul) --</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} (stock actuel : {p.stock_quantity})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={S.label}>Notes <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel)</span></label>
+                    <input value={acNotes} onChange={e => setAcNotes(e.target.value)} placeholder="Ex: Fournisseur X, livraison urgente…" style={S.input} />
+                  </div>
+
+                  {/* Aperçu du total */}
+                  {acPrice && acQty && (
+                    <div style={{ gridColumn: '1 / -1', background: '#fefce8', border: '1px solid #fde047', borderRadius: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: 14, color: '#713f12' }}>Total achat : <strong>{fmt(parseFloat(acPrice || 0) * parseInt(acQty || 1))}</strong></span>
+                        {acPrice && (
+                          <span style={{ fontSize: 13, color: '#92400e', marginLeft: 16 }}>
+                            → Économie impôts : <strong>{fmt(parseFloat(acPrice || 0) * parseInt(acQty || 1) * 0.15)}</strong>
+                          </span>
+                        )}
+                      </div>
+                      {acProduct && <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>+ {acQty} unité(s) ajoutée(s) au stock</span>}
+                    </div>
+                  )}
+
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button type="submit" style={S.btnPrimary} disabled={loading}>
+                      {loading ? 'Enregistrement…' : '💾 Enregistrer l\'achat'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Liste des achats du mois */}
+              <h3 style={S.subTitle}>Achats du mois en cours</h3>
+              {purchasesData.purchases.length === 0 ? (
+                <p style={S.empty}>Aucun achat enregistré ce mois-ci.</p>
+              ) : (
+                <>
+                  <div style={{ marginBottom: 12, fontSize: 15, color: '#374151', fontWeight: 500 }}>
+                    Total dépensé : <strong style={{ color: '#dc2626' }}>{fmt(purchasesData.totalPurchases)}</strong>
+                    <span style={{ color: '#94a3b8', marginLeft: 12, fontSize: 13 }}>
+                      · Économie impôts : <span style={{ color: '#16a34a', fontWeight: 600 }}>{fmt(purchasesData.totalPurchases * 0.15)}</span>
+                    </span>
+                  </div>
+                  <div style={S.tableWrap}>
+                    <table style={S.table}>
+                      <thead>
+                        <tr>
+                          <th style={S.th}>Matière première</th>
+                          <th style={S.th}>Qté</th>
+                          <th style={S.th}>Prix unit.</th>
+                          <th style={S.th}>Total</th>
+                          <th style={S.th}>Lié au produit</th>
+                          <th style={S.th}>Notes</th>
+                          <th style={S.th}>Date</th>
+                          <th style={S.th}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {purchasesData.purchases.map((p) => (
+                          <tr key={p.id} style={S.tr}>
+                            <td style={S.td}><strong>{p.name}</strong></td>
+                            <td style={S.td}>{p.quantity ?? '—'}</td>
+                            <td style={S.td}>{fmt(p.unit_price)}</td>
+                            <td style={{ ...S.td, fontWeight: 700, color: '#dc2626' }}>− {fmt(p.total_amount)}</td>
+                            <td style={S.td}>
+                              {p.product_name
+                                ? <span style={{ ...S.badge, background: '#dcfce7', color: '#16a34a' }}>📦 {p.product_name}</span>
+                                : <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>
+                              }
+                            </td>
+                            <td style={{ ...S.td, color: '#64748b', fontSize: 13 }}>{p.notes || '—'}</td>
+                            <td style={{ ...S.td, color: '#94a3b8', fontSize: 12 }}>{fmtDate(p.purchase_date)}</td>
+                            <td style={S.td}>
+                              <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeletePurchase(p.id)}>🗑️</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -892,4 +1087,10 @@ const S = {
   modalTitle: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 20 },
   modalActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 },
   qtyBtn2: { width: 28, height: 28, border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#374151' },
+
+  // Achats
+  purchaseSummary: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 },
+  pSumItem:  { background: '#fff', borderRadius: 12, padding: '16px 20px', flex: 1, minWidth: 150, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' },
+  pSumLabel: { fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 },
+  pSumValue: { fontSize: 20, fontWeight: 800, color: '#1e293b' },
 };
