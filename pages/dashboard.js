@@ -169,6 +169,9 @@ export default function EmployeeDashboard() {
                           <div style={S.productName}>{p.name}</div>
                           <div style={S.productCat}>{p.category}</div>
                           <div style={S.productPrice}>{fmt(p.price)}</div>
+                          {p.recipe_count > 0 && (
+                            <div style={{ fontSize: 10, color: '#16a34a', fontWeight: 600, marginTop: 4 }}>🧪 -{p.recipe_count} mat.</div>
+                          )}
                         </button>
                       );
                     })}

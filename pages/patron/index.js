@@ -34,6 +34,12 @@ export default function PatronDashboard() {
   const [acPrice, setAcPrice]       = useState('');
   const [acNotes, setAcNotes]       = useState('');
 
+  // Recettes produits
+  const [recipeProduct, setRecipeProduct] = useState(null); // produit en cours d'édition
+  const [recipe, setRecipe]               = useState([]);
+  const [recipeRm, setRecipeRm]           = useState('');
+  const [recipeQty, setRecipeQty]         = useState('1');
+
   // Formulaire matière première
   const [rmName, setRmName]       = useState('');
   const [rmUnit, setRmUnit]       = useState('unité');
@@ -133,7 +139,7 @@ export default function PatronDashboard() {
     loadPending(); // toujours chargé pour le badge
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); }
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
-    if (tab === 'produits') loadProducts();
+    if (tab === 'produits') { loadProducts(); loadRawMaterials(); }
     if (tab === 'stocks')   loadRawMaterials();
     if (tab === 'achats')   { loadPurchases(); loadRawMaterials(); }
   }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials]);
@@ -164,6 +170,29 @@ export default function PatronDashboard() {
   async function handleUpdateRmStock(id, qty) {
     await fetch('/api/patron/raw-materials', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, quantity: parseFloat(qty) }) });
     showToast('Stock mis à jour !'); setEditingRmStock(null); loadRawMaterials(); loadOverview();
+  }
+
+  // ── Actions recettes produits ──────────────────────────────
+  async function loadRecipe(productId) {
+    const r = await fetch(`/api/patron/recipes?product_id=${productId}`);
+    setRecipe(await r.json());
+  }
+
+  async function handleAddIngredient(e) {
+    e.preventDefault();
+    if (!recipeRm) return showToast('Sélectionne une matière première.', 'error');
+    const r = await fetch('/api/patron/recipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: recipeProduct.id, raw_material_id: parseInt(recipeRm), quantity_per_unit: parseFloat(recipeQty) || 1 }),
+    });
+    if (r.ok) { showToast('Ingrédient ajouté !'); setRecipeRm(''); setRecipeQty('1'); loadRecipe(recipeProduct.id); loadProducts(); }
+    else { const d = await r.json(); showToast(d.error, 'error'); }
+  }
+
+  async function handleDeleteIngredient(id) {
+    await fetch('/api/patron/recipes', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    showToast('Ingrédient retiré.'); loadRecipe(recipeProduct.id); loadProducts();
   }
 
   // ── Actions validation comptes ─────────────────────────────
@@ -547,8 +576,11 @@ export default function PatronDashboard() {
                             : <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
                           }
                           <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', marginBottom: 3 }}>{p.name}</div>
-                          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>{p.category}</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb' }}>{fmt(p.price)}</div>
+                          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>{p.category}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb', marginBottom: 4 }}>{fmt(p.price)}</div>
+                          {p.recipe_count > 0 && (
+                            <div style={{ fontSize: 10, color: '#16a34a', fontWeight: 600 }}>🧪 -{p.recipe_count} mat.</div>
+                          )}
                         </button>
                       );
                     })}
@@ -989,12 +1021,13 @@ export default function PatronDashboard() {
                         <th style={S.th}>Produit</th>
                         <th style={S.th}>Catégorie</th>
                         <th style={S.th}>Prix</th>
+                        <th style={S.th}>Recette</th>
                         <th style={S.th}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {products.map((p) => (
-                        <tr key={p.id} style={S.tr}>
+                        <tr key={p.id} style={{ ...S.tr, background: recipeProduct?.id === p.id ? '#f0f9ff' : '#fff' }}>
                           <td style={S.td}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                               {p.image_url
@@ -1007,8 +1040,21 @@ export default function PatronDashboard() {
                           <td style={S.td}><span style={S.chip}>{p.category}</span></td>
                           <td style={{ ...S.td, fontWeight: 600 }}>{fmt(p.price)}</td>
                           <td style={S.td}>
+                            {p.recipe_count > 0
+                              ? <span style={{ ...S.badge, background: '#dcfce7', color: '#16a34a' }}>🧪 {p.recipe_count} ingrédient{p.recipe_count > 1 ? 's' : ''}</span>
+                              : <span style={{ ...S.badge, background: '#f1f5f9', color: '#94a3b8' }}>Aucune</span>
+                            }
+                          </td>
+                          <td style={S.td}>
                             <div style={{ display: 'flex', gap: 6 }}>
                               <button style={S.btnSmall} onClick={() => openEditProduct(p)}>✏️ Modifier</button>
+                              <button
+                                style={{ ...S.btnSmall, background: recipeProduct?.id === p.id ? '#dbeafe' : '#fff', color: '#2563eb', borderColor: '#93c5fd' }}
+                                onClick={() => {
+                                  if (recipeProduct?.id === p.id) { setRecipeProduct(null); setRecipe([]); }
+                                  else { setRecipeProduct(p); loadRecipe(p.id); }
+                                }}
+                              >🧪 Recette</button>
                               <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeleteProduct(p.id)}>🗑️</button>
                             </div>
                           </td>
@@ -1016,6 +1062,75 @@ export default function PatronDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Panel de gestion de la recette */}
+              {recipeProduct && (
+                <div style={{ marginTop: 20, background: '#f0f9ff', border: '1.5px solid #93c5fd', borderRadius: 14, padding: '20px 24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e40af', margin: 0 }}>
+                      🧪 Recette de <span style={{ color: '#2563eb' }}>{recipeProduct.name}</span>
+                    </h3>
+                    <button style={S.btnSmall} onClick={() => { setRecipeProduct(null); setRecipe([]); }}>✕ Fermer</button>
+                  </div>
+
+                  <p style={{ fontSize: 13, color: '#3b82f6', marginBottom: 16 }}>
+                    Définir quelles matières premières (et en quelle quantité) sont consommées pour fabriquer <strong>1 unité</strong> de ce produit. Le stock sera déduit automatiquement à chaque vente.
+                  </p>
+
+                  {/* Ingrédients actuels */}
+                  {recipe.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                      {recipe.map((ing) => {
+                        const isLow = ing.stock <= ing.min_alert;
+                        return (
+                          <div key={ing.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', borderRadius: 10, padding: '10px 14px', border: '1px solid #bfdbfe' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <span style={{ fontSize: 20 }}>🧪</span>
+                              <div>
+                                <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b' }}>{ing.name}</div>
+                                <div style={{ fontSize: 12, color: '#64748b' }}>
+                                  <strong style={{ color: '#2563eb' }}>{ing.quantity_per_unit} {ing.unit}</strong> par unité vendue
+                                  {' · '}
+                                  <span style={{ color: isLow ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
+                                    Stock : {ing.stock} {ing.unit}{isLow ? ' ⚠️' : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeleteIngredient(ing.id)}>🗑️</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 16 }}>Aucun ingrédient défini. Les ventes de ce produit ne déduiront rien du stock.</p>
+                  )}
+
+                  {/* Formulaire ajout ingrédient */}
+                  <form onSubmit={handleAddIngredient} style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 2, minWidth: 180 }}>
+                      <label style={S.label}>Matière première</label>
+                      <select value={recipeRm} onChange={e => setRecipeRm(e.target.value)} style={S.select}>
+                        <option value="">-- Sélectionner --</option>
+                        {rawMaterials
+                          .filter(m => !recipe.find(r => r.raw_material_id === m.id))
+                          .map(m => <option key={m.id} value={m.id}>{m.name} (stock : {m.quantity} {m.unit})</option>)
+                        }
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 120 }}>
+                      <label style={S.label}>Quantité par unité vendue</label>
+                      <input type="number" min="0.001" step="0.001" value={recipeQty} onChange={e => setRecipeQty(e.target.value)} style={S.input} />
+                    </div>
+                    {recipeRm && (
+                      <div style={{ fontSize: 12, color: '#64748b', alignSelf: 'flex-end', paddingBottom: 12 }}>
+                        unité : <strong>{rawMaterials.find(m => String(m.id) === String(recipeRm))?.unit}</strong>
+                      </div>
+                    )}
+                    <button type="submit" style={{ ...S.btnPrimary, alignSelf: 'flex-end' }}>➕ Ajouter</button>
+                  </form>
                 </div>
               )}
             </div>

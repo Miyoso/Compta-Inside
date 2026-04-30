@@ -8,10 +8,13 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
   const products = await sql`
-    SELECT id, name, category, price::float, stock_quantity, stock_min_alert, image_url
-    FROM products
-    WHERE company_id = ${token.companyId}
-    ORDER BY name ASC
+    SELECT p.id, p.name, p.category, p.price::float, p.image_url,
+           COUNT(pr.id)::int AS recipe_count
+    FROM products p
+    LEFT JOIN product_recipes pr ON pr.product_id = p.id AND pr.company_id = ${token.companyId}
+    WHERE p.company_id = ${token.companyId}
+    GROUP BY p.id
+    ORDER BY p.name ASC
   `;
   return res.status(200).json(products);
 }
