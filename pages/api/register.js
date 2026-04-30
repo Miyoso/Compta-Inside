@@ -31,11 +31,11 @@ export default async function handler(req, res) {
   // Hashage du mot de passe
   const passwordHash = await bcrypt.hash(password, 12);
 
-  // Création de l'utilisateur
+  // Création de l'utilisateur — statut "pending" jusqu'à validation du patron
   await sql`
-    INSERT INTO users (name, email, password_hash, role, company_id)
-    VALUES (${name}, ${email}, ${passwordHash}, 'employee', ${companyId})
+    INSERT INTO users (name, email, password_hash, role, company_id, status)
+    VALUES (${name}, ${email}, ${passwordHash}, 'employee', ${companyId}, 'pending')
   `;
 
-  return res.status(201).json({ success: true });
+  return res.status(201).json({ success: true, pending: true });
 }

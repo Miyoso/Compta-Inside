@@ -24,6 +24,7 @@ export default function PatronDashboard() {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [purchasesData, setPurchasesData] = useState({ purchases: [], totalPurchases: 0 });
+  const [pendingUsers, setPendingUsers] = useState([]);
 
   // Formulaire achat
   const [acName, setAcName]       = useState('');
@@ -107,15 +108,37 @@ export default function PatronDashboard() {
     setPurchasesData(await r.json());
   }, []);
 
+  const loadPending = useCallback(async () => {
+    const r = await fetch('/api/patron/pending');
+    setPendingUsers(await r.json());
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     loadOverview();
+    loadPending(); // toujours chargé pour le badge
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); }
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
     if (tab === 'produits') loadProducts();
     if (tab === 'stocks')   loadProducts();
     if (tab === 'achats')   { loadPurchases(); loadProducts(); }
-  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases]);
+  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending]);
+
+  // ── Actions validation comptes ─────────────────────────────
+  async function handleAccountAction(id, action) {
+    const label = action === 'approve' ? 'approuver' : 'refuser';
+    if (!confirm(`Veux-tu ${label} ce compte ?`)) return;
+    const r = await fetch('/api/patron/pending', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action }),
+    });
+    if (r.ok) {
+      showToast(action === 'approve' ? '✅ Compte approuvé !' : '❌ Compte refusé.');
+      loadPending();
+      loadEmployees();
+    }
+  }
 
   // ── Actions achats ─────────────────────────────────────────
   async function handleAddPurchase(e) {
@@ -274,8 +297,9 @@ export default function PatronDashboard() {
     return <div style={S.loadingPage}><div style={S.spinner} /></div>;
   }
 
+  const pendingCount = pendingUsers.filter(u => u.status === 'pending').length;
   const tabs = [
-    { key: 'overview', label: '🏠 Vue d\'ensemble' },
+    { key: 'overview', label: '🏠 Vue d\'ensemble', badge: pendingCount },
     { key: 'ventes',   label: '🧾 Ventes' },
     { key: 'achats',   label: '🛍️ Achats' },
     { key: 'salaires', label: '💰 Salaires & Impôts' },
@@ -316,6 +340,11 @@ export default function PatronDashboard() {
               onClick={() => setTab(t.key)}
             >
               {t.label}
+              {t.badge > 0 && (
+                <span style={{ marginLeft: 6, background: '#dc2626', color: '#fff', borderRadius: '50%', fontSize: 11, fontWeight: 700, padding: '1px 6px', verticalAlign: 'middle' }}>
+                  {t.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -365,6 +394,50 @@ export default function PatronDashboard() {
                     <div style={S.alertBanner}>
                       ⚠️ <strong>{overview.alertsCount} produit{overview.alertsCount > 1 ? 's' : ''}</strong> en stock bas !{' '}
                       <button style={S.alertLink} onClick={() => setTab('stocks')}>Voir les stocks →</button>
+                    </div>
+                  )}
+
+                  {/* Comptes en attente de validation */}
+                  {pendingUsers.filter(u => u.status === 'pending').length > 0 && (
+                    <div style={S.pendingBox}>
+                      <div style={S.pendingTitle}>
+                        🔔 Comptes en attente de validation ({pendingUsers.filter(u => u.status === 'pending').length})
+                      </div>
+                      <div style={S.pendingList}>
+                        {pendingUsers.filter(u => u.status === 'pending').map(u => (
+                          <div key={u.id} style={S.pendingRow}>
+                            <div style={S.pendingInfo}>
+                              <strong>{u.name}</strong>
+                              <span style={S.pendingEmail}>{u.email}</span>
+                              <span style={S.pendingDate}>Inscrit le {new Date(u.created_at).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                            <div style={S.pendingActions}>
+                              <button style={S.btnApprove} onClick={() => handleAccountAction(u.id, 'approve')}>✅ Approuver</button>
+                              <button style={S.btnReject}  onClick={() => handleAccountAction(u.id, 'reject')}>❌ Refuser</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comptes refusés */}
+                  {pendingUsers.filter(u => u.status === 'rejected').length > 0 && (
+                    <div style={{ ...S.pendingBox, borderColor: '#fca5a5', background: '#fff7f7' }}>
+                      <div style={{ ...S.pendingTitle, color: '#dc2626' }}>
+                        ❌ Comptes refusés ({pendingUsers.filter(u => u.status === 'rejected').length})
+                      </div>
+                      <div style={S.pendingList}>
+                        {pendingUsers.filter(u => u.status === 'rejected').map(u => (
+                          <div key={u.id} style={S.pendingRow}>
+                            <div style={S.pendingInfo}>
+                              <strong>{u.name}</strong>
+                              <span style={S.pendingEmail}>{u.email}</span>
+                            </div>
+                            <button style={S.btnApprove} onClick={() => handleAccountAction(u.id, 'approve')}>↩️ Réapprouver</button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -1087,6 +1160,18 @@ const S = {
   modalTitle: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 20 },
   modalActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 },
   qtyBtn2: { width: 28, height: 28, border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#374151' },
+
+  // Validation comptes
+  pendingBox:     { background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 12, padding: '16px 20px', marginBottom: 20 },
+  pendingTitle:   { fontWeight: 700, fontSize: 15, color: '#92400e', marginBottom: 12 },
+  pendingList:    { display: 'flex', flexDirection: 'column', gap: 10 },
+  pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', borderRadius: 10, padding: '12px 16px', flexWrap: 'wrap', gap: 10 },
+  pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 2 },
+  pendingEmail:   { fontSize: 13, color: '#64748b' },
+  pendingDate:    { fontSize: 12, color: '#94a3b8' },
+  pendingActions: { display: 'flex', gap: 8 },
+  btnApprove:     { padding: '7px 14px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
+  btnReject:      { padding: '7px 14px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
 
   // Achats
   purchaseSummary: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 },

@@ -56,7 +56,13 @@ export default function Home() {
     });
     setLoading(false);
     if (result?.error) {
-      setError('Email ou mot de passe incorrect.');
+      if (result.error === 'AccountPending') {
+        setError('⏳ Ton compte est en attente de validation par ton patron. Tu recevras l\'accès dès qu\'il l\'aura approuvé.');
+      } else if (result.error === 'AccountRejected') {
+        setError('❌ Ton compte a été refusé. Contacte ton patron pour plus d\'informations.');
+      } else {
+        setError('Email ou mot de passe incorrect.');
+      }
     } else {
       router.push('/dashboard');
     }
@@ -83,7 +89,7 @@ export default function Home() {
     if (!res.ok) {
       setError(data.error || 'Une erreur est survenue.');
     } else {
-      setSuccess('Compte créé ! Vous pouvez maintenant vous connecter.');
+      setSuccess('✅ Compte créé ! Ton patron doit valider ton accès avant que tu puisses te connecter. Reviens ici une fois qu\'il t\'a confirmé.');
       setMode('login');
       setLoginEmail(regEmail);
       setRegName('');

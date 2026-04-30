@@ -16,7 +16,8 @@ export default NextAuth({
 
         // Recherche de l'utilisateur en base
         const rows = await sql`
-          SELECT u.id, u.email, u.name, u.password_hash, u.role, u.company_id, c.name AS company_name
+          SELECT u.id, u.email, u.name, u.password_hash, u.role, u.status,
+                 u.company_id, c.name AS company_name
           FROM users u
           LEFT JOIN companies c ON c.id = u.company_id
           WHERE u.email = ${credentials.email}
@@ -29,6 +30,14 @@ export default NextAuth({
         // Vérification du mot de passe
         const valid = await bcrypt.compare(credentials.password, user.password_hash);
         if (!valid) return null;
+
+        // Vérification du statut du compte
+        if (user.status === 'pending') {
+          throw new Error('AccountPending');
+        }
+        if (user.status === 'rejected') {
+          throw new Error('AccountRejected');
+        }
 
         return {
           id: String(user.id),
@@ -50,7 +59,7 @@ export default NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role      = user.role;
         token.companyId = user.companyId;
         token.companyName = user.companyName;
       }
@@ -58,8 +67,8 @@ export default NextAuth({
     },
     async session({ session, token }) {
       if (token) {
-        session.user.role = token.role;
-        session.user.companyId = token.companyId;
+        session.user.role        = token.role;
+        session.user.companyId   = token.companyId;
         session.user.companyName = token.companyName;
       }
       return session;
@@ -67,8 +76,8 @@ export default NextAuth({
   },
 
   pages: {
-    signIn: '/',       // Page de connexion = page d'accueil
-    error: '/',        // Erreurs renvoyées sur la page d'accueil
+    signIn: '/',
+    error:  '/',
   },
 
   secret: process.env.NEXTAUTH_SECRET,
