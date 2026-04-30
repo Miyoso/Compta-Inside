@@ -23,12 +23,16 @@ export default function Home() {
   const [regPassword, setRegPassword] = useState('');
   const [regCompany, setRegCompany] = useState('');
 
-  // Redirection si déjà connecté
+  // Redirection selon le rôle
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/dashboard');
+      if (['patron', 'admin'].includes(session?.user?.role)) {
+        router.push('/patron');
+      } else {
+        router.push('/dashboard');
+      }
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   // Chargement des entreprises depuis la BDD
   useEffect(() => {
