@@ -58,17 +58,16 @@ export default function EmployeeDashboard() {
 
   // ── Gestion du panier ─────────────────────────────────────
   function addToCart(product) {
-    if (product.stock_quantity === 0) return;
     setCart((prev) => {
       const exists = prev.find((i) => i.product_id === product.id);
       if (exists) {
         return prev.map((i) =>
           i.product_id === product.id
-            ? { ...i, quantity: Math.min(i.quantity + 1, product.stock_quantity) }
+            ? { ...i, quantity: i.quantity + 1 }
             : i
         );
       }
-      return [...prev, { product_id: product.id, name: product.name, price: product.price, quantity: 1, max: product.stock_quantity }];
+      return [...prev, { product_id: product.id, name: product.name, price: product.price, quantity: 1 }];
     });
   }
 
@@ -80,7 +79,7 @@ export default function EmployeeDashboard() {
     const n = parseInt(qty);
     if (isNaN(n) || n < 1) return;
     setCart((prev) =>
-      prev.map((i) => i.product_id === product_id ? { ...i, quantity: Math.min(n, i.max) } : i)
+      prev.map((i) => i.product_id === product_id ? { ...i, quantity: n } : i)
     );
   }
 
@@ -99,7 +98,6 @@ export default function EmployeeDashboard() {
     if (r.ok) {
       showToast(`✅ Facture #${d.invoice_id} validée — Total : ${fmt(d.total_amount)}`);
       setCart([]);
-      loadProducts();
       loadInvoices();
     } else {
       showToast(d.error, 'error');
@@ -153,17 +151,14 @@ export default function EmployeeDashboard() {
                   <div style={S.productGrid}>
                     {products.map((p) => {
                       const inCart = cart.find((i) => i.product_id === p.id);
-                      const outOfStock = p.stock_quantity === 0;
                       return (
                         <button
                           key={p.id}
                           type="button"
-                          disabled={outOfStock}
                           onClick={() => addToCart(p)}
                           style={{
                             ...S.productCard,
                             ...(inCart ? S.productCardInCart : {}),
-                            ...(outOfStock ? S.productCardDisabled : {}),
                           }}
                         >
                           {inCart && <div style={S.cartBadge}>× {inCart.quantity}</div>}
@@ -174,9 +169,6 @@ export default function EmployeeDashboard() {
                           <div style={S.productName}>{p.name}</div>
                           <div style={S.productCat}>{p.category}</div>
                           <div style={S.productPrice}>{fmt(p.price)}</div>
-                          <div style={{ ...S.productStock, color: outOfStock ? '#dc2626' : p.stock_quantity <= p.stock_min_alert ? '#f59e0b' : '#16a34a' }}>
-                            {outOfStock ? '❌ Épuisé' : `Stock : ${p.stock_quantity}`}
-                          </div>
                         </button>
                       );
                     })}
@@ -200,7 +192,7 @@ export default function EmployeeDashboard() {
                             <div style={S.qtyRow}>
                               <button style={S.qtyBtn} onClick={() => item.quantity === 1 ? removeFromCart(item.product_id) : setCartQty(item.product_id, item.quantity - 1)}>−</button>
                               <span style={S.qtyVal}>{item.quantity}</span>
-                              <button style={S.qtyBtn} onClick={() => setCartQty(item.product_id, item.quantity + 1)} disabled={item.quantity >= item.max}>+</button>
+                              <button style={S.qtyBtn} onClick={() => setCartQty(item.product_id, item.quantity + 1)}>+</button>
                             </div>
                             <span style={S.cartItemTotal}>{fmt(item.price * item.quantity)}</span>
                             <button style={S.removeBtn} onClick={() => removeFromCart(item.product_id)}>✕</button>

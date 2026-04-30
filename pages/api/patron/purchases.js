@@ -10,88 +10,77 @@ export default async function handler(req, res) {
   const companyId = token.companyId;
   const patronId  = parseInt(token.sub);
 
-  // GET — liste des achats (mois en cours)
+  // GET — achats du mois + total
   if (req.method === 'GET') {
     const purchases = await sql`
-      SELECT
-        p.id, p.name, p.quantity, p.unit_price::float,
-        p.total_amount::float, p.purchase_date, p.notes,
-        pr.name AS product_name
+      SELECT p.id, p.name, p.quantity, p.unit_price::float,
+             p.total_amount::float, p.purchase_date, p.notes,
+             rm.name AS material_name, rm.unit AS material_unit
       FROM purchases p
-      LEFT JOIN products pr ON pr.id = p.product_id
+      LEFT JOIN raw_materials rm ON rm.id = p.raw_material_id
       WHERE p.company_id = ${companyId}
         AND DATE_TRUNC('month', p.purchase_date) = DATE_TRUNC('month', NOW())
       ORDER BY p.purchase_date DESC
     `;
-
     const [totRow] = await sql`
       SELECT COALESCE(SUM(total_amount), 0)::float AS total
       FROM purchases
       WHERE company_id = ${companyId}
         AND DATE_TRUNC('month', purchase_date) = DATE_TRUNC('month', NOW())
     `;
-
     return res.status(200).json({ purchases, totalPurchases: totRow.total });
   }
 
-  // POST — enregistrer un achat (+ réapprovisionnement stock si product_id)
+  // POST — enregistrer un achat (+ réapprovisionner la matière première si liée)
   if (req.method === 'POST') {
-    const { name, product_id, quantity, unit_price, notes } = req.body;
+    const { name, raw_material_id, quantity, unit_price, notes } = req.body;
 
     if (!name || !unit_price || unit_price <= 0) {
       return res.status(400).json({ error: 'Nom et prix unitaire obligatoires.' });
     }
 
-    const qty          = parseInt(quantity) || 1;
+    const qty          = parseFloat(quantity) || 1;
     const total_amount = parseFloat(unit_price) * qty;
 
-    // Si un produit est lié, vérifier qu'il appartient à l'entreprise
-    if (product_id) {
-      const [prod] = await sql`SELECT id FROM products WHERE id = ${product_id} AND company_id = ${companyId}`;
-      if (!prod) return res.status(404).json({ error: 'Produit introuvable.' });
+    // Vérifier que la matière première appartient à l'entreprise si renseignée
+    if (raw_material_id) {
+      const [mat] = await sql`
+        SELECT id FROM raw_materials WHERE id = ${raw_material_id} AND company_id = ${companyId}
+      `;
+      if (!mat) return res.status(404).json({ error: 'Matière première introuvable.' });
     }
 
     // Créer l'achat
-    const [purchase] = await sql`
-      INSERT INTO purchases (company_id, patron_id, name, product_id, quantity, unit_price, total_amount, notes)
-      VALUES (
-        ${companyId}, ${patronId}, ${name},
-        ${product_id || null}, ${product_id ? qty : null},
-        ${parseFloat(unit_price)}, ${total_amount},
-        ${notes || null}
-      )
-      RETURNING id, total_amount::float
+    await sql`
+      INSERT INTO purchases (company_id, patron_id, name, raw_material_id, quantity, unit_price, total_amount, notes)
+      VALUES (${companyId}, ${patronId}, ${name}, ${raw_material_id || null}, ${qty}, ${parseFloat(unit_price)}, ${total_amount}, ${notes || null})
     `;
 
-    // Réapprovisionnement automatique du stock si produit lié
-    if (product_id && qty > 0) {
+    // Réapprovisionner le stock de la matière première
+    if (raw_material_id && qty > 0) {
       await sql`
-        UPDATE products
-        SET stock_quantity = stock_quantity + ${qty}
-        WHERE id = ${product_id} AND company_id = ${companyId}
+        UPDATE raw_materials SET quantity = quantity + ${qty}
+        WHERE id = ${raw_material_id} AND company_id = ${companyId}
       `;
     }
 
-    return res.status(201).json({ success: true, id: purchase.id, total_amount: purchase.total_amount });
+    return res.status(201).json({ success: true, total_amount });
   }
 
-  // DELETE — annuler un achat (et déduire le stock si applicable)
+  // DELETE — annuler un achat (et déduire le stock de la matière première)
   if (req.method === 'DELETE') {
     const { id } = req.body;
-    if (!id) return res.status(400).json({ error: 'ID manquant.' });
-
     const [purchase] = await sql`
-      SELECT id, product_id, quantity FROM purchases
+      SELECT id, raw_material_id, quantity FROM purchases
       WHERE id = ${id} AND company_id = ${companyId}
     `;
     if (!purchase) return res.status(404).json({ error: 'Achat introuvable.' });
 
-    // Annuler le réapprovisionnement si applicable
-    if (purchase.product_id && purchase.quantity) {
+    if (purchase.raw_material_id && purchase.quantity) {
       await sql`
-        UPDATE products
-        SET stock_quantity = GREATEST(0, stock_quantity - ${purchase.quantity})
-        WHERE id = ${purchase.product_id} AND company_id = ${companyId}
+        UPDATE raw_materials
+        SET quantity = GREATEST(0, quantity - ${purchase.quantity})
+        WHERE id = ${purchase.raw_material_id} AND company_id = ${companyId}
       `;
     }
 

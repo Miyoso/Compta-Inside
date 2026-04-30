@@ -25,13 +25,22 @@ export default function PatronDashboard() {
   const [sales, setSales] = useState([]);
   const [purchasesData, setPurchasesData] = useState({ purchases: [], totalPurchases: 0 });
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [rawMaterials, setRawMaterials] = useState([]);
 
   // Formulaire achat
-  const [acName, setAcName]       = useState('');
-  const [acProduct, setAcProduct] = useState('');
-  const [acQty, setAcQty]         = useState('1');
-  const [acPrice, setAcPrice]     = useState('');
-  const [acNotes, setAcNotes]     = useState('');
+  const [acName, setAcName]         = useState('');
+  const [acMaterial, setAcMaterial] = useState(''); // remplace acProduct
+  const [acQty, setAcQty]           = useState('1');
+  const [acPrice, setAcPrice]       = useState('');
+  const [acNotes, setAcNotes]       = useState('');
+
+  // Formulaire matière première
+  const [rmName, setRmName]       = useState('');
+  const [rmUnit, setRmUnit]       = useState('unité');
+  const [rmQty, setRmQty]         = useState('0');
+  const [rmAlert, setRmAlert]     = useState('5');
+  const [editingRm, setEditingRm] = useState(null);
+  const [editingRmStock, setEditingRmStock] = useState(null);
 
   // États UI
   const [loading, setLoading] = useState(false);
@@ -113,6 +122,11 @@ export default function PatronDashboard() {
     setPendingUsers(await r.json());
   }, []);
 
+  const loadRawMaterials = useCallback(async () => {
+    const r = await fetch('/api/patron/raw-materials');
+    setRawMaterials(await r.json());
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     loadOverview();
@@ -120,9 +134,37 @@ export default function PatronDashboard() {
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); }
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
     if (tab === 'produits') loadProducts();
-    if (tab === 'stocks')   loadProducts();
-    if (tab === 'achats')   { loadPurchases(); loadProducts(); }
-  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending]);
+    if (tab === 'stocks')   loadRawMaterials();
+    if (tab === 'achats')   { loadPurchases(); loadRawMaterials(); }
+  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials]);
+
+  // ── Actions matières premières ─────────────────────────────
+  async function handleAddRm(e) {
+    e.preventDefault();
+    setLoading(true);
+    const body = editingRm
+      ? { id: editingRm.id, name: rmName, unit: rmUnit, min_alert: parseFloat(rmAlert) }
+      : { name: rmName, unit: rmUnit, quantity: parseFloat(rmQty) || 0, min_alert: parseFloat(rmAlert) || 5 };
+    const r = await fetch('/api/patron/raw-materials', {
+      method: editingRm ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    setLoading(false);
+    if (r.ok) { showToast(editingRm ? 'Matière première modifiée !' : 'Matière première ajoutée !'); setEditingRm(null); setRmName(''); setRmUnit('unité'); setRmQty('0'); setRmAlert('5'); loadRawMaterials(); }
+    else { const d = await r.json(); showToast(d.error, 'error'); }
+  }
+
+  async function handleDeleteRm(id) {
+    if (!confirm('Supprimer cette matière première ?')) return;
+    await fetch('/api/patron/raw-materials', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    showToast('Supprimée.'); loadRawMaterials();
+  }
+
+  async function handleUpdateRmStock(id, qty) {
+    await fetch('/api/patron/raw-materials', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, quantity: parseFloat(qty) }) });
+    showToast('Stock mis à jour !'); setEditingRmStock(null); loadRawMaterials(); loadOverview();
+  }
 
   // ── Actions validation comptes ─────────────────────────────
   async function handleAccountAction(id, action) {
@@ -149,8 +191,8 @@ export default function PatronDashboard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: acName,
-        product_id: acProduct || null,
-        quantity: parseInt(acQty) || 1,
+        raw_material_id: acMaterial || null,
+        quantity: parseFloat(acQty) || 1,
         unit_price: parseFloat(acPrice),
         notes: acNotes || null,
       }),
@@ -158,9 +200,9 @@ export default function PatronDashboard() {
     const d = await r.json();
     setLoading(false);
     if (r.ok) {
-      showToast(`✅ Achat enregistré — ${fmt(d.total_amount)}${acProduct ? ' · Stock réapprovisionné' : ''}`);
-      setAcName(''); setAcProduct(''); setAcQty('1'); setAcPrice(''); setAcNotes('');
-      loadPurchases(); loadOverview(); if (acProduct) loadProducts();
+      showToast(`✅ Achat enregistré — ${fmt(d.total_amount)}${acMaterial ? ' · Stock matière réapprovisionné' : ''}`);
+      setAcName(''); setAcMaterial(''); setAcQty('1'); setAcPrice(''); setAcNotes('');
+      loadPurchases(); loadOverview(); if (acMaterial) loadRawMaterials();
     } else {
       showToast(d.error, 'error');
     }
@@ -169,22 +211,21 @@ export default function PatronDashboard() {
   async function handleDeletePurchase(id) {
     if (!confirm('Supprimer cet achat ? Le stock sera ajusté si applicable.')) return;
     await fetch('/api/patron/purchases', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    showToast('Achat supprimé.'); loadPurchases(); loadOverview(); loadProducts();
+    showToast('Achat supprimé.'); loadPurchases(); loadOverview(); loadRawMaterials();
   }
 
   // ── Gestion du panier (onglet Ventes) ────────────────────
   function addToCart(product) {
-    if (product.stock_quantity === 0) return;
     setCart((prev) => {
       const exists = prev.find((i) => i.product_id === product.id);
-      if (exists) return prev.map((i) => i.product_id === product.id ? { ...i, quantity: Math.min(i.quantity + 1, product.stock_quantity) } : i);
-      return [...prev, { product_id: product.id, name: product.name, price: product.price, quantity: 1, max: product.stock_quantity }];
+      if (exists) return prev.map((i) => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+      return [...prev, { product_id: product.id, name: product.name, price: product.price, quantity: 1 }];
     });
   }
   function removeFromCart(product_id) { setCart((prev) => prev.filter((i) => i.product_id !== product_id)); }
   function setCartQty(product_id, qty) {
     const n = parseInt(qty); if (isNaN(n) || n < 1) return;
-    setCart((prev) => prev.map((i) => i.product_id === product_id ? { ...i, quantity: Math.min(n, i.max) } : i));
+    setCart((prev) => prev.map((i) => i.product_id === product_id ? { ...i, quantity: n } : i));
   }
   const cartTotal = cart.reduce((a, i) => a + i.price * i.quantity, 0);
 
@@ -199,14 +240,14 @@ export default function PatronDashboard() {
     });
     const d = await r.json();
     setLoading(false);
-    if (r.ok) { showToast(`✅ Facture #${d.invoice_id} créée — ${fmt(d.total_amount)}`); setCart([]); loadProducts(); loadInvoices(); loadOverview(); }
+    if (r.ok) { showToast(`✅ Facture #${d.invoice_id} créée — ${fmt(d.total_amount)}`); setCart([]); loadInvoices(); loadOverview(); }
     else showToast(d.error, 'error');
   }
 
   async function handleDeleteInvoice(id) {
     if (!confirm('Annuler cette facture et remettre le stock ?')) return;
     await fetch('/api/invoices', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    showToast('Facture annulée.'); loadInvoices(); loadProducts(); loadOverview();
+    showToast('Facture annulée.'); loadInvoices(); loadOverview();
   }
 
   // ── Actions produits ──
@@ -216,7 +257,7 @@ export default function PatronDashboard() {
     const r = await fetch('/api/patron/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: pName, category: pCategory, price: parseFloat(pPrice), stock_quantity: parseInt(pStock) || 0, stock_min_alert: parseInt(pAlert) || 5, image_url: pImageUrl || null }),
+      body: JSON.stringify({ name: pName, category: pCategory, price: parseFloat(pPrice), image_url: pImageUrl || null }),
     });
     setLoading(false);
     if (r.ok) { showToast('Produit ajouté !'); setShowAddProduct(false); resetProductForm(); loadProducts(); }
@@ -229,7 +270,7 @@ export default function PatronDashboard() {
     const r = await fetch('/api/patron/products', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: editingProduct.id, name: pName, category: pCategory, price: parseFloat(pPrice), stock_min_alert: parseInt(pAlert) || 5, image_url: pImageUrl || null }),
+      body: JSON.stringify({ id: editingProduct.id, name: pName, category: pCategory, price: parseFloat(pPrice), image_url: pImageUrl || null }),
     });
     setLoading(false);
     if (r.ok) { showToast('Produit modifié !'); setEditingProduct(null); resetProductForm(); loadProducts(); }
@@ -244,11 +285,11 @@ export default function PatronDashboard() {
 
   function openEditProduct(p) {
     setEditingProduct(p);
-    setPName(p.name); setPCategory(p.category); setPPrice(String(p.price)); setPAlert(String(p.stock_min_alert)); setPImageUrl(p.image_url || '');
+    setPName(p.name); setPCategory(p.category); setPPrice(String(p.price)); setPImageUrl(p.image_url || '');
     setShowAddProduct(false);
   }
 
-  function resetProductForm() { setPName(''); setPCategory(''); setPPrice(''); setPStock(''); setPAlert('5'); setPImageUrl(''); }
+  function resetProductForm() { setPName(''); setPCategory(''); setPPrice(''); setPImageUrl(''); }
 
   // ── Actions stock ──
   async function handleUpdateStock(id, qty) {
@@ -497,10 +538,9 @@ export default function PatronDashboard() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
                     {products.map((p) => {
                       const inCart = cart.find((i) => i.product_id === p.id);
-                      const out = p.stock_quantity === 0;
                       return (
-                        <button key={p.id} type="button" disabled={out} onClick={() => addToCart(p)}
-                          style={{ position: 'relative', background: inCart ? '#eff6ff' : '#f8fafc', border: `2px solid ${inCart ? '#2563eb' : '#e2e8f0'}`, borderRadius: 12, padding: '12px 10px', cursor: out ? 'not-allowed' : 'pointer', textAlign: 'center', opacity: out ? 0.45 : 1 }}>
+                        <button key={p.id} type="button" onClick={() => addToCart(p)}
+                          style={{ position: 'relative', background: inCart ? '#eff6ff' : '#f8fafc', border: `2px solid ${inCart ? '#2563eb' : '#e2e8f0'}`, borderRadius: 12, padding: '12px 10px', cursor: 'pointer', textAlign: 'center' }}>
                           {inCart && <div style={{ position: 'absolute', top: -8, right: -8, background: '#2563eb', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{inCart.quantity}</div>}
                           {p.image_url
                             ? <img src={p.image_url} alt={p.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 8, display: 'block', margin: '0 auto 8px' }} onError={e => e.target.style.display='none'} />
@@ -509,9 +549,6 @@ export default function PatronDashboard() {
                           <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', marginBottom: 3 }}>{p.name}</div>
                           <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>{p.category}</div>
                           <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb' }}>{fmt(p.price)}</div>
-                          <div style={{ fontSize: 10, marginTop: 4, fontWeight: 600, color: out ? '#dc2626' : p.stock_quantity <= p.stock_min_alert ? '#f59e0b' : '#16a34a' }}>
-                            {out ? '❌ Épuisé' : `Stock : ${p.stock_quantity}`}
-                          </div>
                         </button>
                       );
                     })}
@@ -533,7 +570,7 @@ export default function PatronDashboard() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <button style={S.qtyBtn2} onClick={() => item.quantity === 1 ? removeFromCart(item.product_id) : setCartQty(item.product_id, item.quantity - 1)}>−</button>
                                 <span style={{ width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{item.quantity}</span>
-                                <button style={S.qtyBtn2} onClick={() => setCartQty(item.product_id, item.quantity + 1)} disabled={item.quantity >= item.max}>+</button>
+                                <button style={S.qtyBtn2} onClick={() => setCartQty(item.product_id, item.quantity + 1)}>+</button>
                               </div>
                               <span style={{ fontSize: 14, fontWeight: 700, color: '#2563eb', flex: 1, textAlign: 'right' }}>{fmt(item.price * item.quantity)}</span>
                               <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 14 }} onClick={() => removeFromCart(item.product_id)}>✕</button>
@@ -647,13 +684,13 @@ export default function PatronDashboard() {
                   </div>
                   <div>
                     <label style={S.label}>
-                      Lier à un produit en stock{' '}
-                      <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel — réapprovisionne automatiquement)</span>
+                      Lier à une matière première{' '}
+                      <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel — ajoute au stock automatiquement)</span>
                     </label>
-                    <select value={acProduct} onChange={e => setAcProduct(e.target.value)} style={S.select}>
-                      <option value="">-- Aucun (achat seul) --</option>
-                      {products.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} (stock actuel : {p.stock_quantity})</option>
+                    <select value={acMaterial} onChange={e => setAcMaterial(e.target.value)} style={S.select}>
+                      <option value="">-- Aucune (achat sans lien stock) --</option>
+                      {rawMaterials.map(m => (
+                        <option key={m.id} value={m.id}>{m.name} (stock : {m.quantity} {m.unit})</option>
                       ))}
                     </select>
                   </div>
@@ -664,16 +701,18 @@ export default function PatronDashboard() {
 
                   {/* Aperçu du total */}
                   {acPrice && acQty && (
-                    <div style={{ gridColumn: '1 / -1', background: '#fefce8', border: '1px solid #fde047', borderRadius: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ gridColumn: '1 / -1', background: '#fefce8', border: '1px solid #fde047', borderRadius: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                       <div>
-                        <span style={{ fontSize: 14, color: '#713f12' }}>Total achat : <strong>{fmt(parseFloat(acPrice || 0) * parseInt(acQty || 1))}</strong></span>
-                        {acPrice && (
-                          <span style={{ fontSize: 13, color: '#92400e', marginLeft: 16 }}>
-                            → Économie impôts : <strong>{fmt(parseFloat(acPrice || 0) * parseInt(acQty || 1) * 0.15)}</strong>
-                          </span>
-                        )}
+                        <span style={{ fontSize: 14, color: '#713f12' }}>Total achat : <strong>{fmt(parseFloat(acPrice || 0) * parseFloat(acQty || 1))}</strong></span>
+                        <span style={{ fontSize: 13, color: '#92400e', marginLeft: 16 }}>
+                          → Économie impôts : <strong>{fmt(parseFloat(acPrice || 0) * parseFloat(acQty || 1) * 0.15)}</strong>
+                        </span>
                       </div>
-                      {acProduct && <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>+ {acQty} unité(s) ajoutée(s) au stock</span>}
+                      {acMaterial && (
+                        <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>
+                          + {acQty} {rawMaterials.find(m => String(m.id) === String(acMaterial))?.unit || 'unité(s)'} au stock
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -705,7 +744,7 @@ export default function PatronDashboard() {
                           <th style={S.th}>Qté</th>
                           <th style={S.th}>Prix unit.</th>
                           <th style={S.th}>Total</th>
-                          <th style={S.th}>Lié au produit</th>
+                          <th style={S.th}>Stock lié</th>
                           <th style={S.th}>Notes</th>
                           <th style={S.th}>Date</th>
                           <th style={S.th}>Action</th>
@@ -719,8 +758,8 @@ export default function PatronDashboard() {
                             <td style={S.td}>{fmt(p.unit_price)}</td>
                             <td style={{ ...S.td, fontWeight: 700, color: '#dc2626' }}>− {fmt(p.total_amount)}</td>
                             <td style={S.td}>
-                              {p.product_name
-                                ? <span style={{ ...S.badge, background: '#dcfce7', color: '#16a34a' }}>📦 {p.product_name}</span>
+                              {p.material_name
+                                ? <span style={{ ...S.badge, background: '#dcfce7', color: '#16a34a' }}>🧪 {p.material_name} ({p.material_unit})</span>
                                 : <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>
                               }
                             </td>
@@ -920,16 +959,6 @@ export default function PatronDashboard() {
                       <label style={S.label}>Prix de vente ($) *</label>
                       <input type="number" min="0" step="0.01" value={pPrice} onChange={e => setPPrice(e.target.value)} required placeholder="0" style={S.input} />
                     </div>
-                    {!editingProduct && (
-                      <div>
-                        <label style={S.label}>Stock initial</label>
-                        <input type="number" min="0" value={pStock} onChange={e => setPStock(e.target.value)} placeholder="0" style={S.input} />
-                      </div>
-                    )}
-                    <div>
-                      <label style={S.label}>Alerte stock bas (seuil)</label>
-                      <input type="number" min="0" value={pAlert} onChange={e => setPAlert(e.target.value)} style={S.input} />
-                    </div>
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={S.label}>Image du produit <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(lien URL — ex: goopics, imgur…)</span></label>
                       <input type="url" value={pImageUrl} onChange={e => setPImageUrl(e.target.value)} placeholder="https://i.goopics.net/abc123.png" style={S.input} />
@@ -960,7 +989,6 @@ export default function PatronDashboard() {
                         <th style={S.th}>Produit</th>
                         <th style={S.th}>Catégorie</th>
                         <th style={S.th}>Prix</th>
-                        <th style={S.th}>Stock</th>
                         <th style={S.th}>Actions</th>
                       </tr>
                     </thead>
@@ -979,11 +1007,6 @@ export default function PatronDashboard() {
                           <td style={S.td}><span style={S.chip}>{p.category}</span></td>
                           <td style={{ ...S.td, fontWeight: 600 }}>{fmt(p.price)}</td>
                           <td style={S.td}>
-                            <span style={{ color: p.stock_quantity <= p.stock_min_alert ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
-                              {p.stock_quantity <= p.stock_min_alert ? '⚠️ ' : ''}{p.stock_quantity}
-                            </span>
-                          </td>
-                          <td style={S.td}>
                             <div style={{ display: 'flex', gap: 6 }}>
                               <button style={S.btnSmall} onClick={() => openEditProduct(p)}>✏️ Modifier</button>
                               <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeleteProduct(p.id)}>🗑️</button>
@@ -999,50 +1022,83 @@ export default function PatronDashboard() {
           )}
 
           {/* ══════════════════════════════════════════
-              ONGLET : STOCKS
+              ONGLET : STOCKS (matières premières)
           ══════════════════════════════════════════ */}
           {tab === 'stocks' && (
             <div>
-              <h2 style={S.sectionTitle}>Gestion des stocks</h2>
+              <h2 style={S.sectionTitle}>Stocks — Matières premières</h2>
 
-              {products.filter(p => p.stock_quantity <= p.stock_min_alert).length > 0 && (
+              {/* Alertes stock bas */}
+              {rawMaterials.filter(m => m.quantity <= m.min_alert).length > 0 && (
                 <div style={S.alertBanner}>
-                  ⚠️ <strong>{products.filter(p => p.stock_quantity <= p.stock_min_alert).length} produit(s)</strong> en stock bas ou épuisé(s) !
+                  ⚠️ <strong>{rawMaterials.filter(m => m.quantity <= m.min_alert).length} matière(s) première(s)</strong> en stock bas !
                 </div>
               )}
 
-              {products.length === 0 ? (
-                <p style={S.empty}>Aucun produit. Allez dans "Produits" pour en ajouter.</p>
+              {/* Formulaire ajout / modification matière première */}
+              <div style={S.formCard}>
+                <h3 style={S.subTitle}>{editingRm ? '✏️ Modifier la matière première' : '➕ Nouvelle matière première'}</h3>
+                <form onSubmit={handleAddRm} style={S.formGrid}>
+                  <div>
+                    <label style={S.label}>Nom *</label>
+                    <input value={rmName} onChange={e => setRmName(e.target.value)} required placeholder="Ex: Café en grains, Lait…" style={S.input} />
+                  </div>
+                  <div>
+                    <label style={S.label}>Unité</label>
+                    <input value={rmUnit} onChange={e => setRmUnit(e.target.value)} placeholder="unité, kg, L…" style={S.input} />
+                  </div>
+                  {!editingRm && (
+                    <div>
+                      <label style={S.label}>Stock initial</label>
+                      <input type="number" min="0" step="0.01" value={rmQty} onChange={e => setRmQty(e.target.value)} placeholder="0" style={S.input} />
+                    </div>
+                  )}
+                  <div>
+                    <label style={S.label}>Seuil d'alerte</label>
+                    <input type="number" min="0" step="0.01" value={rmAlert} onChange={e => setRmAlert(e.target.value)} placeholder="5" style={S.input} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                    {editingRm && (
+                      <button type="button" style={S.btnSecondary} onClick={() => { setEditingRm(null); setRmName(''); setRmUnit('unité'); setRmQty('0'); setRmAlert('5'); }}>Annuler</button>
+                    )}
+                    <button type="submit" style={S.btnPrimary} disabled={loading}>{loading ? 'Enregistrement…' : (editingRm ? 'Enregistrer' : '➕ Ajouter')}</button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Liste des matières premières */}
+              {rawMaterials.length === 0 ? (
+                <p style={S.empty}>Aucune matière première. Ajoutez-en une ci-dessus.</p>
               ) : (
                 <div style={S.tableWrap}>
                   <table style={S.table}>
                     <thead>
                       <tr>
-                        <th style={S.th}>Produit</th>
-                        <th style={S.th}>Catégorie</th>
+                        <th style={S.th}>Matière première</th>
+                        <th style={S.th}>Unité</th>
                         <th style={S.th}>Stock actuel</th>
                         <th style={S.th}>Seuil alerte</th>
                         <th style={S.th}>Statut</th>
-                        <th style={S.th}>Action</th>
+                        <th style={S.th}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((p) => {
-                        const isLow = p.stock_quantity <= p.stock_min_alert;
+                      {rawMaterials.map((m) => {
+                        const isLow = m.quantity <= m.min_alert;
                         return (
-                          <tr key={p.id} style={{ ...S.tr, background: isLow ? '#fff7f7' : '#fff' }}>
-                            <td style={S.td}><strong>{p.name}</strong></td>
-                            <td style={S.td}><span style={S.chip}>{p.category}</span></td>
+                          <tr key={m.id} style={{ ...S.tr, background: isLow ? '#fff7f7' : '#fff' }}>
+                            <td style={S.td}><strong>{m.name}</strong></td>
+                            <td style={S.td}><span style={S.chip}>{m.unit}</span></td>
                             <td style={S.td}>
-                              {editingStock === p.id ? (
-                                <StockEditor current={p.stock_quantity} onSave={(v) => handleUpdateStock(p.id, v)} onCancel={() => setEditingStock(null)} />
+                              {editingRmStock === m.id ? (
+                                <StockEditor current={m.quantity} onSave={(v) => handleUpdateRmStock(m.id, v)} onCancel={() => setEditingRmStock(null)} />
                               ) : (
-                                <span style={{ fontSize: 16, fontWeight: 700, color: isLow ? '#dc2626' : '#1e293b' }}>{p.stock_quantity}</span>
+                                <span style={{ fontSize: 16, fontWeight: 700, color: isLow ? '#dc2626' : '#1e293b' }}>{m.quantity}</span>
                               )}
                             </td>
-                            <td style={S.td}>{p.stock_min_alert}</td>
+                            <td style={S.td}>{m.min_alert}</td>
                             <td style={S.td}>
-                              {p.stock_quantity === 0
+                              {m.quantity === 0
                                 ? <span style={{ ...S.badge, background: '#fee2e2', color: '#dc2626' }}>❌ Épuisé</span>
                                 : isLow
                                 ? <span style={{ ...S.badge, background: '#fef3c7', color: '#d97706' }}>⚠️ Stock bas</span>
@@ -1050,9 +1106,13 @@ export default function PatronDashboard() {
                               }
                             </td>
                             <td style={S.td}>
-                              {editingStock !== p.id && (
-                                <button style={S.btnSmall} onClick={() => setEditingStock(p.id)}>✏️ Modifier</button>
-                              )}
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                {editingRmStock !== m.id && (
+                                  <button style={S.btnSmall} onClick={() => setEditingRmStock(m.id)}>📦 Stock</button>
+                                )}
+                                <button style={S.btnSmall} onClick={() => { setEditingRm(m); setRmName(m.name); setRmUnit(m.unit); setRmAlert(String(m.min_alert)); }}>✏️ Modifier</button>
+                                <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeleteRm(m.id)}>🗑️</button>
+                              </div>
                             </td>
                           </tr>
                         );

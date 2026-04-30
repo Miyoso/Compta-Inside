@@ -45,10 +45,10 @@ export default async function handler(req, res) {
   `;
   const totalSalaries = salRow.total;
 
-  // Alertes stock bas
+  // Alertes stock bas (matières premières, pas les produits)
   const [alertRow] = await sql`
-    SELECT COUNT(*)::int AS count FROM products
-    WHERE company_id = ${companyId} AND stock_quantity <= stock_min_alert
+    SELECT COUNT(*)::int AS count FROM raw_materials
+    WHERE company_id = ${companyId} AND quantity <= min_alert
   `;
 
   // 10 dernières ventes
