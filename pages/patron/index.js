@@ -362,6 +362,17 @@ export default function PatronDashboard() {
   }
 
   // ── Actions employés ──
+  async function handleFireEmployee(id, name) {
+    if (!confirm(`Virer ${name} ? Il/elle ne pourra plus accéder à l'application. L'historique des ventes est conservé.`)) return;
+    const r = await fetch('/api/patron/employees', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    if (r.ok) { showToast(`${name} a été retiré(e) de l'entreprise.`); loadEmployees(); }
+    else { const d = await r.json(); showToast(d.error, 'error'); }
+  }
+
   async function handleUpdateSalaryPercent(id, pct) {
     const r = await fetch('/api/patron/employees', {
       method: 'PUT',
@@ -992,7 +1003,12 @@ export default function PatronDashboard() {
                             <SalaryEditor current={emp.salary_percent} onSave={(v) => handleUpdateSalaryPercent(emp.id, v)} onCancel={() => setEditingEmployee(null)} />
                           </div>
                         ) : (
-                          <button style={{ ...S.btnSmall, marginTop: 10, width: '100%' }} onClick={() => setEditingEmployee(emp.id)}>✏️ Modifier le %</button>
+                          <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                            <button style={{ ...S.btnSmall, flex: 1 }} onClick={() => setEditingEmployee(emp.id)}>✏️ % Salaire</button>
+                            {emp.role !== 'patron' && (
+                              <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleFireEmployee(emp.id, emp.name)} title="Virer cet employé">🚫</button>
+                            )}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -1050,6 +1066,9 @@ export default function PatronDashboard() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <span style={{ fontWeight: 600 }}>{emp.salary_percent}%</span>
                                   <button style={S.btnSmall} onClick={() => setEditingEmployee(emp.id)}>✏️</button>
+                                  {emp.role !== 'patron' && (
+                                    <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleFireEmployee(emp.id, emp.name)}>🚫 Virer</button>
+                                  )}
                                 </div>
                               )}
                             </td>

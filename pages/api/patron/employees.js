@@ -60,5 +60,21 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // DELETE — virer un employé (passe en inactive, conserve l'historique)
+  if (req.method === 'DELETE') {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'ID manquant.' });
+
+    // Un patron ne peut pas se virer lui-même
+    const [target] = await sql`SELECT id, role FROM users WHERE id = ${id} AND company_id = ${companyId}`;
+    if (!target) return res.status(404).json({ error: 'Employé introuvable.' });
+    if (target.role === 'patron' && token.role !== 'admin') {
+      return res.status(403).json({ error: 'Impossible de virer un patron.' });
+    }
+
+    await sql`UPDATE users SET status = 'inactive' WHERE id = ${id} AND company_id = ${companyId}`;
+    return res.status(200).json({ success: true });
+  }
+
   return res.status(405).end();
 }
