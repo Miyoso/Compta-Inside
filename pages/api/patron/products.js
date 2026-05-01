@@ -66,8 +66,10 @@ export default async function handler(req, res) {
         });
       }
 
-      // Supprimer la recette liée d'abord
-      await sql`DELETE FROM product_recipes WHERE product_id = ${parseInt(id)} AND company_id = ${companyId}`;
+      // Supprimer la recette liée d'abord (si la table existe)
+      try {
+        await sql`DELETE FROM product_recipes WHERE product_id = ${parseInt(id)} AND company_id = ${companyId}`;
+      } catch {}
       // Supprimer le produit
       await sql`DELETE FROM products WHERE id = ${parseInt(id)} AND company_id = ${companyId}`;
       return res.status(200).json({ success: true });
