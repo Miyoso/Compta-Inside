@@ -1447,8 +1447,8 @@ function StockEditor({ current, onSave, onCancel }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <input type="number" min="0" value={val} onChange={e => setVal(e.target.value)}
-        style={{ width: 70, padding: '4px 8px', border: '1.5px solid #92400e', borderRadius: 6, fontSize: 14 }} />
-      <button style={{ ...S.btnSmall, background: '#92400e', color: '#fff', borderColor: '#92400e' }} onClick={() => onSave(val)}>✓</button>
+        style={{ width: 70, padding: '5px 9px', border: '1.5px solid #b5541a', borderRadius: 7, fontSize: 14 }} />
+      <button style={{ ...S.btnSmall, background: '#b5541a', color: '#fff', borderColor: '#b5541a' }} onClick={() => onSave(val)}>✓</button>
       <button style={S.btnSmall} onClick={onCancel}>✕</button>
     </div>
   );
@@ -1491,109 +1491,110 @@ function SalaryEditor({ current, onSave, onCancel }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <input type="number" min="0" max="100" step="0.5" value={val} onChange={e => setVal(e.target.value)}
-        style={{ width: 70, padding: '4px 8px', border: '1.5px solid #92400e', borderRadius: 6, fontSize: 14 }} />
-      <span>%</span>
-      <button style={{ ...S.btnSmall, background: '#92400e', color: '#fff', borderColor: '#92400e' }} onClick={() => onSave(val)}>✓</button>
+        style={{ width: 70, padding: '5px 9px', border: '1.5px solid #b5541a', borderRadius: 7, fontSize: 14 }} />
+      <span style={{ color: '#9c7a60', fontWeight: 600 }}>%</span>
+      <button style={{ ...S.btnSmall, background: '#b5541a', color: '#fff', borderColor: '#b5541a' }} onClick={() => onSave(val)}>✓</button>
       <button style={S.btnSmall} onClick={onCancel}>✕</button>
     </div>
   );
 }
 
-// ─── Styles — Palette café ☕ ─────────────────────────────────
-// Espresso #2c1a0e · Caramel #92400e · Latte #c8956c
-// Crème #fdf6ee · Beige clair #f5ece0 · Bordure #e8d5c4
+// ─── Styles — Café Premium ☕ ──────────────────────────────────
+// Philosophie : cartes blanches flottantes sur fond crème très doux,
+// nav espresso premium, accent caramel utilisé avec parcimonie.
+// Noir texte = #1a0f0a · Accent = #b5541a · Fond = #f7f2ec
 const S = {
-  page: { minHeight: '100vh', background: '#fdf6ee', fontFamily: "'Segoe UI', Arial, sans-serif" },
-  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fdf6ee' },
-  spinner: { width: 40, height: 40, border: '4px solid #e8d5c4', borderTop: '4px solid #92400e', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+  page: { minHeight: '100vh', background: '#f7f2ec', fontFamily: "'Segoe UI', system-ui, Arial, sans-serif" },
+  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f2ec' },
+  spinner: { width: 40, height: 40, border: '4px solid #e5d9ce', borderTop: '4px solid #b5541a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
 
-  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '12px 20px', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 4px 16px rgba(44,26,14,0.25)' },
+  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 20px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' },
 
-  // ── Navigation espresso foncé
-  nav: { background: '#2c1a0e', borderBottom: '1px solid #3d2412', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 },
-  navLeft: { display: 'flex', alignItems: 'center', gap: 14 },
-  navLogo: { fontWeight: 800, fontSize: 18, color: '#f5ece0', letterSpacing: 0.3 },
-  navCompany: { background: '#92400e', color: '#fef0dc', padding: '3px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
-  navRight: { display: 'flex', alignItems: 'center', gap: 12 },
-  navUser: { color: '#c8956c', fontSize: 14 },
-  navBtn: { padding: '6px 14px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#f5ece0', fontWeight: 600 },
+  // ── Navigation : dégradé espresso premium
+  nav: { background: 'linear-gradient(135deg, #1a0f0a 0%, #2d1507 100%)', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 62, boxShadow: '0 2px 12px rgba(0,0,0,0.3)' },
+  navLeft: { display: 'flex', alignItems: 'center', gap: 16 },
+  navLogo: { fontWeight: 800, fontSize: 19, color: '#fff', letterSpacing: 0.2 },
+  navCompany: { background: 'rgba(181,84,26,0.85)', color: '#ffe8d6', padding: '4px 13px', borderRadius: 20, fontSize: 12, fontWeight: 700, letterSpacing: 0.3 },
+  navRight: { display: 'flex', alignItems: 'center', gap: 14 },
+  navUser: { color: '#c9a882', fontSize: 13 },
+  navBtn: { padding: '6px 14px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#f0e0d0', fontWeight: 500, transition: 'background 0.2s' },
 
-  // ── Onglets beige chaud
-  tabBar: { background: '#fff8f1', borderBottom: '1px solid #e8d5c4', display: 'flex', padding: '0 24px', overflowX: 'auto' },
-  tabBtn: { padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: '#a07850', whiteSpace: 'nowrap', borderBottom: '2px solid transparent' },
-  tabBtnActive: { color: '#7c3a1e', borderBottom: '2px solid #92400e', background: '#fdf0e4', fontWeight: 700 },
+  // ── Onglets : blanc propre, accent caramel
+  tabBar: { background: '#ffffff', borderBottom: '1px solid #ecddd2', display: 'flex', padding: '0 28px', overflowX: 'auto', boxShadow: '0 1px 0 #ecddd2' },
+  tabBtn: { padding: '15px 18px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 500, color: '#9c7a60', whiteSpace: 'nowrap', borderBottom: '2px solid transparent', transition: 'color 0.2s' },
+  tabBtnActive: { color: '#b5541a', borderBottom: '2px solid #b5541a', fontWeight: 700 },
 
-  main: { maxWidth: 1100, margin: '0 auto', padding: '28px 24px' },
-  sectionTitle: { fontSize: 22, fontWeight: 700, color: '#2c1a0e', marginBottom: 20 },
+  main: { maxWidth: 1100, margin: '0 auto', padding: '30px 24px' },
+  sectionTitle: { fontSize: 22, fontWeight: 700, color: '#1a0f0a', marginBottom: 20, letterSpacing: -0.3 },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 },
-  subTitle: { fontSize: 16, fontWeight: 600, color: '#5c3317', marginBottom: 12 },
-  loading: { color: '#c8956c', fontStyle: 'italic' },
-  empty: { color: '#c8956c', textAlign: 'center', padding: 40, background: '#fff8f1', borderRadius: 12, border: '1px dashed #e8d5c4' },
+  subTitle: { fontSize: 15, fontWeight: 700, color: '#3d2010', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 12 },
+  loading: { color: '#b89880', fontStyle: 'italic' },
+  empty: { color: '#b89880', textAlign: 'center', padding: 48, background: '#fff', borderRadius: 16, border: '1px dashed #ddd0c4' },
 
-  // ── KPI cards crème
-  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 },
-  kpiCard: { background: '#fff8f1', borderRadius: 12, padding: '20px', border: '2px solid #e8d5c4', boxShadow: '0 1px 6px rgba(44,26,14,0.06)' },
-  kpiIcon: { fontSize: 28, marginBottom: 8 },
-  kpiLabel: { fontSize: 13, color: '#a07850', marginBottom: 4 },
-  kpiValue: { fontSize: 24, fontWeight: 700, color: '#2c1a0e' },
+  // ── KPI cards blanches flottantes
+  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14, marginBottom: 28 },
+  kpiCard: { background: '#ffffff', borderRadius: 16, padding: '22px 20px', border: '1px solid #ecddd2', boxShadow: '0 2px 12px rgba(90,45,15,0.07)' },
+  kpiIcon: { fontSize: 26, marginBottom: 10 },
+  kpiLabel: { fontSize: 12, color: '#9c7a60', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 },
+  kpiValue: { fontSize: 26, fontWeight: 800, color: '#1a0f0a', letterSpacing: -0.5 },
 
-  alertBanner: { background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: 10, padding: '12px 16px', marginBottom: 20, color: '#78350f', fontSize: 14 },
-  alertLink: { background: 'none', border: 'none', color: '#92400e', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline', fontSize: 14 },
+  alertBanner: { background: '#fffbeb', border: '1px solid #fbbf24', borderRadius: 12, padding: '13px 18px', marginBottom: 20, color: '#7c4a0a', fontSize: 14, fontWeight: 500 },
+  alertLink: { background: 'none', border: 'none', color: '#b5541a', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline', fontSize: 14 },
 
-  taxBox: { background: '#fff8f1', border: '1px solid #e8d5c4', borderRadius: 12, padding: '20px 24px', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420 },
-  taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#5c3317' },
+  taxBox: { background: '#fff', border: '1px solid #ecddd2', borderRadius: 14, padding: '20px 24px', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420, boxShadow: '0 2px 10px rgba(90,45,15,0.06)' },
+  taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#3d2010' },
 
   // ── Tableaux
-  tableWrap: { overflowX: 'auto', borderRadius: 12, boxShadow: '0 1px 6px rgba(44,26,14,0.07)' },
-  table: { width: '100%', borderCollapse: 'collapse', background: '#fff8f1', borderRadius: 12, overflow: 'hidden' },
-  th: { background: '#f5ece0', padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8d5c4' },
-  tr: { borderBottom: '1px solid #f5ece0' },
-  td: { padding: '13px 16px', fontSize: 14, color: '#3d1f0d', verticalAlign: 'middle' },
+  tableWrap: { overflowX: 'auto', borderRadius: 14, boxShadow: '0 2px 14px rgba(90,45,15,0.08)' },
+  table: { width: '100%', borderCollapse: 'collapse', background: '#ffffff', borderRadius: 14, overflow: 'hidden' },
+  th: { background: '#faf5f0', padding: '13px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#9c7a60', textTransform: 'uppercase', letterSpacing: 0.7, borderBottom: '1px solid #ecddd2' },
+  tr: { borderBottom: '1px solid #f5ede5' },
+  td: { padding: '14px 16px', fontSize: 14, color: '#2d1507', verticalAlign: 'middle' },
 
   badge: { padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 },
-  chip: { background: '#f5ece0', color: '#7c3a1e', padding: '2px 10px', borderRadius: 20, fontSize: 12 },
+  chip: { background: '#f5ede5', color: '#7c4a0a', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 },
 
-  // ── Boutons caramel
-  btnPrimary:   { padding: '9px 18px', background: '#92400e', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600 },
-  btnSecondary: { padding: '9px 18px', background: '#f5ece0', color: '#5c3317', border: '1px solid #e8d5c4', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600 },
-  btnSmall:     { padding: '5px 10px', background: '#fff8f1', color: '#5c3317', border: '1px solid #e8d5c4', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 500 },
+  // ── Boutons
+  btnPrimary:   { padding: '9px 20px', background: '#b5541a', color: '#fff', border: 'none', borderRadius: 9, cursor: 'pointer', fontSize: 14, fontWeight: 600, boxShadow: '0 2px 8px rgba(181,84,26,0.25)' },
+  btnSecondary: { padding: '9px 18px', background: '#fff', color: '#5c3010', border: '1px solid #ddd0c4', borderRadius: 9, cursor: 'pointer', fontSize: 14, fontWeight: 500 },
+  btnSmall:     { padding: '5px 11px', background: '#fff', color: '#5c3010', border: '1px solid #ddd0c4', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontWeight: 500 },
 
   // ── Formulaires
-  formCard: { background: '#fff8f1', border: '1px solid #e8d5c4', borderRadius: 12, padding: '24px', marginBottom: 24 },
+  formCard: { background: '#ffffff', border: '1px solid #ecddd2', borderRadius: 16, padding: '26px', marginBottom: 24, boxShadow: '0 2px 12px rgba(90,45,15,0.06)' },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, alignItems: 'start' },
   form: { display: 'flex', flexDirection: 'column', gap: 12 },
-  label: { fontSize: 13, fontWeight: 600, color: '#5c3317', marginBottom: 4, display: 'block' },
-  input: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8d5c4', borderRadius: 8, fontSize: 14, color: '#2c1a0e', background: '#fffaf5', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8d5c4', borderRadius: 8, fontSize: 14, color: '#2c1a0e', background: '#fffaf5', boxSizing: 'border-box' },
-  calcPreview: { padding: '10px 14px', background: '#fef0dc', borderRadius: 8, fontSize: 14, color: '#7c3a1e' },
+  label: { fontSize: 12, fontWeight: 700, color: '#7c4a0a', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: 0.4 },
+  input: { width: '100%', padding: '10px 13px', border: '1.5px solid #ddd0c4', borderRadius: 9, fontSize: 14, color: '#1a0f0a', background: '#fff', boxSizing: 'border-box', outline: 'none' },
+  select: { width: '100%', padding: '10px 13px', border: '1.5px solid #ddd0c4', borderRadius: 9, fontSize: 14, color: '#1a0f0a', background: '#fff', boxSizing: 'border-box' },
+  calcPreview: { padding: '10px 14px', background: '#fef6ee', borderRadius: 9, fontSize: 14, color: '#7c4a0a', border: '1px solid #f0dfd2' },
 
-  modal: { position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 },
-  modalBox: { background: '#fff8f1', borderRadius: 16, padding: 32, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(44,26,14,0.25)' },
-  modalTitle: { fontSize: 18, fontWeight: 700, color: '#2c1a0e', marginBottom: 20 },
+  modal: { position: 'fixed', inset: 0, background: 'rgba(26,15,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 },
+  modalBox: { background: '#fff', borderRadius: 18, padding: 32, width: '100%', maxWidth: 440, boxShadow: '0 24px 64px rgba(26,15,10,0.3)' },
+  modalTitle: { fontSize: 18, fontWeight: 700, color: '#1a0f0a', marginBottom: 20 },
   modalActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 },
-  qtyBtn2: { width: 28, height: 28, border: '1px solid #e8d5c4', borderRadius: 6, background: '#fff8f1', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#5c3317' },
+  qtyBtn2: { width: 30, height: 30, border: '1px solid #ddd0c4', borderRadius: 7, background: '#faf5f0', cursor: 'pointer', fontSize: 17, fontWeight: 700, color: '#5c3010', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 
   // ── Validation comptes
-  pendingBox:     { background: '#fef9f0', border: '1px solid #fbbf24', borderRadius: 12, padding: '16px 20px', marginBottom: 20 },
-  pendingTitle:   { fontWeight: 700, fontSize: 15, color: '#78350f', marginBottom: 12 },
+  pendingBox:     { background: '#fffcf5', border: '1px solid #fbbf24', borderRadius: 14, padding: '18px 22px', marginBottom: 22, boxShadow: '0 2px 8px rgba(251,191,36,0.1)' },
+  pendingTitle:   { fontWeight: 700, fontSize: 15, color: '#7c4a0a', marginBottom: 14 },
   pendingList:    { display: 'flex', flexDirection: 'column', gap: 10 },
-  pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff8f1', borderRadius: 10, padding: '12px 16px', flexWrap: 'wrap', gap: 10 },
-  pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 2 },
-  pendingEmail:   { fontSize: 13, color: '#a07850' },
-  pendingDate:    { fontSize: 12, color: '#c8956c' },
+  pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', borderRadius: 10, padding: '13px 16px', flexWrap: 'wrap', gap: 10, border: '1px solid #f0dfd2' },
+  pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 3 },
+  pendingEmail:   { fontSize: 13, color: '#9c7a60' },
+  pendingDate:    { fontSize: 12, color: '#b89880' },
   pendingActions: { display: 'flex', gap: 8 },
-  btnApprove:     { padding: '7px 14px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
-  btnReject:      { padding: '7px 14px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
+  btnApprove:     { padding: '7px 16px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
+  btnReject:      { padding: '7px 16px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
 
-  // ── Bloc IRS (gardé en rouge — important)
-  irsBox:   { background: 'linear-gradient(135deg, #fff1f2 0%, #fef2f2 100%)', border: '2px solid #fca5a5', borderRadius: 16, padding: '24px 28px', marginBottom: 24, display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' },
+  // ── Bloc IRS (rouge conservé — alerte fiscale)
+  irsBox:   { background: 'linear-gradient(135deg, #fff5f5 0%, #fff1f2 100%)', border: '1.5px solid #fca5a5', borderRadius: 18, padding: '24px 28px', marginBottom: 28, display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start', boxShadow: '0 4px 20px rgba(220,38,38,0.07)' },
   irsLeft:  { flex: 1, minWidth: 200 },
-  irsRight: { flex: 2, minWidth: 260, background: '#fff8f1', borderRadius: 12, padding: '16px 20px', border: '1px solid #fca5a5' },
-  irsRow:   { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#3d1f0d', marginBottom: 6 },
+  irsRight: { flex: 2, minWidth: 260, background: '#fff', borderRadius: 12, padding: '18px 22px', border: '1px solid #fca5a5', boxShadow: '0 2px 8px rgba(220,38,38,0.05)' },
+  irsRow:   { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#3d2010', marginBottom: 7 },
 
   // ── Achats
   purchaseSummary: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 },
-  pSumItem:  { background: '#fff8f1', borderRadius: 12, padding: '16px 20px', flex: 1, minWidth: 150, boxShadow: '0 1px 6px rgba(44,26,14,0.06)', border: '1px solid #e8d5c4' },
-  pSumLabel: { fontSize: 12, color: '#a07850', marginBottom: 6, fontWeight: 500 },
-  pSumValue: { fontSize: 20, fontWeight: 800, color: '#2c1a0e' },
+  pSumItem:  { background: '#ffffff', borderRadius: 14, padding: '18px 20px', flex: 1, minWidth: 150, boxShadow: '0 2px 10px rgba(90,45,15,0.07)', border: '1px solid #ecddd2' },
+  pSumLabel: { fontSize: 11, color: '#9c7a60', marginBottom: 7, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 },
+  pSumValue: { fontSize: 22, fontWeight: 800, color: '#1a0f0a' },
 };
