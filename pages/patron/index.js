@@ -222,7 +222,7 @@ export default function PatronDashboard() {
         name: acName,
         raw_material_id: acMaterial || null,
         quantity: parseFloat(acQty) || 1,
-        unit_price: parseFloat(acPrice),
+        unit_price: parseFloat(acPrice) / (parseFloat(acQty) || 1), // prix par unité = lot / qté
         notes: acNotes || null,
       }),
     });
@@ -804,32 +804,58 @@ export default function PatronDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label style={S.label}>Prix unitaire ($) *</label>
-                    <input type="number" min="0" step="0.01" value={acPrice} onChange={e => setAcPrice(e.target.value)} required placeholder="0.00" style={S.input} />
+                    <label style={S.label}>Quantité dans le lot *</label>
+                    <input type="number" min="0.001" step="0.001" value={acQty} onChange={e => setAcQty(e.target.value)} required
+                      placeholder={`Ex: 24`}
+                      style={S.input} />
+                    {acMaterial && <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>unité : <strong>{rawMaterials.find(m => String(m.id) === String(acMaterial))?.unit || '—'}</strong></div>}
                   </div>
                   <div>
-                    <label style={S.label}>Quantité achetée</label>
-                    <input type="number" min="1" step="0.001" value={acQty} onChange={e => setAcQty(e.target.value)} style={S.input} />
+                    <label style={S.label}>Prix du lot ($) *</label>
+                    <input type="number" min="0" step="0.01" value={acPrice} onChange={e => setAcPrice(e.target.value)} required placeholder="Ex: 120.00" style={S.input} />
+                    {acPrice && acQty && parseFloat(acQty) > 0 && (
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                        → <strong>{fmt(parseFloat(acPrice) / parseFloat(acQty))}</strong> / unité
+                      </div>
+                    )}
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={S.label}>Notes <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel)</span></label>
                     <input value={acNotes} onChange={e => setAcNotes(e.target.value)} placeholder="Ex: Fournisseur X, livraison urgente…" style={S.input} />
                   </div>
 
-                  {/* Aperçu du total */}
-                  {acMaterial && acPrice && acQty && (() => {
+                  {/* Aperçu du lot */}
+                  {acMaterial && acPrice && acQty && parseFloat(acQty) > 0 && (() => {
                     const rm = rawMaterials.find(m => String(m.id) === String(acMaterial));
-                    const total = parseFloat(acPrice || 0) * parseFloat(acQty || 1);
+                    const lotTotal = parseFloat(acPrice || 0);
+                    const qty = parseFloat(acQty || 1);
+                    const unitPrice = lotTotal / qty;
                     return (
-                      <div style={{ gridColumn: '1 / -1', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                        <div>
-                          <div style={{ fontSize: 14, color: '#14532d', fontWeight: 600, marginBottom: 4 }}>
-                            📦 {rm?.name} — {acQty} {rm?.unit} @ {fmt(parseFloat(acPrice))} / unité
+                      <div style={{ gridColumn: '1 / -1', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '14px 16px' }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: '#14532d', marginBottom: 8 }}>
+                          📦 Récapitulatif du lot
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                          <div style={{ fontSize: 13, color: '#166534' }}>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>MATIÈRE</div>
+                            <strong>{rm?.name}</strong>
                           </div>
-                          <span style={{ fontSize: 14, color: '#166534' }}>Total : <strong>{fmt(total)}</strong></span>
-                          <span style={{ fontSize: 12, color: '#16a34a', marginLeft: 12 }}>
-                            → Nouveau stock : {parseFloat(rm?.quantity || 0) + parseFloat(acQty || 0)} {rm?.unit}
-                          </span>
+                          <div style={{ fontSize: 13, color: '#166534' }}>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>QUANTITÉ AJOUTÉE</div>
+                            <strong>+{qty} {rm?.unit}</strong>
+                          </div>
+                          <div style={{ fontSize: 13, color: '#166534' }}>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>PRIX PAR UNITÉ</div>
+                            <strong>{fmt(unitPrice)} / {rm?.unit}</strong>
+                          </div>
+                          <div style={{ fontSize: 13, color: '#166534' }}>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>TOTAL LOT</div>
+                            <strong style={{ fontSize: 16 }}>{fmt(lotTotal)}</strong>
+                          </div>
+                          <div style={{ fontSize: 13, color: '#166534' }}>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>STOCK APRÈS</div>
+                            <strong>{parseFloat(rm?.quantity || 0) + qty} {rm?.unit}</strong>
+                          </div>
                         </div>
                       </div>
                     );
