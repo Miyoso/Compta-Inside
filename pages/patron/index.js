@@ -1447,8 +1447,8 @@ function StockEditor({ current, onSave, onCancel }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <input type="number" min="0" value={val} onChange={e => setVal(e.target.value)}
-        style={{ width: 70, padding: '4px 8px', border: '1.5px solid #2563eb', borderRadius: 6, fontSize: 14 }} />
-      <button style={{ ...S.btnSmall, background: '#2563eb', color: '#fff', borderColor: '#2563eb' }} onClick={() => onSave(val)}>✓</button>
+        style={{ width: 70, padding: '4px 8px', border: '1.5px solid #92400e', borderRadius: 6, fontSize: 14 }} />
+      <button style={{ ...S.btnSmall, background: '#92400e', color: '#fff', borderColor: '#92400e' }} onClick={() => onSave(val)}>✓</button>
       <button style={S.btnSmall} onClick={onCancel}>✕</button>
     </div>
   );
@@ -1491,101 +1491,109 @@ function SalaryEditor({ current, onSave, onCancel }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <input type="number" min="0" max="100" step="0.5" value={val} onChange={e => setVal(e.target.value)}
-        style={{ width: 70, padding: '4px 8px', border: '1.5px solid #2563eb', borderRadius: 6, fontSize: 14 }} />
+        style={{ width: 70, padding: '4px 8px', border: '1.5px solid #92400e', borderRadius: 6, fontSize: 14 }} />
       <span>%</span>
-      <button style={{ ...S.btnSmall, background: '#2563eb', color: '#fff', borderColor: '#2563eb' }} onClick={() => onSave(val)}>✓</button>
+      <button style={{ ...S.btnSmall, background: '#92400e', color: '#fff', borderColor: '#92400e' }} onClick={() => onSave(val)}>✓</button>
       <button style={S.btnSmall} onClick={onCancel}>✕</button>
     </div>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────
+// ─── Styles — Palette café ☕ ─────────────────────────────────
+// Espresso #2c1a0e · Caramel #92400e · Latte #c8956c
+// Crème #fdf6ee · Beige clair #f5ece0 · Bordure #e8d5c4
 const S = {
-  page: { minHeight: '100vh', background: '#f1f5f9', fontFamily: "'Segoe UI', Arial, sans-serif" },
-  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' },
-  spinner: { width: 40, height: 40, border: '4px solid #e0e0e0', borderTop: '4px solid #2563eb', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+  page: { minHeight: '100vh', background: '#fdf6ee', fontFamily: "'Segoe UI', Arial, sans-serif" },
+  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fdf6ee' },
+  spinner: { width: 40, height: 40, border: '4px solid #e8d5c4', borderTop: '4px solid #92400e', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
 
-  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '12px 20px', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 4px 16px rgba(0,0,0,0.15)' },
+  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '12px 20px', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 4px 16px rgba(44,26,14,0.25)' },
 
-  nav: { background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 58 },
+  // ── Navigation espresso foncé
+  nav: { background: '#2c1a0e', borderBottom: '1px solid #3d2412', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 },
   navLeft: { display: 'flex', alignItems: 'center', gap: 14 },
-  navLogo: { fontWeight: 700, fontSize: 18, color: '#1e293b' },
-  navCompany: { background: '#dbeafe', color: '#1d4ed8', padding: '3px 10px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
+  navLogo: { fontWeight: 800, fontSize: 18, color: '#f5ece0', letterSpacing: 0.3 },
+  navCompany: { background: '#92400e', color: '#fef0dc', padding: '3px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
   navRight: { display: 'flex', alignItems: 'center', gap: 12 },
-  navUser: { color: '#64748b', fontSize: 14 },
-  navBtn: { padding: '6px 14px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#374151', fontWeight: 600 },
+  navUser: { color: '#c8956c', fontSize: 14 },
+  navBtn: { padding: '6px 14px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#f5ece0', fontWeight: 600 },
 
-  tabBar: { background: '#fff', borderBottom: '1px solid #e2e8f0', display: 'flex', padding: '0 24px', overflowX: 'auto' },
-  tabBtn: { padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: '#64748b', whiteSpace: 'nowrap', borderBottom: '2px solid transparent' },
-  tabBtnActive: { color: '#2563eb', borderBottom: '2px solid #2563eb', background: '#f8faff' },
+  // ── Onglets beige chaud
+  tabBar: { background: '#fff8f1', borderBottom: '1px solid #e8d5c4', display: 'flex', padding: '0 24px', overflowX: 'auto' },
+  tabBtn: { padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: '#a07850', whiteSpace: 'nowrap', borderBottom: '2px solid transparent' },
+  tabBtnActive: { color: '#7c3a1e', borderBottom: '2px solid #92400e', background: '#fdf0e4', fontWeight: 700 },
 
   main: { maxWidth: 1100, margin: '0 auto', padding: '28px 24px' },
-  sectionTitle: { fontSize: 22, fontWeight: 700, color: '#1e293b', marginBottom: 20 },
+  sectionTitle: { fontSize: 22, fontWeight: 700, color: '#2c1a0e', marginBottom: 20 },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 },
-  subTitle: { fontSize: 16, fontWeight: 600, color: '#374151', marginBottom: 12 },
-  loading: { color: '#94a3b8', fontStyle: 'italic' },
-  empty: { color: '#94a3b8', textAlign: 'center', padding: 40, background: '#fff', borderRadius: 12, border: '1px dashed #e2e8f0' },
+  subTitle: { fontSize: 16, fontWeight: 600, color: '#5c3317', marginBottom: 12 },
+  loading: { color: '#c8956c', fontStyle: 'italic' },
+  empty: { color: '#c8956c', textAlign: 'center', padding: 40, background: '#fff8f1', borderRadius: 12, border: '1px dashed #e8d5c4' },
 
+  // ── KPI cards crème
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 },
-  kpiCard: { background: '#fff', borderRadius: 12, padding: '20px', border: '2px solid #e2e8f0', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' },
+  kpiCard: { background: '#fff8f1', borderRadius: 12, padding: '20px', border: '2px solid #e8d5c4', boxShadow: '0 1px 6px rgba(44,26,14,0.06)' },
   kpiIcon: { fontSize: 28, marginBottom: 8 },
-  kpiLabel: { fontSize: 13, color: '#64748b', marginBottom: 4 },
-  kpiValue: { fontSize: 24, fontWeight: 700, color: '#1e293b' },
+  kpiLabel: { fontSize: 13, color: '#a07850', marginBottom: 4 },
+  kpiValue: { fontSize: 24, fontWeight: 700, color: '#2c1a0e' },
 
-  alertBanner: { background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 10, padding: '12px 16px', marginBottom: 20, color: '#92400e', fontSize: 14 },
+  alertBanner: { background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: 10, padding: '12px 16px', marginBottom: 20, color: '#78350f', fontSize: 14 },
   alertLink: { background: 'none', border: 'none', color: '#92400e', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline', fontSize: 14 },
 
-  taxBox: { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 24px', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420 },
-  taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#374151' },
+  taxBox: { background: '#fff8f1', border: '1px solid #e8d5c4', borderRadius: 12, padding: '20px 24px', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420 },
+  taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#5c3317' },
 
-  tableWrap: { overflowX: 'auto', borderRadius: 12, boxShadow: '0 1px 6px rgba(0,0,0,0.06)' },
-  table: { width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 12, overflow: 'hidden' },
-  th: { background: '#f8fafc', padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0' },
-  tr: { borderBottom: '1px solid #f1f5f9' },
-  td: { padding: '13px 16px', fontSize: 14, color: '#374151', verticalAlign: 'middle' },
+  // ── Tableaux
+  tableWrap: { overflowX: 'auto', borderRadius: 12, boxShadow: '0 1px 6px rgba(44,26,14,0.07)' },
+  table: { width: '100%', borderCollapse: 'collapse', background: '#fff8f1', borderRadius: 12, overflow: 'hidden' },
+  th: { background: '#f5ece0', padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8d5c4' },
+  tr: { borderBottom: '1px solid #f5ece0' },
+  td: { padding: '13px 16px', fontSize: 14, color: '#3d1f0d', verticalAlign: 'middle' },
 
   badge: { padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 },
-  chip: { background: '#f1f5f9', color: '#475569', padding: '2px 10px', borderRadius: 20, fontSize: 12 },
+  chip: { background: '#f5ece0', color: '#7c3a1e', padding: '2px 10px', borderRadius: 20, fontSize: 12 },
 
-  btnPrimary: { padding: '9px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600 },
-  btnSecondary: { padding: '9px 18px', background: '#f1f5f9', color: '#374151', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600 },
-  btnSmall: { padding: '5px 10px', background: '#fff', color: '#374151', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 500 },
+  // ── Boutons caramel
+  btnPrimary:   { padding: '9px 18px', background: '#92400e', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600 },
+  btnSecondary: { padding: '9px 18px', background: '#f5ece0', color: '#5c3317', border: '1px solid #e8d5c4', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600 },
+  btnSmall:     { padding: '5px 10px', background: '#fff8f1', color: '#5c3317', border: '1px solid #e8d5c4', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 500 },
 
-  formCard: { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '24px', marginBottom: 24 },
+  // ── Formulaires
+  formCard: { background: '#fff8f1', border: '1px solid #e8d5c4', borderRadius: 12, padding: '24px', marginBottom: 24 },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, alignItems: 'start' },
   form: { display: 'flex', flexDirection: 'column', gap: 12 },
-  label: { fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' },
-  input: { width: '100%', padding: '10px 12px', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: 14, color: '#1e293b', background: '#fafafa', boxSizing: 'border-box' },
-  select: { width: '100%', padding: '10px 12px', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: 14, color: '#1e293b', background: '#fafafa', boxSizing: 'border-box' },
-  calcPreview: { padding: '10px 14px', background: '#f0f9ff', borderRadius: 8, fontSize: 14, color: '#0369a1' },
+  label: { fontSize: 13, fontWeight: 600, color: '#5c3317', marginBottom: 4, display: 'block' },
+  input: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8d5c4', borderRadius: 8, fontSize: 14, color: '#2c1a0e', background: '#fffaf5', boxSizing: 'border-box' },
+  select: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8d5c4', borderRadius: 8, fontSize: 14, color: '#2c1a0e', background: '#fffaf5', boxSizing: 'border-box' },
+  calcPreview: { padding: '10px 14px', background: '#fef0dc', borderRadius: 8, fontSize: 14, color: '#7c3a1e' },
 
-  modal: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 },
-  modalBox: { background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
-  modalTitle: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 20 },
+  modal: { position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 },
+  modalBox: { background: '#fff8f1', borderRadius: 16, padding: 32, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(44,26,14,0.25)' },
+  modalTitle: { fontSize: 18, fontWeight: 700, color: '#2c1a0e', marginBottom: 20 },
   modalActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 },
-  qtyBtn2: { width: 28, height: 28, border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#374151' },
+  qtyBtn2: { width: 28, height: 28, border: '1px solid #e8d5c4', borderRadius: 6, background: '#fff8f1', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#5c3317' },
 
-  // Validation comptes
-  pendingBox:     { background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 12, padding: '16px 20px', marginBottom: 20 },
-  pendingTitle:   { fontWeight: 700, fontSize: 15, color: '#92400e', marginBottom: 12 },
+  // ── Validation comptes
+  pendingBox:     { background: '#fef9f0', border: '1px solid #fbbf24', borderRadius: 12, padding: '16px 20px', marginBottom: 20 },
+  pendingTitle:   { fontWeight: 700, fontSize: 15, color: '#78350f', marginBottom: 12 },
   pendingList:    { display: 'flex', flexDirection: 'column', gap: 10 },
-  pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', borderRadius: 10, padding: '12px 16px', flexWrap: 'wrap', gap: 10 },
+  pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff8f1', borderRadius: 10, padding: '12px 16px', flexWrap: 'wrap', gap: 10 },
   pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 2 },
-  pendingEmail:   { fontSize: 13, color: '#64748b' },
-  pendingDate:    { fontSize: 12, color: '#94a3b8' },
+  pendingEmail:   { fontSize: 13, color: '#a07850' },
+  pendingDate:    { fontSize: 12, color: '#c8956c' },
   pendingActions: { display: 'flex', gap: 8 },
   btnApprove:     { padding: '7px 14px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
   btnReject:      { padding: '7px 14px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
 
-  // Bloc IRS
+  // ── Bloc IRS (gardé en rouge — important)
   irsBox:   { background: 'linear-gradient(135deg, #fff1f2 0%, #fef2f2 100%)', border: '2px solid #fca5a5', borderRadius: 16, padding: '24px 28px', marginBottom: 24, display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' },
   irsLeft:  { flex: 1, minWidth: 200 },
-  irsRight: { flex: 2, minWidth: 260, background: '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #fca5a5' },
-  irsRow:   { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#374151', marginBottom: 6 },
+  irsRight: { flex: 2, minWidth: 260, background: '#fff8f1', borderRadius: 12, padding: '16px 20px', border: '1px solid #fca5a5' },
+  irsRow:   { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#3d1f0d', marginBottom: 6 },
 
-  // Achats
+  // ── Achats
   purchaseSummary: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 },
-  pSumItem:  { background: '#fff', borderRadius: 12, padding: '16px 20px', flex: 1, minWidth: 150, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' },
-  pSumLabel: { fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 500 },
-  pSumValue: { fontSize: 20, fontWeight: 800, color: '#1e293b' },
+  pSumItem:  { background: '#fff8f1', borderRadius: 12, padding: '16px 20px', flex: 1, minWidth: 150, boxShadow: '0 1px 6px rgba(44,26,14,0.06)', border: '1px solid #e8d5c4' },
+  pSumLabel: { fontSize: 12, color: '#a07850', marginBottom: 6, fontWeight: 500 },
+  pSumValue: { fontSize: 20, fontWeight: 800, color: '#2c1a0e' },
 };
