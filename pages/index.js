@@ -26,7 +26,9 @@ export default function Home() {
   // Redirection selon le rôle
   useEffect(() => {
     if (status === 'authenticated') {
-      if (['patron', 'admin'].includes(session?.user?.role)) {
+      if (session?.user?.role === 'admin') {
+        router.push('/admin');
+      } else if (session?.user?.role === 'patron') {
         router.push('/patron');
       } else {
         router.push('/dashboard');
