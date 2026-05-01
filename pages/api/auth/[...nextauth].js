@@ -6,21 +6,21 @@ import sql from '../../../lib/db';
 export default NextAuth({
   providers: [
     CredentialsProvider({
-      name: 'Email et mot de passe',
+      name: 'Identifiant et mot de passe',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        username: { label: 'Identifiant', type: 'text' },
         password: { label: 'Mot de passe', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.username || !credentials?.password) return null;
 
-        // Recherche de l'utilisateur en base
+        // Recherche par username (insensible à la casse)
         const rows = await sql`
-          SELECT u.id, u.email, u.name, u.password_hash, u.role, u.status,
+          SELECT u.id, u.username, u.email, u.name, u.password_hash, u.role, u.status,
                  u.company_id, c.name AS company_name
           FROM users u
           LEFT JOIN companies c ON c.id = u.company_id
-          WHERE u.email = ${credentials.email}
+          WHERE LOWER(u.username) = LOWER(${credentials.username})
           LIMIT 1
         `;
 
@@ -32,6 +32,9 @@ export default NextAuth({
         if (!valid) return null;
 
         // Vérification du statut du compte
+        if (user.status === 'inactive') {
+          throw new Error('AccountInactive');
+        }
         if (user.status === 'pending') {
           throw new Error('AccountPending');
         }
@@ -40,11 +43,12 @@ export default NextAuth({
         }
 
         return {
-          id: String(user.id),
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          companyId: user.company_id,
+          id:          String(user.id),
+          username:    user.username,
+          email:       user.email,
+          name:        user.name,
+          role:        user.role,
+          companyId:   user.company_id,
           companyName: user.company_name,
         };
       },
@@ -59,14 +63,18 @@ export default NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role      = user.role;
-        token.companyId = user.companyId;
+        token.id          = user.id;
+        token.username    = user.username;
+        token.role        = user.role;
+        token.companyId   = user.companyId;
         token.companyName = user.companyName;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
+        session.user.id          = token.id;
+        session.user.username    = token.username;
         session.user.role        = token.role;
         session.user.companyId   = token.companyId;
         session.user.companyName = token.companyName;

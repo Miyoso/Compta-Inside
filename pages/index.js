@@ -14,12 +14,12 @@ export default function Home() {
   const [success, setSuccess] = useState('');
 
   // Formulaire connexion
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
   // Formulaire inscription
   const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
+  const [regUsername, setRegUsername] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regCompany, setRegCompany] = useState('');
 
@@ -53,17 +53,19 @@ export default function Home() {
     setLoading(true);
     const result = await signIn('credentials', {
       redirect: false,
-      email: loginEmail,
+      username: loginUsername,
       password: loginPassword,
     });
     setLoading(false);
     if (result?.error) {
       if (result.error === 'AccountPending') {
-        setError('⏳ Ton compte est en attente de validation par ton patron. Tu recevras l\'accès dès qu\'il l\'aura approuvé.');
+        setError('⏳ Ton compte est en attente de validation par ton patron.');
       } else if (result.error === 'AccountRejected') {
-        setError('❌ Ton compte a été refusé. Contacte ton patron pour plus d\'informations.');
+        setError('❌ Ton compte a été refusé. Contacte ton patron.');
+      } else if (result.error === 'AccountInactive') {
+        setError('🚫 Ce compte a été désactivé. Contacte ton patron.');
       } else {
-        setError('Email ou mot de passe incorrect.');
+        setError('Identifiant ou mot de passe incorrect.');
       }
     } else {
       router.push('/dashboard');
@@ -81,7 +83,7 @@ export default function Home() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: regName,
-        email: regEmail,
+        username: regUsername,
         password: regPassword,
         companyId: regCompany,
       }),
@@ -91,11 +93,11 @@ export default function Home() {
     if (!res.ok) {
       setError(data.error || 'Une erreur est survenue.');
     } else {
-      setSuccess('✅ Compte créé ! Ton patron doit valider ton accès avant que tu puisses te connecter. Reviens ici une fois qu\'il t\'a confirmé.');
+      setSuccess('✅ Compte créé ! Ton patron doit valider ton accès. Reviens te connecter une fois approuvé.');
       setMode('login');
-      setLoginEmail(regEmail);
+      setLoginUsername(regUsername);
       setRegName('');
-      setRegEmail('');
+      setRegUsername('');
       setRegPassword('');
     }
   }
@@ -156,13 +158,14 @@ export default function Home() {
                 <h2 style={styles.formTitle}>Bienvenue 👋</h2>
                 <p style={styles.formSub}>Connectez-vous pour accéder à votre espace.</p>
 
-                <label style={styles.label}>Adresse email</label>
+                <label style={styles.label}>Identifiant</label>
                 <input
-                  type="email"
-                  placeholder="votre@email.com"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
+                  type="text"
+                  placeholder="ton_identifiant"
+                  value={loginUsername}
+                  onChange={(e) => setLoginUsername(e.target.value)}
                   required
+                  autoComplete="username"
                   style={styles.input}
                 />
 
@@ -205,13 +208,16 @@ export default function Home() {
                   style={styles.input}
                 />
 
-                <label style={styles.label}>Adresse email</label>
+                <label style={styles.label}>Identifiant de connexion <span style={styles.hint}>(lettres, chiffres, _)</span></label>
                 <input
-                  type="email"
-                  placeholder="votre@email.com"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
+                  type="text"
+                  placeholder="Ex: john_doe"
+                  value={regUsername}
+                  onChange={(e) => setRegUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                   required
+                  minLength={3}
+                  maxLength={30}
+                  autoComplete="username"
                   style={styles.input}
                 />
 

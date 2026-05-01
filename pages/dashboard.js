@@ -18,6 +18,12 @@ export default function EmployeeDashboard() {
   const [salaryData, setSalaryData] = useState(null);
   const [cart,       setCart]       = useState([]);
 
+  // Changement de mot de passe
+  const [cpCurrent,  setCpCurrent]  = useState('');
+  const [cpNew,      setCpNew]      = useState('');
+  const [cpConfirm,  setCpConfirm]  = useState('');
+  const [cpLoading,  setCpLoading]  = useState(false);
+
   const [selEmployee, setSelEmployee] = useState('');
   const [loading,  setLoading]  = useState(false);
   const [toast,    setToast]    = useState(null);
@@ -55,6 +61,21 @@ export default function EmployeeDashboard() {
     if (tab === 'ventes')  loadInvoices();
     if (tab === 'salaire') loadSalary();
   }, [tab, status, loadProducts, loadInvoices, loadSalary]);
+
+  async function handleChangePassword(e) {
+    e.preventDefault();
+    if (cpNew !== cpConfirm) return showToast('Les deux nouveaux mots de passe ne correspondent pas.', 'error');
+    setCpLoading(true);
+    const r = await fetch('/api/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: cpCurrent, newPassword: cpNew }),
+    });
+    const d = await r.json();
+    setCpLoading(false);
+    if (r.ok) { showToast('✅ Mot de passe modifié !'); setCpCurrent(''); setCpNew(''); setCpConfirm(''); }
+    else showToast(d.error, 'error');
+  }
 
   // ── Gestion du panier ─────────────────────────────────────
   function addToCart(product) {
@@ -132,6 +153,7 @@ export default function EmployeeDashboard() {
         <div style={S.tabBar}>
           <button style={tab === 'ventes'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('ventes')}>🛒 Mes ventes</button>
           <button style={tab === 'salaire' ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('salaire')}>💵 Mon salaire</button>
+          <button style={tab === 'compte'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('compte')}>⚙️ Mon compte</button>
         </div>
 
         <main style={S.main}>
@@ -324,6 +346,48 @@ export default function EmployeeDashboard() {
               )}
             </div>
           )}
+          {/* ══ ONGLET MON COMPTE ══ */}
+          {tab === 'compte' && (
+            <div style={{ maxWidth: 480, margin: '0 auto' }}>
+              <h2 style={S.title}>⚙️ Mon compte</h2>
+
+              {/* Infos */}
+              <div style={{ background: '#fff', borderRadius: 14, padding: '20px 24px', marginBottom: 24, border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>Nom affiché</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 14 }}>{session.user.name}</div>
+                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>Identifiant de connexion</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#2563eb' }}>@{session.user.username}</div>
+              </div>
+
+              {/* Formulaire changement mdp */}
+              <div style={{ background: '#fff', borderRadius: 14, padding: '20px 24px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>🔒 Changer mon mot de passe</h3>
+                <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={S.label}>Mot de passe actuel</label>
+                    <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required placeholder="••••••••" style={S.input} />
+                  </div>
+                  <div>
+                    <label style={S.label}>Nouveau mot de passe <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(6 car. min.)</span></label>
+                    <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required minLength={6} placeholder="••••••••" style={S.input} />
+                  </div>
+                  <div>
+                    <label style={S.label}>Confirmer le nouveau mot de passe</label>
+                    <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="••••••••"
+                      style={{ ...S.input, borderColor: cpConfirm && cpNew !== cpConfirm ? '#dc2626' : '#e2e8f0' }} />
+                    {cpConfirm && cpNew !== cpConfirm && (
+                      <div style={{ fontSize: 12, color: '#dc2626', marginTop: 4 }}>Les mots de passe ne correspondent pas.</div>
+                    )}
+                  </div>
+                  <button type="submit" disabled={cpLoading || (cpConfirm && cpNew !== cpConfirm)}
+                    style={{ ...S.btnPrimary, opacity: cpLoading ? 0.6 : 1 }}>
+                    {cpLoading ? 'Modification…' : '🔒 Modifier le mot de passe'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
     </>
