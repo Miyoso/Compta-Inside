@@ -789,9 +789,19 @@ export default function PatronDashboard() {
               <div style={S.formCard}>
                 <h3 style={S.subTitle}>➕ Enregistrer un achat</h3>
                 <form onSubmit={handleAddPurchase} style={S.formGrid}>
-                  <div>
-                    <label style={S.label}>Nom de la matière première *</label>
-                    <input value={acName} onChange={e => setAcName(e.target.value)} required placeholder="Ex: Café en grains, Lait, Alcool…" style={S.input} />
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={S.label}>Matière première *</label>
+                    <select value={acMaterial} onChange={e => {
+                      const val = e.target.value;
+                      setAcMaterial(val);
+                      const rm = rawMaterials.find(m => String(m.id) === String(val));
+                      setAcName(rm ? rm.name : '');
+                    }} required style={{ ...S.select, borderColor: acMaterial ? '#86efac' : '#e2e8f0', background: acMaterial ? '#f0fdf4' : '#fafafa' }}>
+                      <option value="">-- Sélectionner une matière première --</option>
+                      {rawMaterials.map(m => (
+                        <option key={m.id} value={m.id}>{m.name} (stock actuel : {m.quantity} {m.unit})</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label style={S.label}>Prix unitaire ($) *</label>
@@ -799,19 +809,7 @@ export default function PatronDashboard() {
                   </div>
                   <div>
                     <label style={S.label}>Quantité achetée</label>
-                    <input type="number" min="1" value={acQty} onChange={e => setAcQty(e.target.value)} style={S.input} />
-                  </div>
-                  <div>
-                    <label style={S.label}>
-                      Lier à une matière première{' '}
-                      <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel — ajoute au stock automatiquement)</span>
-                    </label>
-                    <select value={acMaterial} onChange={e => setAcMaterial(e.target.value)} style={S.select}>
-                      <option value="">-- Aucune (achat sans lien stock) --</option>
-                      {rawMaterials.map(m => (
-                        <option key={m.id} value={m.id}>{m.name} (stock : {m.quantity} {m.unit})</option>
-                      ))}
-                    </select>
+                    <input type="number" min="1" step="0.001" value={acQty} onChange={e => setAcQty(e.target.value)} style={S.input} />
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={S.label}>Notes <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel)</span></label>
@@ -819,21 +817,23 @@ export default function PatronDashboard() {
                   </div>
 
                   {/* Aperçu du total */}
-                  {acPrice && acQty && (
-                    <div style={{ gridColumn: '1 / -1', background: '#fefce8', border: '1px solid #fde047', borderRadius: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                      <div>
-                        <span style={{ fontSize: 14, color: '#713f12' }}>Total achat : <strong>{fmt(parseFloat(acPrice || 0) * parseFloat(acQty || 1))}</strong></span>
-                        <span style={{ fontSize: 13, color: '#92400e', marginLeft: 16 }}>
-                          → Économie impôts : <strong>{fmt(parseFloat(acPrice || 0) * parseFloat(acQty || 1) * 0.15)}</strong>
-                        </span>
+                  {acMaterial && acPrice && acQty && (() => {
+                    const rm = rawMaterials.find(m => String(m.id) === String(acMaterial));
+                    const total = parseFloat(acPrice || 0) * parseFloat(acQty || 1);
+                    return (
+                      <div style={{ gridColumn: '1 / -1', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 14, color: '#14532d', fontWeight: 600, marginBottom: 4 }}>
+                            📦 {rm?.name} — {acQty} {rm?.unit} @ {fmt(parseFloat(acPrice))} / unité
+                          </div>
+                          <span style={{ fontSize: 14, color: '#166534' }}>Total : <strong>{fmt(total)}</strong></span>
+                          <span style={{ fontSize: 12, color: '#16a34a', marginLeft: 12 }}>
+                            → Nouveau stock : {parseFloat(rm?.quantity || 0) + parseFloat(acQty || 0)} {rm?.unit}
+                          </span>
+                        </div>
                       </div>
-                      {acMaterial && (
-                        <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>
-                          + {acQty} {rawMaterials.find(m => String(m.id) === String(acMaterial))?.unit || 'unité(s)'} au stock
-                        </span>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
                     <button type="submit" style={S.btnPrimary} disabled={loading}>
