@@ -29,9 +29,10 @@ export default function PatronDashboard() {
 
   // Formulaire achat
   const [acName, setAcName]         = useState('');
-  const [acMaterial, setAcMaterial] = useState(''); // remplace acProduct
-  const [acQty, setAcQty]           = useState('1');
-  const [acPrice, setAcPrice]       = useState('');
+  const [acMaterial, setAcMaterial] = useState('');
+  const [acLots, setAcLots]         = useState('1'); // nombre de lots achetés
+  const [acQty, setAcQty]           = useState('');  // quantité par lot
+  const [acPrice, setAcPrice]       = useState('');  // prix d'un lot
   const [acNotes, setAcNotes]       = useState('');
 
   // Recettes produits
@@ -221,8 +222,8 @@ export default function PatronDashboard() {
       body: JSON.stringify({
         name: acName,
         raw_material_id: acMaterial || null,
-        quantity: parseFloat(acQty) || 1,
-        unit_price: parseFloat(acPrice) / (parseFloat(acQty) || 1), // prix par unité = lot / qté
+        quantity: (parseFloat(acLots) || 1) * (parseFloat(acQty) || 1), // lots × qté/lot
+        unit_price: parseFloat(acPrice) / (parseFloat(acQty) || 1),     // prix par unité = lot / qté
         notes: acNotes || null,
       }),
     });
@@ -230,7 +231,7 @@ export default function PatronDashboard() {
     setLoading(false);
     if (r.ok) {
       showToast(`✅ Achat enregistré — ${fmt(d.total_amount)}${acMaterial ? ' · Stock matière réapprovisionné' : ''}`);
-      setAcName(''); setAcMaterial(''); setAcQty('1'); setAcPrice(''); setAcNotes('');
+      setAcName(''); setAcMaterial(''); setAcLots('1'); setAcQty(''); setAcPrice(''); setAcNotes('');
       loadPurchases(); loadOverview(); if (acMaterial) loadRawMaterials();
     } else {
       showToast(d.error, 'error');
@@ -804,18 +805,27 @@ export default function PatronDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label style={S.label}>Quantité dans le lot *</label>
+                    <label style={S.label}>Qté par lot *</label>
                     <input type="number" min="0.001" step="0.001" value={acQty} onChange={e => setAcQty(e.target.value)} required
-                      placeholder={`Ex: 24`}
+                      placeholder="Ex: 24"
                       style={S.input} />
                     {acMaterial && <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>unité : <strong>{rawMaterials.find(m => String(m.id) === String(acMaterial))?.unit || '—'}</strong></div>}
                   </div>
                   <div>
-                    <label style={S.label}>Prix du lot ($) *</label>
+                    <label style={S.label}>Prix d'un lot ($) *</label>
                     <input type="number" min="0" step="0.01" value={acPrice} onChange={e => setAcPrice(e.target.value)} required placeholder="Ex: 120.00" style={S.input} />
                     {acPrice && acQty && parseFloat(acQty) > 0 && (
                       <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
                         → <strong>{fmt(parseFloat(acPrice) / parseFloat(acQty))}</strong> / unité
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label style={S.label}>Nombre de lots</label>
+                    <input type="number" min="1" step="1" value={acLots} onChange={e => setAcLots(e.target.value)} style={S.input} />
+                    {acLots && parseInt(acLots) > 1 && acPrice && (
+                      <div style={{ fontSize: 12, color: '#7c3aed', marginTop: 4, fontWeight: 600 }}>
+                        → Total : <strong>{fmt(parseFloat(acPrice) * parseInt(acLots))}</strong>
                       </div>
                     )}
                   </div>
@@ -827,34 +837,43 @@ export default function PatronDashboard() {
                   {/* Aperçu du lot */}
                   {acMaterial && acPrice && acQty && parseFloat(acQty) > 0 && (() => {
                     const rm = rawMaterials.find(m => String(m.id) === String(acMaterial));
-                    const lotTotal = parseFloat(acPrice || 0);
-                    const qty = parseFloat(acQty || 1);
-                    const unitPrice = lotTotal / qty;
+                    const lots = parseInt(acLots) || 1;
+                    const qtyPerLot = parseFloat(acQty || 1);
+                    const lotPrice = parseFloat(acPrice || 0);
+                    const totalQty = lots * qtyPerLot;
+                    const totalCost = lots * lotPrice;
+                    const unitPrice = lotPrice / qtyPerLot;
                     return (
                       <div style={{ gridColumn: '1 / -1', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '14px 16px' }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#14532d', marginBottom: 8 }}>
-                          📦 Récapitulatif du lot
+                        <div style={{ fontWeight: 700, fontSize: 14, color: '#14532d', marginBottom: 10 }}>
+                          📦 Récapitulatif — {lots > 1 ? `${lots} lots de ${qtyPerLot} ${rm?.unit}` : `1 lot de ${qtyPerLot} ${rm?.unit}`}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
                           <div style={{ fontSize: 13, color: '#166534' }}>
                             <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>MATIÈRE</div>
                             <strong>{rm?.name}</strong>
                           </div>
                           <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>QUANTITÉ AJOUTÉE</div>
-                            <strong>+{qty} {rm?.unit}</strong>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>QTÉ TOTALE AJOUTÉE</div>
+                            <strong>+{totalQty} {rm?.unit}</strong>
                           </div>
                           <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>PRIX PAR UNITÉ</div>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>PRIX / UNITÉ</div>
                             <strong>{fmt(unitPrice)} / {rm?.unit}</strong>
                           </div>
+                          {lots > 1 && (
+                            <div style={{ fontSize: 13, color: '#166534' }}>
+                              <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>PRIX / LOT</div>
+                              <strong>{fmt(lotPrice)}</strong>
+                            </div>
+                          )}
                           <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>TOTAL LOT</div>
-                            <strong style={{ fontSize: 16 }}>{fmt(lotTotal)}</strong>
+                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>TOTAL À PAYER</div>
+                            <strong style={{ fontSize: 16, color: '#15803d' }}>{fmt(totalCost)}</strong>
                           </div>
                           <div style={{ fontSize: 13, color: '#166534' }}>
                             <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>STOCK APRÈS</div>
-                            <strong>{parseFloat(rm?.quantity || 0) + qty} {rm?.unit}</strong>
+                            <strong>{parseFloat(rm?.quantity || 0) + totalQty} {rm?.unit}</strong>
                           </div>
                         </div>
                       </div>
