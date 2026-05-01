@@ -38,9 +38,43 @@ export default async function handler(req, res) {
   `;
   const weekPurchases = weekPurchRow.total;
 
-  // Base imposable = CA − achats − salaires
-  const weekNet = Math.max(0, weekSales - weekPurchases - weekSalaries);
-  const weekTax = computeWeeklyTax(weekNet);
+  // Bénéfice net réel (peut être négatif si charges > CA)
+  const weekNetRaw  = weekSales - weekPurchases - weekSalaries;
+  const weekTaxBase = Math.max(0, weekNetRaw);
+  const weekTax     = computeWeeklyTax(weekTaxBase);
+
+  // ── Mois en cours (onglet Achats — récap fiscal) ──────────────
+
+  const [monthSalesRow] = await sql`
+    SELECT COALESCE(SUM(total_amount), 0)::float AS total
+    FROM sales
+    WHERE company_id = ${companyId}
+      AND DATE_TRUNC('month', sale_date) = DATE_TRUNC('month', NOW())
+  `;
+  const monthSales = monthSalesRow.total;
+
+  const [monthSalRow] = await sql`
+    SELECT COALESCE(SUM(s.total_amount * u.salary_percent / 100), 0)::float AS total
+    FROM sales s
+    JOIN users u ON u.id = s.employee_id
+    WHERE s.company_id = ${companyId}
+      AND DATE_TRUNC('month', s.sale_date) = DATE_TRUNC('month', NOW())
+  `;
+  const monthSalaries = monthSalRow.total;
+
+  const [monthPurchRow] = await sql`
+    SELECT COALESCE(SUM(total_amount), 0)::float AS total
+    FROM purchases
+    WHERE company_id = ${companyId}
+      AND DATE_TRUNC('month', purchase_date) = DATE_TRUNC('month', NOW())
+  `;
+  const monthPurchases = monthPurchRow.total;
+
+  const monthTaxBase       = Math.max(0, monthSales - monthPurchases - monthSalaries);
+  const monthTaxBaseNoPurch = Math.max(0, monthSales - monthSalaries);
+  const monthTaxObj        = computeWeeklyTax(monthTaxBase);
+  const monthTaxNoPurchObj = computeWeeklyTax(monthTaxBaseNoPurch);
+  const taxSaving          = Math.max(0, monthTaxNoPurchObj.tax - monthTaxObj.tax);
 
   // ── 4 semaines précédentes ────────────────────────────────────
   const prevWeeks = [];
@@ -67,8 +101,10 @@ export default async function handler(req, res) {
         AND purchase_date >= DATE_TRUNC('week', NOW()) - (${i} * INTERVAL '1 week')
         AND purchase_date <  DATE_TRUNC('week', NOW()) - ((${i} - 1) * INTERVAL '1 week')
     `;
-    const net = Math.max(0, s.total - p.total - sal.total);
-    const tax = computeWeeklyTax(net);
+    const netRaw  = s.total - p.total - sal.total;
+    const taxBase = Math.max(0, netRaw);
+    const tax     = computeWeeklyTax(taxBase);
+
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7) - i * 7);
     prevWeeks.push({
@@ -76,10 +112,11 @@ export default async function handler(req, res) {
       sales:     s.total,
       purchases: p.total,
       salaries:  sal.total,
-      net,
-      tax:     tax.tax,
-      rate:    tax.rate,
-      bracket: tax.bracket,
+      net:       netRaw,
+      taxBase,
+      tax:       tax.tax,
+      rate:      tax.rate,
+      bracket:   tax.bracket,
     });
   }
 
@@ -102,15 +139,27 @@ export default async function handler(req, res) {
   `;
 
   return res.status(200).json({
+    // Semaine
     weekSales,
     weekPurchases,
     weekSalaries,
-    weekNet,
-    weekTaxAmount: weekTax.tax,
-    weekTaxRate:   weekTax.rate,
-    weekBracket:   weekTax.bracket,
+    weekNet:              weekNetRaw,
+    weekTaxBase,
+    weekTaxAmount:        weekTax.tax,
+    weekTaxRate:          weekTax.rate,
+    weekTaxEffectiveRate: weekTax.effectiveRate,
+    weekBracket:          weekTax.bracket,
+    // Mois
+    totalSales:     monthSales,
+    totalPurchases: monthPurchases,
+    totalSalaries:  monthSalaries,
+    taxableBase:    monthTaxBase,
+    taxSaving,
+    taxes:          monthTaxObj.tax,
+    taxRate:        monthTaxObj.rate,
+    // Divers
     prevWeeks,
-    alertsCount:   alertRow.count,
+    alertsCount:  alertRow.count,
     recentSales,
   });
 }

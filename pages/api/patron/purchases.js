@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   // GET — achats du mois + total
   if (req.method === 'GET') {
     const purchases = await sql`
-      SELECT p.id, p.name, p.quantity, p.unit_price::float,
+      SELECT p.id, p.name, p.quantity::float, p.unit_price::float,
              p.total_amount::float, p.purchase_date, p.notes,
              rm.name AS material_name, rm.unit AS material_unit
       FROM purchases p
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ purchases, totalPurchases: totRow.total });
   }
 
-  // POST — enregistrer un achat (+ réapprovisionner la matière première si liée)
+  // POST — enregistrer un achat + réapprovisionner + logguer mouvement
   if (req.method === 'POST') {
     const { name, raw_material_id, quantity, unit_price, notes } = req.body;
 
@@ -42,7 +42,6 @@ export default async function handler(req, res) {
     const qty          = parseFloat(quantity) || 1;
     const total_amount = parseFloat(unit_price) * qty;
 
-    // Vérifier que la matière première appartient à l'entreprise si renseignée
     if (raw_material_id) {
       const [mat] = await sql`
         SELECT id FROM raw_materials WHERE id = ${raw_material_id} AND company_id = ${companyId}
@@ -50,38 +49,58 @@ export default async function handler(req, res) {
       if (!mat) return res.status(404).json({ error: 'Matière première introuvable.' });
     }
 
-    // Créer l'achat
-    await sql`
+    const [purchase] = await sql`
       INSERT INTO purchases (company_id, patron_id, name, raw_material_id, quantity, unit_price, total_amount, notes)
       VALUES (${companyId}, ${patronId}, ${name}, ${raw_material_id || null}, ${qty}, ${parseFloat(unit_price)}, ${total_amount}, ${notes || null})
+      RETURNING id
     `;
 
-    // Réapprovisionner le stock de la matière première
+    // Réapprovisionner et logguer
     if (raw_material_id && qty > 0) {
-      await sql`
+      const [updated] = await sql`
         UPDATE raw_materials SET quantity = quantity + ${qty}
         WHERE id = ${raw_material_id} AND company_id = ${companyId}
+        RETURNING quantity::float AS new_qty, name
       `;
+      if (updated) {
+        await sql`
+          INSERT INTO stock_movements
+            (company_id, raw_material_id, movement_type, quantity_change, quantity_after, reference_id, reference_label)
+          VALUES
+            (${companyId}, ${raw_material_id}, 'purchase', ${qty},
+             ${updated.new_qty}, ${purchase.id}, ${`Achat — ${name}`})
+        `;
+      }
     }
 
     return res.status(201).json({ success: true, total_amount });
   }
 
-  // DELETE — annuler un achat (et déduire le stock de la matière première)
+  // DELETE — annuler un achat + déduire stock + logguer
   if (req.method === 'DELETE') {
     const { id } = req.body;
     const [purchase] = await sql`
-      SELECT id, raw_material_id, quantity FROM purchases
+      SELECT id, raw_material_id, quantity::float, name FROM purchases
       WHERE id = ${id} AND company_id = ${companyId}
     `;
     if (!purchase) return res.status(404).json({ error: 'Achat introuvable.' });
 
     if (purchase.raw_material_id && purchase.quantity) {
-      await sql`
+      const [updated] = await sql`
         UPDATE raw_materials
         SET quantity = GREATEST(0, quantity - ${purchase.quantity})
         WHERE id = ${purchase.raw_material_id} AND company_id = ${companyId}
+        RETURNING quantity::float AS new_qty
       `;
+      if (updated) {
+        await sql`
+          INSERT INTO stock_movements
+            (company_id, raw_material_id, movement_type, quantity_change, quantity_after, reference_id, reference_label)
+          VALUES
+            (${companyId}, ${purchase.raw_material_id}, 'purchase_cancel', ${-purchase.quantity},
+             ${updated.new_qty}, ${id}, ${`Annulation achat — ${purchase.name}`})
+        `;
+      }
     }
 
     await sql`DELETE FROM purchases WHERE id = ${id} AND company_id = ${companyId}`;

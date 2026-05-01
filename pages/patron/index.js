@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 
-const TAX_RATE = 0.15;
-
 // ─── Helpers ────────────────────────────────────────────────
 const fmt = (n) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n ?? 0);
@@ -84,6 +82,9 @@ export default function PatronDashboard() {
   const [cartEmployee, setCartEmployee] = useState('');
   const [invoices, setInvoices] = useState([]);
   const [expandedInv, setExpandedInv] = useState(null);
+  const [costPrices, setCostPrices] = useState([]);
+  const [stockMovements, setStockMovements] = useState([]);
+  const [showMovements, setShowMovements] = useState(false);
 
   // Redirection si pas patron
   useEffect(() => {
@@ -140,16 +141,26 @@ export default function PatronDashboard() {
     setRawMaterials(await r.json());
   }, []);
 
+  const loadCostPrices = useCallback(async () => {
+    const r = await fetch('/api/patron/cost-price');
+    setCostPrices(await r.json());
+  }, []);
+
+  const loadStockMovements = useCallback(async () => {
+    const r = await fetch('/api/patron/stock-movements');
+    setStockMovements(await r.json());
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     loadOverview();
     loadPending(); // toujours chargé pour le badge
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); }
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
-    if (tab === 'produits') { loadProducts(); loadRawMaterials(); }
-    if (tab === 'stocks')   loadRawMaterials();
+    if (tab === 'produits') { loadProducts(); loadRawMaterials(); loadCostPrices(); }
+    if (tab === 'stocks')   { loadRawMaterials(); loadStockMovements(); }
     if (tab === 'achats')   { loadPurchases(); loadRawMaterials(); }
-  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials]);
+  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials, loadCostPrices, loadStockMovements]);
 
   // ── Changement de mot de passe ────────────────────────────
   async function handleChangePassword(e) {
@@ -507,10 +518,12 @@ export default function PatronDashboard() {
                       </div>
                       <div style={{ ...S.irsRow, borderTop: '2px solid #fca5a5', paddingTop: 10, marginTop: 6, fontWeight: 700, fontSize: 15 }}>
                         <span>= Base imposable</span>
-                        <strong style={{ color: '#dc2626' }}>{fmt(overview.weekNet)}</strong>
+                        <strong style={{ color: overview.weekNet < 0 ? '#fbbf24' : '#dc2626' }}>
+                          {overview.weekNet < 0 ? `Perte (${fmt(overview.weekNet)})` : fmt(overview.weekNet)}
+                        </strong>
                       </div>
                       <div style={{ marginTop: 12 }}>
-                        <TaxBracketBar net={overview.weekNet} rate={overview.weekTaxRate} bracket={overview.weekBracket} />
+                        <TaxBracketBar net={Math.max(0, overview.weekNet)} rate={overview.weekTaxRate} bracket={overview.weekBracket} />
                       </div>
                     </div>
                   </div>
@@ -537,11 +550,11 @@ export default function PatronDashboard() {
                       <div style={S.kpiLabel}>Taxe IRS ({(overview.weekTaxRate * 100).toFixed(0)}%)</div>
                       <div style={{ ...S.kpiValue, color: '#dc2626' }}>{fmt(overview.weekTaxAmount)}</div>
                     </div>
-                    <div style={{ ...S.kpiCard, borderColor: '#16a34a' }}>
+                    <div style={{ ...S.kpiCard, borderColor: (overview.weekNet - overview.weekTaxAmount) >= 0 ? '#16a34a' : '#dc2626' }}>
                       <div style={S.kpiIcon}>📈</div>
-                      <div style={S.kpiLabel}>Bénéfice net de la semaine</div>
-                      <div style={{ ...S.kpiValue, color: overview.weekNet - overview.weekTaxAmount >= 0 ? '#16a34a' : '#dc2626' }}>
-                        {fmt(overview.weekNet - overview.weekTaxAmount)}
+                      <div style={S.kpiLabel}>Bénéfice net après impôts</div>
+                      <div style={{ ...S.kpiValue, color: (overview.weekNet - overview.weekTaxAmount) >= 0 ? '#16a34a' : '#dc2626' }}>
+                        {fmt(Math.max(0, overview.weekNet) - overview.weekTaxAmount)}
                       </div>
                     </div>
                   </div>
@@ -810,7 +823,7 @@ export default function PatronDashboard() {
                     <div style={{ ...S.pSumValue, color: '#8060a0' }}>{fmt(overview.taxableBase)}</div>
                   </div>
                   <div style={{ ...S.pSumItem }}>
-                    <div style={S.pSumLabel}>💚 Économie impôts (15%)</div>
+                    <div style={S.pSumLabel}>💚 Économie impôts estimée</div>
                     <div style={{ ...S.pSumValue, color: '#4ade80' }}>{fmt(overview.taxSaving)}</div>
                   </div>
                   <div style={{ ...S.pSumItem, color: '#dc2626' }}>
@@ -929,10 +942,12 @@ export default function PatronDashboard() {
               ) : (
                 <>
                   <div style={{ marginBottom: 12, fontSize: 15, color: '#d0b8f8', fontWeight: 500 }}>
-                    Total dépensé : <strong style={{ color: '#ef4444' }}>{fmt(purchasesData.totalPurchases)}</strong>
-                    <span style={{ color: '#5a4080', marginLeft: 12, fontSize: 13 }}>
-                      · Économie impôts : <span style={{ color: '#4ade80', fontWeight: 600 }}>{fmt(purchasesData.totalPurchases * 0.15)}</span>
-                    </span>
+                    Total dépensé ce mois : <strong style={{ color: '#ef4444' }}>{fmt(purchasesData.totalPurchases)}</strong>
+                    {overview?.taxSaving > 0 && (
+                      <span style={{ color: '#5a4080', marginLeft: 12, fontSize: 13 }}>
+                        · Économie impôts estimée : <span style={{ color: '#4ade80', fontWeight: 600 }}>{fmt(overview.taxSaving)}</span>
+                      </span>
+                    )}
                   </div>
                   <div style={S.tableWrap}>
                     <table style={S.table}>
@@ -1172,13 +1187,22 @@ export default function PatronDashboard() {
                       <tr>
                         <th style={S.th}>Produit</th>
                         <th style={S.th}>Catégorie</th>
-                        <th style={S.th}>Prix</th>
+                        <th style={S.th}>Prix vente</th>
+                        <th style={S.th}>Coût revient</th>
+                        <th style={S.th}>Marge</th>
                         <th style={S.th}>Recette</th>
                         <th style={S.th}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((p) => (
+                      {products.map((p) => {
+                        const cp = costPrices.find(c => c.id === p.id);
+                        const marginPct = cp?.margin_pct ?? null;
+                        const marginColor = marginPct === null ? '#5a4080'
+                          : marginPct >= 30 ? '#4ade80'
+                          : marginPct >= 10 ? '#fbbf24'
+                          : '#ef4444';
+                        return (
                         <tr key={p.id} style={{ ...S.tr, background: recipeProduct?.id === p.id ? 'rgba(224,64,251,0.06)' : 'transparent' }}>
                           <td style={S.td}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1192,8 +1216,25 @@ export default function PatronDashboard() {
                           <td style={S.td}><span style={S.chip}>{p.category}</span></td>
                           <td style={{ ...S.td, fontWeight: 600 }}>{fmt(p.price)}</td>
                           <td style={S.td}>
+                            {cp?.cost_price != null
+                              ? <span style={{ fontWeight: 600, color: '#d0b8f8' }}>{fmt(cp.cost_price)}</span>
+                              : cp?.warning
+                              ? <span style={{ fontSize: 11, color: '#fbbf24' }}>⚠️ Prix manquant</span>
+                              : <span style={{ color: '#5a4080', fontSize: 12 }}>—</span>
+                            }
+                          </td>
+                          <td style={S.td}>
+                            {marginPct != null
+                              ? <div>
+                                  <span style={{ fontWeight: 700, color: marginColor }}>{marginPct.toFixed(1)}%</span>
+                                  <span style={{ fontSize: 11, color: '#8060a0', marginLeft: 6 }}>({fmt(cp.margin)})</span>
+                                </div>
+                              : <span style={{ color: '#5a4080', fontSize: 12 }}>—</span>
+                            }
+                          </td>
+                          <td style={S.td}>
                             {p.recipe_count > 0
-                              ? <span style={{ ...S.badge, background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>🧪 {p.recipe_count} ingrédient{p.recipe_count > 1 ? 's' : ''}</span>
+                              ? <span style={{ ...S.badge, background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>🧪 {p.recipe_count} ingr.</span>
                               : <span style={{ ...S.badge, background: 'rgba(255,255,255,0.05)', color: '#5a4080' }}>Aucune</span>
                             }
                           </td>
@@ -1211,7 +1252,8 @@ export default function PatronDashboard() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1388,6 +1430,60 @@ export default function PatronDashboard() {
                   </table>
                 </div>
               )}
+
+              {/* ── Historique des mouvements de stock ── */}
+              <div style={{ marginTop: 32 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <h3 style={S.subTitle}>📋 Historique des mouvements</h3>
+                  <button style={S.btnSmall} onClick={() => { setShowMovements(v => !v); if (!showMovements) loadStockMovements(); }}>
+                    {showMovements ? '▲ Masquer' : '▼ Afficher'}
+                  </button>
+                </div>
+                {showMovements && (
+                  stockMovements.length === 0
+                    ? <p style={S.empty}>Aucun mouvement enregistré. Les achats et ventes futurs apparaîtront ici.</p>
+                    : <div style={S.tableWrap}>
+                        <table style={S.table}>
+                          <thead>
+                            <tr>
+                              <th style={S.th}>Date</th>
+                              <th style={S.th}>Matière</th>
+                              <th style={S.th}>Type</th>
+                              <th style={S.th}>Variation</th>
+                              <th style={S.th}>Stock après</th>
+                              <th style={S.th}>Détail</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {stockMovements.map(mv => {
+                              const isIn  = mv.quantity_change > 0;
+                              const typeLabel = {
+                                purchase:        { label: '📥 Achat',        color: '#4ade80' },
+                                sale:            { label: '📤 Vente',         color: '#ef4444' },
+                                adjustment:      { label: '✏️ Ajustement',   color: '#fbbf24' },
+                                purchase_cancel: { label: '↩️ Annul. achat', color: '#f97316' },
+                                sale_cancel:     { label: '↩️ Annul. vente', color: '#a78bfa' },
+                              }[mv.movement_type] || { label: mv.movement_type, color: '#8060a0' };
+                              return (
+                                <tr key={mv.id} style={S.tr}>
+                                  <td style={{ ...S.td, fontSize: 12, color: '#5a4080' }}>{fmtDate(mv.created_at)}</td>
+                                  <td style={{ ...S.td, fontWeight: 600 }}>{mv.material_name}</td>
+                                  <td style={S.td}><span style={{ ...S.badge, background: typeLabel.color + '20', color: typeLabel.color }}>{typeLabel.label}</span></td>
+                                  <td style={{ ...S.td, fontWeight: 700, color: isIn ? '#4ade80' : '#ef4444' }}>
+                                    {isIn ? '+' : ''}{Number(mv.quantity_change).toFixed(3)} {mv.material_unit}
+                                  </td>
+                                  <td style={{ ...S.td, color: '#d0b8f8' }}>
+                                    {mv.quantity_after != null ? `${Number(mv.quantity_after).toFixed(3)} ${mv.material_unit}` : '—'}
+                                  </td>
+                                  <td style={{ ...S.td, fontSize: 12, color: '#8060a0', maxWidth: 200 }}>{mv.reference_label || '—'}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                )}
+              </div>
             </div>
           )}
           {/* ══════════════════════════════════════════
@@ -1691,23 +1787,4 @@ const S = {
 
   // ── Bloc IRS — rouge sur fond sombre cosmique
   irsBox:   {
-    background: 'linear-gradient(135deg, #180610, #200810)',
-    border: '1.5px solid rgba(239,68,68,0.3)',
-    borderRadius: 18, padding: '24px 28px', marginBottom: 28,
-    display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start',
-    boxShadow: '0 8px 32px rgba(220,38,38,0.12)',
-  },
-  irsLeft:  { flex: 1, minWidth: 200 },
-  irsRight: {
-    flex: 2, minWidth: 260,
-    background: 'rgba(0,0,0,0.35)',
-    borderRadius: 12, padding: '18px 22px',
-    border: '1px solid rgba(239,68,68,0.2)',
-  },
-  irsRow:   { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#c090b8', marginBottom: 7 },
-
-  // ── Achats
-  purchaseSummary: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 },
-  pSumItem: {
-    background: 'linear-gradient(145deg, #16102a, #1e1435)',
-    borderRadius: 14, padding: '18px 
+    background: 'linear-gradient(135de

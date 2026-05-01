@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
   }
 
-  // ── POST : créer une facture (plusieurs produits, sans gestion de stock) ──
+  // ── POST : créer une facture ──────────────────────────────
   if (req.method === 'POST') {
     const { employee_id, items } = req.body;
 
@@ -61,7 +61,6 @@ export default async function handler(req, res) {
       if (!item.product_id || !item.quantity || item.quantity <= 0) {
         return res.status(400).json({ error: 'Données produit invalides.' });
       }
-      // Juste récupérer le prix — plus de vérification de stock
       const [product] = await sql`
         SELECT id, price::float, name FROM products
         WHERE id = ${item.product_id} AND company_id = ${companyId}
@@ -80,38 +79,52 @@ export default async function handler(req, res) {
       RETURNING id
     `;
 
-    // Insérer les lignes + déduire les matières premières selon la recette
+    // Insérer les lignes de vente + déduire matières premières selon recette
     for (const item of processed) {
       await sql`
         INSERT INTO sales (company_id, employee_id, product_id, quantity, unit_price, total_amount, invoice_id)
         VALUES (${companyId}, ${empId}, ${item.product_id}, ${item.quantity}, ${item.unit_price}, ${item.subtotal}, ${invoice.id})
       `;
 
-      // Déduire les matières premières selon la recette du produit
+      // Déduire les matières premières et logger le mouvement
       const recipe = await sql`
         SELECT raw_material_id, quantity_per_unit::float
         FROM product_recipes
         WHERE product_id = ${item.product_id} AND company_id = ${companyId}
       `;
+
       for (const ingredient of recipe) {
         const deduct = ingredient.quantity_per_unit * item.quantity;
-        await sql`
+
+        // Mise à jour stock avec RETURNING pour avoir le stock après
+        const [updated] = await sql`
           UPDATE raw_materials
           SET quantity = GREATEST(0, quantity - ${deduct})
           WHERE id = ${ingredient.raw_material_id} AND company_id = ${companyId}
+          RETURNING quantity::float AS new_qty, name
         `;
+
+        if (updated) {
+          await sql`
+            INSERT INTO stock_movements
+              (company_id, raw_material_id, movement_type, quantity_change, quantity_after, reference_id, reference_label)
+            VALUES
+              (${companyId}, ${ingredient.raw_material_id}, 'sale', ${-deduct},
+               ${updated.new_qty}, ${invoice.id},
+               ${`Facture #${invoice.id} — ${item.product_name} ×${item.quantity}`})
+          `;
+        }
       }
     }
 
     return res.status(201).json({ invoice_id: invoice.id, total_amount: totalAmount, items: processed });
   }
 
-  // ── DELETE : annuler une facture (patron uniquement) — restaure les stocks ──
+  // ── DELETE : annuler une facture ──────────────────────────
   if (req.method === 'DELETE') {
     if (!isPatron) return res.status(403).json({ error: 'Accès refusé.' });
     const { id } = req.body;
 
-    // Récupérer les lignes de vente pour restaurer les stocks
     const salesLines = await sql`
       SELECT product_id, quantity FROM sales
       WHERE invoice_id = ${id} AND company_id = ${companyId}
@@ -125,10 +138,22 @@ export default async function handler(req, res) {
       `;
       for (const ingredient of recipe) {
         const restore = ingredient.quantity_per_unit * sale.quantity;
-        await sql`
+
+        const [updated] = await sql`
           UPDATE raw_materials SET quantity = quantity + ${restore}
           WHERE id = ${ingredient.raw_material_id} AND company_id = ${companyId}
+          RETURNING quantity::float AS new_qty
         `;
+
+        if (updated) {
+          await sql`
+            INSERT INTO stock_movements
+              (company_id, raw_material_id, movement_type, quantity_change, quantity_after, reference_id, reference_label)
+            VALUES
+              (${companyId}, ${ingredient.raw_material_id}, 'sale_cancel', ${restore},
+               ${updated.new_qty}, ${id}, ${`Annulation facture #${id}`})
+          `;
+        }
       }
     }
 
