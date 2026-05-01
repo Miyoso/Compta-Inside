@@ -902,151 +902,128 @@ export default function PatronDashboard() {
           ══════════════════════════════════════════ */}
           {tab === 'salaires' && (
             <div>
-              <div style={S.sectionHeader}>
-                <h2 style={S.sectionTitle}>Salaires & Impôts</h2>
-                <button style={S.btnPrimary} onClick={() => setShowAddSale(true)}>+ Enregistrer une vente</button>
-              </div>
+              <h2 style={S.sectionTitle}>Salaires & Impôts</h2>
 
-              {/* Modale : Ajouter une vente */}
-              {showAddSale && (
-                <div style={S.modal}>
-                  <div style={S.modalBox}>
-                    <h3 style={S.modalTitle}>Enregistrer une vente</h3>
-                    <form onSubmit={handleAddSale} style={S.form}>
-                      <label style={S.label}>Employé</label>
-                      <select value={sEmployee} onChange={e => setSEmployee(e.target.value)} required style={S.select}>
-                        <option value="">-- Choisir --</option>
-                        {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                      </select>
-                      <label style={S.label}>Produit vendu</label>
-                      <select value={sProduct} onChange={e => setSProduct(e.target.value)} required style={S.select}>
-                        <option value="">-- Choisir --</option>
-                        {products.map(p => (
-                          <option key={p.id} value={p.id}>{p.name} — {fmt(p.price)} (stock: {p.stock_quantity})</option>
-                        ))}
-                      </select>
-                      <label style={S.label}>Quantité</label>
-                      <input type="number" min="1" value={sQty} onChange={e => setSQty(e.target.value)} required style={S.input} />
-                      {sProduct && sQty && (
-                        <div style={S.calcPreview}>
-                          Total estimé : <strong>{fmt((products.find(p => String(p.id) === String(sProduct))?.price || 0) * parseInt(sQty || 0))}</strong>
-                        </div>
-                      )}
-                      <div style={S.modalActions}>
-                        <button type="button" style={S.btnSecondary} onClick={() => setShowAddSale(false)}>Annuler</button>
-                        <button type="submit" style={S.btnPrimary} disabled={loading}>{loading ? 'Enregistrement…' : 'Enregistrer'}</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-
-              {/* Récap impôts */}
-              {employees.length > 0 && (() => {
-                const totalSales = employees.reduce((a, e) => a + e.total_sales, 0);
-                const totalSal = employees.reduce((a, e) => a + e.salary_due, 0);
-                return (
-                  <div style={S.taxBox}>
-                    <div style={S.taxRow}>
-                      <span>CA total du mois</span>
-                      <strong>{fmt(totalSales)}</strong>
-                    </div>
-                    <div style={{ ...S.taxRow, color: '#dc2626' }}>
-                      <span>Impôts à reverser (15%)</span>
-                      <strong>{fmt(totalSales * TAX_RATE)}</strong>
-                    </div>
-                    <div style={{ ...S.taxRow, color: '#d97706' }}>
-                      <span>Total salaires à distribuer</span>
-                      <strong>{fmt(totalSal)}</strong>
-                    </div>
-                    <div style={{ ...S.taxRow, borderTop: '2px solid #e2e8f0', paddingTop: 10, marginTop: 4, color: '#16a34a' }}>
-                      <span>Bénéfice net</span>
-                      <strong>{fmt(totalSales - totalSales * TAX_RATE - totalSal)}</strong>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Tableau des employés */}
-              <h3 style={S.subTitle}>Salaires par employé ce mois-ci</h3>
               {employees.length === 0 ? <p style={S.loading}>Chargement…</p> : (
-                <div style={S.tableWrap}>
-                  <table style={S.table}>
-                    <thead>
-                      <tr>
-                        <th style={S.th}>Employé</th>
-                        <th style={S.th}>Rôle</th>
-                        <th style={S.th}>Ventes du mois</th>
-                        <th style={S.th}>% Salaire</th>
-                        <th style={S.th}>Salaire à payer</th>
-                        <th style={S.th}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {employees.map((emp) => (
-                        <tr key={emp.id} style={S.tr}>
-                          <td style={S.td}><strong>{emp.name}</strong></td>
-                          <td style={S.td}>
-                            <span style={{ ...S.badge, background: emp.role === 'patron' ? '#dbeafe' : '#f1f5f9', color: emp.role === 'patron' ? '#1d4ed8' : '#475569' }}>
+                <>
+                  {/* ── Salaires à verser cette semaine ── */}
+                  <h3 style={S.subTitle}>💸 Salaires à verser — semaine en cours</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 28 }}>
+                    {employees.map((emp) => (
+                      <div key={emp.id} style={{
+                        background: '#fff',
+                        borderRadius: 14,
+                        padding: '18px 20px',
+                        border: `2px solid ${emp.week_salary > 0 ? '#fde68a' : '#e2e8f0'}`,
+                        boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: '#1e293b' }}>{emp.name}</div>
+                            <span style={{ ...S.badge, background: emp.role === 'patron' ? '#dbeafe' : '#f1f5f9', color: emp.role === 'patron' ? '#1d4ed8' : '#475569', fontSize: 11 }}>
                               {emp.role === 'patron' ? '👑 Patron' : '👤 Employé'}
                             </span>
-                          </td>
-                          <td style={S.td}>{fmt(emp.total_sales)}</td>
-                          <td style={S.td}>
-                            {editingEmployee === emp.id ? (
-                              <SalaryEditor current={emp.salary_percent} onSave={(v) => handleUpdateSalaryPercent(emp.id, v)} onCancel={() => setEditingEmployee(null)} />
-                            ) : (
-                              <span>{emp.salary_percent}%</span>
-                            )}
-                          </td>
-                          <td style={{ ...S.td, fontWeight: 700, color: '#d97706' }}>{fmt(emp.salary_due)}</td>
-                          <td style={S.td}>
-                            {editingEmployee !== emp.id && (
-                              <button style={S.btnSmall} onClick={() => setEditingEmployee(emp.id)}>✏️ Modifier %</button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>taux</div>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: '#374151' }}>{emp.salary_percent}%</div>
+                          </div>
+                        </div>
 
-              {/* Historique des ventes */}
-              <h3 style={{ ...S.subTitle, marginTop: 32 }}>Historique des ventes</h3>
-              {sales.length === 0 ? (
-                <p style={S.empty}>Aucune vente enregistrée pour le moment.</p>
-              ) : (
-                <div style={S.tableWrap}>
-                  <table style={S.table}>
-                    <thead>
-                      <tr>
-                        <th style={S.th}>Employé</th>
-                        <th style={S.th}>Produit</th>
-                        <th style={S.th}>Qté</th>
-                        <th style={S.th}>Prix unit.</th>
-                        <th style={S.th}>Total</th>
-                        <th style={S.th}>Date</th>
-                        <th style={S.th}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sales.map((s) => (
-                        <tr key={s.id} style={S.tr}>
-                          <td style={S.td}>{s.employee_name}</td>
-                          <td style={S.td}>{s.product_name}</td>
-                          <td style={S.td}>{s.quantity}</td>
-                          <td style={S.td}>{fmt(s.unit_price)}</td>
-                          <td style={{ ...S.td, fontWeight: 600 }}>{fmt(s.total_amount)}</td>
-                          <td style={{ ...S.td, color: '#94a3b8', fontSize: 12 }}>{fmtDate(s.sale_date)}</td>
-                          <td style={S.td}>
-                            <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeleteSale(s.id)}>🗑️ Annuler</button>
-                          </td>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b', marginBottom: 6 }}>
+                          <span>Ventes semaine</span>
+                          <span style={{ fontWeight: 600, color: '#1e293b' }}>{fmt(emp.week_sales)}</span>
+                        </div>
+
+                        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10, marginTop: 4 }}>
+                          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 2 }}>À verser cette semaine</div>
+                          <div style={{ fontSize: 22, fontWeight: 900, color: emp.week_salary > 0 ? '#d97706' : '#94a3b8' }}>
+                            {fmt(emp.week_salary)}
+                          </div>
+                        </div>
+
+                        {editingEmployee === emp.id ? (
+                          <div style={{ marginTop: 10 }}>
+                            <SalaryEditor current={emp.salary_percent} onSave={(v) => handleUpdateSalaryPercent(emp.id, v)} onCancel={() => setEditingEmployee(null)} />
+                          </div>
+                        ) : (
+                          <button style={{ ...S.btnSmall, marginTop: 10, width: '100%' }} onClick={() => setEditingEmployee(emp.id)}>✏️ Modifier le %</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Total à distribuer cette semaine */}
+                  {(() => {
+                    const totalWeekSal = employees.reduce((a, e) => a + e.week_salary, 0);
+                    const totalMonthSal = employees.reduce((a, e) => a + e.salary_due, 0);
+                    return totalWeekSal > 0 ? (
+                      <div style={{ background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 12, padding: '14px 20px', marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                        <div>
+                          <div style={{ fontSize: 13, color: '#92400e', fontWeight: 600 }}>💰 Total salaires à distribuer cette semaine</div>
+                          <div style={{ fontSize: 28, fontWeight: 900, color: '#d97706', marginTop: 2 }}>{fmt(totalWeekSal)}</div>
+                        </div>
+                        <div style={{ fontSize: 13, color: '#92400e' }}>
+                          Total du mois : <strong>{fmt(totalMonthSal)}</strong>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* ── Tableau récap mois ── */}
+                  <h3 style={S.subTitle}>📊 Récapitulatif du mois</h3>
+                  <div style={S.tableWrap}>
+                    <table style={S.table}>
+                      <thead>
+                        <tr>
+                          <th style={S.th}>Employé</th>
+                          <th style={S.th}>Rôle</th>
+                          <th style={S.th}>Ventes semaine</th>
+                          <th style={S.th}>Salaire semaine</th>
+                          <th style={S.th}>Ventes du mois</th>
+                          <th style={S.th}>Salaire du mois</th>
+                          <th style={S.th}>% Salaire</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {employees.map((emp) => (
+                          <tr key={emp.id} style={S.tr}>
+                            <td style={S.td}><strong>{emp.name}</strong></td>
+                            <td style={S.td}>
+                              <span style={{ ...S.badge, background: emp.role === 'patron' ? '#dbeafe' : '#f1f5f9', color: emp.role === 'patron' ? '#1d4ed8' : '#475569' }}>
+                                {emp.role === 'patron' ? '👑 Patron' : '👤 Employé'}
+                              </span>
+                            </td>
+                            <td style={S.td}>{fmt(emp.week_sales)}</td>
+                            <td style={{ ...S.td, fontWeight: 700, color: '#d97706' }}>{fmt(emp.week_salary)}</td>
+                            <td style={S.td}>{fmt(emp.total_sales)}</td>
+                            <td style={{ ...S.td, fontWeight: 600, color: '#7c3aed' }}>{fmt(emp.salary_due)}</td>
+                            <td style={S.td}>
+                              {editingEmployee === emp.id ? (
+                                <SalaryEditor current={emp.salary_percent} onSave={(v) => handleUpdateSalaryPercent(emp.id, v)} onCancel={() => setEditingEmployee(null)} />
+                              ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontWeight: 600 }}>{emp.salary_percent}%</span>
+                                  <button style={S.btnSmall} onClick={() => setEditingEmployee(emp.id)}>✏️</button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ background: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
+                          <td colSpan={2} style={{ ...S.td, fontWeight: 700 }}>TOTAL</td>
+                          <td style={{ ...S.td, fontWeight: 700 }}>{fmt(employees.reduce((a, e) => a + e.week_sales, 0))}</td>
+                          <td style={{ ...S.td, fontWeight: 800, color: '#d97706' }}>{fmt(employees.reduce((a, e) => a + e.week_salary, 0))}</td>
+                          <td style={{ ...S.td, fontWeight: 700 }}>{fmt(employees.reduce((a, e) => a + e.total_sales, 0))}</td>
+                          <td style={{ ...S.td, fontWeight: 800, color: '#7c3aed' }}>{fmt(employees.reduce((a, e) => a + e.salary_due, 0))}</td>
+                          <td style={S.td} />
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           )}

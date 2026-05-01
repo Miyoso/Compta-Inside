@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   const companyId = token.companyId;
 
-  // GET — employés avec leurs ventes du mois + salaire calculé
+  // GET — employés avec ventes semaine + mois et salaires calculés
   if (req.method === 'GET') {
     const employees = await sql`
       SELECT
@@ -18,15 +18,30 @@ export default async function handler(req, res) {
         u.email,
         u.role,
         u.salary_percent::float,
-        COALESCE(SUM(s.total_amount), 0)::float AS total_sales,
-        COALESCE(SUM(s.total_amount) * u.salary_percent / 100, 0)::float AS salary_due
+
+        -- Ventes & salaire de la semaine en cours
+        COALESCE(SUM(s_week.total_amount), 0)::float                              AS week_sales,
+        COALESCE(SUM(s_week.total_amount) * u.salary_percent / 100, 0)::float    AS week_salary,
+
+        -- Ventes & salaire du mois en cours
+        COALESCE(SUM(s_month.total_amount), 0)::float                             AS total_sales,
+        COALESCE(SUM(s_month.total_amount) * u.salary_percent / 100, 0)::float   AS salary_due
+
       FROM users u
-      LEFT JOIN sales s
-        ON s.employee_id = u.id
-        AND DATE_TRUNC('month', s.sale_date) = DATE_TRUNC('month', NOW())
+
+      LEFT JOIN sales s_week
+        ON s_week.employee_id = u.id
+        AND s_week.sale_date >= DATE_TRUNC('week', NOW())
+
+      LEFT JOIN sales s_month
+        ON s_month.employee_id = u.id
+        AND DATE_TRUNC('month', s_month.sale_date) = DATE_TRUNC('month', NOW())
+
       WHERE u.company_id = ${companyId}
+        AND u.status = 'active'
+
       GROUP BY u.id, u.name, u.email, u.role, u.salary_percent
-      ORDER BY u.name ASC
+      ORDER BY week_salary DESC, u.name ASC
     `;
     return res.status(200).json(employees);
   }
