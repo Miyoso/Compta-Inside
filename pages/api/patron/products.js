@@ -51,23 +51,30 @@ export default async function handler(req, res) {
 
   // DELETE — supprimer un produit
   if (req.method === 'DELETE') {
-    const { id } = req.body;
+    try {
+      const { id } = req.body;
+      if (!id) return res.status(400).json({ error: 'ID manquant.' });
 
-    // Vérifier s'il existe des ventes liées à ce produit
-    const [salesCheck] = await sql`
-      SELECT COUNT(*)::int AS count FROM sales
-      WHERE product_id = ${id} AND company_id = ${companyId}
-    `;
-    if (salesCheck.count > 0) {
-      return res.status(409).json({
-        error: `Ce produit a ${salesCheck.count} vente(s) enregistrée(s) et ne peut pas être supprimé. Vous pouvez modifier son nom ou son prix.`,
-      });
+      // Vérifier s'il existe des ventes liées à ce produit
+      const [salesCheck] = await sql`
+        SELECT COUNT(*)::int AS count FROM sales
+        WHERE product_id = ${parseInt(id)} AND company_id = ${companyId}
+      `;
+      if (salesCheck.count > 0) {
+        return res.status(409).json({
+          error: `Ce produit a ${salesCheck.count} vente(s) enregistrée(s) et ne peut pas être supprimé. Modifiez son nom ou son prix si nécessaire.`,
+        });
+      }
+
+      // Supprimer la recette liée d'abord
+      await sql`DELETE FROM product_recipes WHERE product_id = ${parseInt(id)} AND company_id = ${companyId}`;
+      // Supprimer le produit
+      await sql`DELETE FROM products WHERE id = ${parseInt(id)} AND company_id = ${companyId}`;
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error('DELETE product error:', err);
+      return res.status(500).json({ error: 'Erreur serveur lors de la suppression.' });
     }
-
-    // Supprimer la recette liée (au cas où pas de CASCADE)
-    await sql`DELETE FROM product_recipes WHERE product_id = ${id} AND company_id = ${companyId}`;
-    await sql`DELETE FROM products WHERE id = ${id} AND company_id = ${companyId}`;
-    return res.status(200).json({ success: true });
   }
 
   return res.status(405).end();

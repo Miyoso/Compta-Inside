@@ -314,8 +314,9 @@ export default function PatronDashboard() {
       if (recipeProduct?.id === id) { setRecipeProduct(null); setRecipe([]); }
       loadProducts();
     } else {
-      const d = await r.json();
-      showToast(d.error || 'Impossible de supprimer ce produit.', 'error');
+      let msg = 'Impossible de supprimer ce produit.';
+      try { const d = await r.json(); if (d.error) msg = d.error; } catch {}
+      showToast(msg, 'error');
     }
   }
 
