@@ -307,9 +307,16 @@ export default function PatronDashboard() {
   }
 
   async function handleDeleteProduct(id) {
-    if (!confirm('Supprimer ce produit ?')) return;
-    await fetch('/api/patron/products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    showToast('Produit supprimé.'); loadProducts();
+    if (!confirm('Supprimer ce produit ? Cette action est irréversible.')) return;
+    const r = await fetch('/api/patron/products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    if (r.ok) {
+      showToast('Produit supprimé.');
+      if (recipeProduct?.id === id) { setRecipeProduct(null); setRecipe([]); }
+      loadProducts();
+    } else {
+      const d = await r.json();
+      showToast(d.error || 'Impossible de supprimer ce produit.', 'error');
+    }
   }
 
   function openEditProduct(p) {

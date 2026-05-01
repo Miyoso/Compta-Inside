@@ -52,6 +52,20 @@ export default async function handler(req, res) {
   // DELETE — supprimer un produit
   if (req.method === 'DELETE') {
     const { id } = req.body;
+
+    // Vérifier s'il existe des ventes liées à ce produit
+    const [salesCheck] = await sql`
+      SELECT COUNT(*)::int AS count FROM sales
+      WHERE product_id = ${id} AND company_id = ${companyId}
+    `;
+    if (salesCheck.count > 0) {
+      return res.status(409).json({
+        error: `Ce produit a ${salesCheck.count} vente(s) enregistrée(s) et ne peut pas être supprimé. Vous pouvez modifier son nom ou son prix.`,
+      });
+    }
+
+    // Supprimer la recette liée (au cas où pas de CASCADE)
+    await sql`DELETE FROM product_recipes WHERE product_id = ${id} AND company_id = ${companyId}`;
     await sql`DELETE FROM products WHERE id = ${id} AND company_id = ${companyId}`;
     return res.status(200).json({ success: true });
   }
