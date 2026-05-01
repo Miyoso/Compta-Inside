@@ -426,43 +426,108 @@ export default function PatronDashboard() {
           ══════════════════════════════════════════ */}
           {tab === 'overview' && (
             <div>
-              <h2 style={S.sectionTitle}>Vue d'ensemble — {new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}</h2>
+              <h2 style={S.sectionTitle}>Vue d'ensemble — semaine du {(() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' }); })()}</h2>
 
               {!overview ? <p style={S.loading}>Chargement…</p> : (
                 <>
+                  {/* Bloc IRS taxe hebdomadaire — mis en avant */}
+                  <div style={S.irsBox}>
+                    <div style={S.irsLeft}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                        🏛️ Taxe IRS — Semaine en cours
+                      </div>
+                      <div style={{ fontSize: 36, fontWeight: 900, color: '#dc2626', lineHeight: 1 }}>
+                        {fmt(overview.weekTaxAmount)}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#b91c1c', marginTop: 6 }}>
+                        à verser sur le compte IRS
+                      </div>
+                    </div>
+                    <div style={S.irsRight}>
+                      <div style={S.irsRow}>
+                        <span>CA de la semaine</span>
+                        <strong>{fmt(overview.weekSales)}</strong>
+                      </div>
+                      <div style={{ ...S.irsRow, color: '#7c3aed' }}>
+                        <span>− Salaires</span>
+                        <strong>− {fmt(overview.weekSalaries)}</strong>
+                      </div>
+                      <div style={{ ...S.irsRow, borderTop: '1px solid #fca5a5', paddingTop: 8, marginTop: 4 }}>
+                        <span>Base imposable</span>
+                        <strong>{fmt(overview.weekNet)}</strong>
+                      </div>
+                      <div style={{ marginTop: 10 }}>
+                        <TaxBracketBar net={overview.weekNet} rate={overview.weekTaxRate} bracket={overview.weekBracket} />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* KPI Cards */}
                   <div style={S.kpiGrid}>
                     <div style={S.kpiCard}>
                       <div style={S.kpiIcon}>💵</div>
-                      <div style={S.kpiLabel}>Chiffre d'affaires</div>
-                      <div style={S.kpiValue}>{fmt(overview.totalSales)}</div>
-                    </div>
-                    <div style={{ ...S.kpiCard, borderColor: '#f59e0b' }}>
-                      <div style={S.kpiIcon}>🛍️</div>
-                      <div style={S.kpiLabel}>Achats matières premières</div>
-                      <div style={{ ...S.kpiValue, color: '#d97706' }}>− {fmt(overview.totalPurchases)}</div>
-                    </div>
-                    <div style={{ ...S.kpiCard, borderColor: '#dc2626' }}>
-                      <div style={S.kpiIcon}>🏛️</div>
-                      <div style={S.kpiLabel}>Impôts (15% sur {fmt(overview.taxableBase)})</div>
-                      <div style={{ ...S.kpiValue, color: '#dc2626' }}>{fmt(overview.taxes)}</div>
+                      <div style={S.kpiLabel}>CA semaine en cours</div>
+                      <div style={S.kpiValue}>{fmt(overview.weekSales)}</div>
                     </div>
                     <div style={{ ...S.kpiCard, borderColor: '#8b5cf6' }}>
                       <div style={S.kpiIcon}>👥</div>
-                      <div style={S.kpiLabel}>Salaires à distribuer</div>
-                      <div style={{ ...S.kpiValue, color: '#7c3aed' }}>{fmt(overview.totalSalaries)}</div>
+                      <div style={S.kpiLabel}>Salaires de la semaine</div>
+                      <div style={{ ...S.kpiValue, color: '#7c3aed' }}>− {fmt(overview.weekSalaries)}</div>
+                    </div>
+                    <div style={{ ...S.kpiCard, borderColor: '#dc2626' }}>
+                      <div style={S.kpiIcon}>🏛️</div>
+                      <div style={S.kpiLabel}>Taxe IRS ({(overview.weekTaxRate * 100).toFixed(0)}%)</div>
+                      <div style={{ ...S.kpiValue, color: '#dc2626' }}>{fmt(overview.weekTaxAmount)}</div>
+                    </div>
+                    <div style={{ ...S.kpiCard, borderColor: '#f59e0b' }}>
+                      <div style={S.kpiIcon}>🛍️</div>
+                      <div style={S.kpiLabel}>Achats mois (compta)</div>
+                      <div style={{ ...S.kpiValue, color: '#d97706' }}>{fmt(overview.totalPurchases)}</div>
                     </div>
                     <div style={{ ...S.kpiCard, borderColor: '#16a34a' }}>
                       <div style={S.kpiIcon}>📈</div>
-                      <div style={S.kpiLabel}>Bénéfice net</div>
-                      <div style={{ ...S.kpiValue, color: '#16a34a' }}>{fmt(overview.netRevenue)}</div>
+                      <div style={S.kpiLabel}>Net après salaires & taxe</div>
+                      <div style={{ ...S.kpiValue, color: '#16a34a' }}>{fmt(overview.weekNet - overview.weekTaxAmount)}</div>
                     </div>
                   </div>
+
+                  {/* Historique des 4 semaines précédentes */}
+                  {overview.prevWeeks && overview.prevWeeks.some(w => w.sales > 0) && (
+                    <div style={{ marginBottom: 24 }}>
+                      <h3 style={S.subTitle}>Historique — 4 semaines précédentes</h3>
+                      <div style={S.tableWrap}>
+                        <table style={S.table}>
+                          <thead>
+                            <tr>
+                              <th style={S.th}>Semaine</th>
+                              <th style={S.th}>CA</th>
+                              <th style={S.th}>Salaires</th>
+                              <th style={S.th}>Base imposable</th>
+                              <th style={S.th}>Tranche</th>
+                              <th style={S.th}>Taxe IRS</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {overview.prevWeeks.map((w, i) => (
+                              <tr key={i} style={S.tr}>
+                                <td style={S.td}>Sem. du {new Date(w.weekStart).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</td>
+                                <td style={S.td}>{fmt(w.sales)}</td>
+                                <td style={{ ...S.td, color: '#7c3aed' }}>− {fmt(w.salaries)}</td>
+                                <td style={S.td}>{fmt(w.net)}</td>
+                                <td style={{ ...S.td, fontSize: 12, color: '#64748b' }}>{w.bracket}</td>
+                                <td style={{ ...S.td, fontWeight: 700, color: w.tax > 0 ? '#dc2626' : '#94a3b8' }}>{fmt(w.tax)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Alerte stock */}
                   {overview.alertsCount > 0 && (
                     <div style={S.alertBanner}>
-                      ⚠️ <strong>{overview.alertsCount} produit{overview.alertsCount > 1 ? 's' : ''}</strong> en stock bas !{' '}
+                      ⚠️ <strong>{overview.alertsCount} matière{overview.alertsCount > 1 ? 's' : ''} première{overview.alertsCount > 1 ? 's' : ''}</strong> en stock bas !{' '}
                       <button style={S.alertLink} onClick={() => setTab('stocks')}>Voir les stocks →</button>
                     </div>
                   )}
@@ -1257,6 +1322,38 @@ function StockEditor({ current, onSave, onCancel }) {
   );
 }
 
+// ── Barre barème fiscal ───────────────────────────────────────
+function TaxBracketBar({ net, rate, bracket }) {
+  const brackets = [
+    { label: '0 %',  min: 0,     max: 14999,  color: '#16a34a' },
+    { label: '10 %', min: 15000, max: 30999,  color: '#f59e0b' },
+    { label: '20 %', min: 31000, max: 50999,  color: '#f97316' },
+    { label: '30 %', min: 51000, max: 100000, color: '#dc2626' },
+  ];
+  const maxVal = 100000;
+  const clampedNet = Math.min(net, maxVal);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 2, height: 10, borderRadius: 6, overflow: 'hidden', marginBottom: 6 }}>
+        {brackets.map((b, i) => {
+          const width = ((b.max - b.min + 1) / maxVal) * 100;
+          const active = net >= b.min && (i === brackets.length - 1 ? net >= b.min : net <= b.max);
+          return (
+            <div key={i} style={{ width: `${width}%`, background: active ? b.color : b.color + '33', transition: 'background 0.3s' }} title={`${b.label} — ${b.min.toLocaleString('fr-FR')} à ${b.max.toLocaleString('fr-FR')}`} />
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 11, color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+        <span>$0</span><span>$15k</span><span>$31k</span><span>$51k</span><span>$100k+</span>
+      </div>
+      <div style={{ marginTop: 6, fontSize: 12, fontWeight: 700, color: rate === 0 ? '#16a34a' : '#dc2626' }}>
+        Tranche active : {bracket}
+      </div>
+    </div>
+  );
+}
+
 function SalaryEditor({ current, onSave, onCancel }) {
   const [val, setVal] = useState(String(current));
   return (
@@ -1347,6 +1444,12 @@ const S = {
   pendingActions: { display: 'flex', gap: 8 },
   btnApprove:     { padding: '7px 14px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
   btnReject:      { padding: '7px 14px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
+
+  // Bloc IRS
+  irsBox:   { background: 'linear-gradient(135deg, #fff1f2 0%, #fef2f2 100%)', border: '2px solid #fca5a5', borderRadius: 16, padding: '24px 28px', marginBottom: 24, display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' },
+  irsLeft:  { flex: 1, minWidth: 200 },
+  irsRight: { flex: 2, minWidth: 260, background: '#fff', borderRadius: 12, padding: '16px 20px', border: '1px solid #fca5a5' },
+  irsRow:   { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#374151', marginBottom: 6 },
 
   // Achats
   purchaseSummary: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 },

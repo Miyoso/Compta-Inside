@@ -1,7 +1,6 @@
 import { getToken } from 'next-auth/jwt';
 import sql from '../../../lib/db';
-
-const TAX_RATE = 0.15;
+import { computeWeeklyTax } from '../../../lib/tax';
 
 export default async function handler(req, res) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -10,136 +9,103 @@ export default async function handler(req, res) {
   }
   if (req.method !== 'GET') return res.status(405).end();
 
-  // Toutes les entreprises
   const companies = await sql`SELECT id, name FROM companies ORDER BY name ASC`;
 
   const result = await Promise.all(companies.map(async (company) => {
-    // CA du mois
-    const [salesRow] = await sql`
+
+    // ── Semaine en cours ────────────────────────────────────────
+    const [weekSalesRow] = await sql`
       SELECT COALESCE(SUM(total_amount), 0)::float AS total
       FROM sales
       WHERE company_id = ${company.id}
-        AND DATE_TRUNC('month', sale_date) = DATE_TRUNC('month', NOW())
+        AND sale_date >= DATE_TRUNC('week', NOW())
     `;
-    const totalSales = salesRow.total;
+    const weekSales = weekSalesRow.total;
 
-    // CA cumulé (historique complet)
-    const [salesAllRow] = await sql`
-      SELECT COALESCE(SUM(total_amount), 0)::float AS total
-      FROM sales
-      WHERE company_id = ${company.id}
-    `;
-    const totalSalesAll = salesAllRow.total;
-
-    // Achats matières premières du mois
-    const [purchRow] = await sql`
-      SELECT COALESCE(SUM(total_amount), 0)::float AS total
-      FROM purchases
-      WHERE company_id = ${company.id}
-        AND DATE_TRUNC('month', purchase_date) = DATE_TRUNC('month', NOW())
-    `;
-    const totalPurchases = purchRow.total;
-
-    // Base imposable et impôts du mois
-    const taxableBase = Math.max(0, totalSales - totalPurchases);
-    const taxes       = taxableBase * TAX_RATE;
-
-    // Impôts cumulés (historique)
-    const [salesAllMonths] = await sql`
-      SELECT
-        COALESCE(SUM(s.total_amount), 0)::float AS total_sales,
-        COALESCE(SUM(p.total_purchases), 0)::float AS total_purchases
-      FROM (
-        SELECT DATE_TRUNC('month', sale_date) AS month,
-               SUM(total_amount) AS total_amount
-        FROM sales
-        WHERE company_id = ${company.id}
-        GROUP BY month
-      ) s
-      LEFT JOIN (
-        SELECT DATE_TRUNC('month', purchase_date) AS month,
-               SUM(total_amount) AS total_purchases
-        FROM purchases
-        WHERE company_id = ${company.id}
-        GROUP BY month
-      ) p ON p.month = s.month
-    `;
-    const totalTaxesAll = Math.max(0, salesAllMonths.total_sales - salesAllMonths.total_purchases) * TAX_RATE;
-
-    // Salaires du mois
-    const [salRow] = await sql`
+    const [weekSalRow] = await sql`
       SELECT COALESCE(SUM(s.total_amount * u.salary_percent / 100), 0)::float AS total
       FROM sales s
       JOIN users u ON u.id = s.employee_id
       WHERE s.company_id = ${company.id}
-        AND DATE_TRUNC('month', s.sale_date) = DATE_TRUNC('month', NOW())
+        AND s.sale_date >= DATE_TRUNC('week', NOW())
     `;
-    const totalSalaries = salRow.total;
+    const weekSalaries = weekSalRow.total;
 
-    // Nombre d'employés actifs
-    const [empRow] = await sql`
-      SELECT COUNT(*)::int AS count FROM users
-      WHERE company_id = ${company.id} AND role = 'employee' AND status = 'active'
-    `;
+    const weekNet = Math.max(0, weekSales - weekSalaries);
+    const weekTax = computeWeeklyTax(weekNet);
 
-    // Nombre de patrons
-    const [patronRow] = await sql`
-      SELECT COUNT(*)::int AS count FROM users
-      WHERE company_id = ${company.id} AND role = 'patron'
-    `;
+    // ── 4 semaines précédentes ──────────────────────────────────
+    const prevWeeks = [];
+    for (let i = 1; i <= 4; i++) {
+      const [s] = await sql`
+        SELECT COALESCE(SUM(total_amount), 0)::float AS total
+        FROM sales
+        WHERE company_id = ${company.id}
+          AND sale_date >= DATE_TRUNC('week', NOW()) - (${i} * INTERVAL '1 week')
+          AND sale_date <  DATE_TRUNC('week', NOW()) - ((${i} - 1) * INTERVAL '1 week')
+      `;
+      const [sal] = await sql`
+        SELECT COALESCE(SUM(s2.total_amount * u.salary_percent / 100), 0)::float AS total
+        FROM sales s2
+        JOIN users u ON u.id = s2.employee_id
+        WHERE s2.company_id = ${company.id}
+          AND s2.sale_date >= DATE_TRUNC('week', NOW()) - (${i} * INTERVAL '1 week')
+          AND s2.sale_date <  DATE_TRUNC('week', NOW()) - ((${i} - 1) * INTERVAL '1 week')
+      `;
+      const net = Math.max(0, s.total - sal.total);
+      const tax = computeWeeklyTax(net);
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7) - i * 7);
+      prevWeeks.push({
+        weekStart: weekStart.toISOString().split('T')[0],
+        sales: s.total, salaries: sal.total, net,
+        tax: tax.tax, rate: tax.rate, bracket: tax.bracket,
+      });
+    }
 
-    // Comptes en attente
-    const [pendingRow] = await sql`
-      SELECT COUNT(*)::int AS count FROM users
-      WHERE company_id = ${company.id} AND status = 'pending'
-    `;
+    const totalTaxesDue = prevWeeks.reduce((a, w) => a + w.tax, 0) + weekTax.tax;
 
-    // Alertes stock matières premières
-    const [alertRow] = await sql`
-      SELECT COUNT(*)::int AS count FROM raw_materials
-      WHERE company_id = ${company.id} AND quantity <= min_alert
-    `;
-
-    // CA par mois (6 derniers mois) pour mini-graphique
+    // ── CA mensuel pour graphique ────────────────────────────────
     const monthlySales = await sql`
       SELECT DATE_TRUNC('month', sale_date) AS month,
              SUM(total_amount)::float AS total
       FROM sales
       WHERE company_id = ${company.id}
         AND sale_date >= NOW() - INTERVAL '6 months'
-      GROUP BY month
-      ORDER BY month ASC
+      GROUP BY month ORDER BY month ASC
     `;
 
-    const netRevenue = totalSales - taxes - totalSalaries - totalPurchases;
+    // ── Effectifs ────────────────────────────────────────────────
+    const [empRow]     = await sql`SELECT COUNT(*)::int AS count FROM users WHERE company_id = ${company.id} AND role = 'employee' AND status = 'active'`;
+    const [patronRow]  = await sql`SELECT COUNT(*)::int AS count FROM users WHERE company_id = ${company.id} AND role = 'patron'`;
+    const [pendingRow] = await sql`SELECT COUNT(*)::int AS count FROM users WHERE company_id = ${company.id} AND status = 'pending'`;
+    const [alertRow]   = await sql`SELECT COUNT(*)::int AS count FROM raw_materials WHERE company_id = ${company.id} AND quantity <= min_alert`;
 
     return {
-      id:              company.id,
-      name:            company.name,
-      totalSales,
-      totalSalesAll,
-      totalPurchases,
-      taxableBase,
-      taxes,
-      totalTaxesAll,
-      totalSalaries,
-      netRevenue,
-      employeeCount:   empRow.count,
-      patronCount:     patronRow.count,
-      pendingCount:    pendingRow.count,
-      stockAlerts:     alertRow.count,
+      id:            company.id,
+      name:          company.name,
+      weekSales,
+      weekSalaries,
+      weekNet,
+      weekTaxAmount: weekTax.tax,
+      weekTaxRate:   weekTax.rate,
+      weekBracket:   weekTax.bracket,
+      prevWeeks,
+      totalTaxesDue,
       monthlySales,
+      employeeCount: empRow.count,
+      patronCount:   patronRow.count,
+      pendingCount:  pendingRow.count,
+      stockAlerts:   alertRow.count,
     };
   }));
 
-  // Totaux globaux
-  const globalTaxes     = result.reduce((a, c) => a + c.taxes, 0);
-  const globalTaxesAll  = result.reduce((a, c) => a + c.totalTaxesAll, 0);
-  const globalSales     = result.reduce((a, c) => a + c.totalSales, 0);
-  const globalSalesAll  = result.reduce((a, c) => a + c.totalSalesAll, 0);
+  const globalWeekTax  = result.reduce((a, c) => a + c.weekTaxAmount, 0);
+  const globalWeekSales = result.reduce((a, c) => a + c.weekSales, 0);
+  const globalTaxesDue = result.reduce((a, c) => a + c.totalTaxesDue, 0);
 
   return res.status(200).json({
     companies: result,
-    totals: { globalTaxes, globalTaxesAll, globalSales, globalSalesAll },
+    totals: { globalWeekTax, globalWeekSales, globalTaxesDue },
   });
 }

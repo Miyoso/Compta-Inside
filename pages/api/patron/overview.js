@@ -1,7 +1,6 @@
 import { getToken } from 'next-auth/jwt';
 import sql from '../../../lib/db';
-
-const TAX_RATE = 0.15;
+import { computeWeeklyTax } from '../../../lib/tax';
 
 export default async function handler(req, res) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -12,46 +11,85 @@ export default async function handler(req, res) {
 
   const companyId = token.companyId;
 
-  // CA total du mois
-  const [salesRow] = await sql`
+  // ── Semaine en cours ──────────────────────────────────────────
+  const [weekSalesRow] = await sql`
     SELECT COALESCE(SUM(total_amount), 0)::float AS total
     FROM sales
     WHERE company_id = ${companyId}
-    AND DATE_TRUNC('month', sale_date) = DATE_TRUNC('month', NOW())
+      AND sale_date >= DATE_TRUNC('week', NOW())
   `;
-  const totalSales = salesRow.total;
+  const weekSales = weekSalesRow.total;
 
-  // Total achats matières premières du mois
-  const [purchRow] = await sql`
-    SELECT COALESCE(SUM(total_amount), 0)::float AS total
-    FROM purchases
-    WHERE company_id = ${companyId}
-    AND DATE_TRUNC('month', purchase_date) = DATE_TRUNC('month', NOW())
-  `;
-  const totalPurchases = purchRow.total;
-
-  // Base imposable = CA - achats (minimum 0)
-  const taxableBase = Math.max(0, totalSales - totalPurchases);
-  const taxes       = taxableBase * TAX_RATE;
-  const taxSaving   = totalPurchases * TAX_RATE; // économie réalisée grâce aux achats
-
-  // Total salaires du mois
-  const [salRow] = await sql`
+  const [weekSalRow] = await sql`
     SELECT COALESCE(SUM(s.total_amount * u.salary_percent / 100), 0)::float AS total
     FROM sales s
     JOIN users u ON u.id = s.employee_id
     WHERE s.company_id = ${companyId}
-    AND DATE_TRUNC('month', s.sale_date) = DATE_TRUNC('month', NOW())
+      AND s.sale_date >= DATE_TRUNC('week', NOW())
   `;
-  const totalSalaries = salRow.total;
+  const weekSalaries = weekSalRow.total;
 
-  // Alertes stock bas (matières premières, pas les produits)
+  const weekNet = Math.max(0, weekSales - weekSalaries);
+  const weekTax = computeWeeklyTax(weekNet);
+
+  // ── 4 semaines précédentes (historique) ──────────────────────
+  const prevWeeks = [];
+  for (let i = 1; i <= 4; i++) {
+    const [s] = await sql`
+      SELECT COALESCE(SUM(total_amount), 0)::float AS total
+      FROM sales
+      WHERE company_id = ${companyId}
+        AND sale_date >= DATE_TRUNC('week', NOW()) - (${i} * INTERVAL '1 week')
+        AND sale_date <  DATE_TRUNC('week', NOW()) - ((${i} - 1) * INTERVAL '1 week')
+    `;
+    const [sal] = await sql`
+      SELECT COALESCE(SUM(s2.total_amount * u.salary_percent / 100), 0)::float AS total
+      FROM sales s2
+      JOIN users u ON u.id = s2.employee_id
+      WHERE s2.company_id = ${companyId}
+        AND s2.sale_date >= DATE_TRUNC('week', NOW()) - (${i} * INTERVAL '1 week')
+        AND s2.sale_date <  DATE_TRUNC('week', NOW()) - ((${i} - 1) * INTERVAL '1 week')
+    `;
+    const net = Math.max(0, s.total - sal.total);
+    const tax = computeWeeklyTax(net);
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7) - i * 7);
+    prevWeeks.push({
+      weekStart: weekStart.toISOString().split('T')[0],
+      sales:    s.total,
+      salaries: sal.total,
+      net,
+      tax:      tax.tax,
+      rate:     tax.rate,
+      bracket:  tax.bracket,
+    });
+  }
+
+  // ── CA total du mois (comptabilité) ──────────────────────────
+  const [monthSalesRow] = await sql`
+    SELECT COALESCE(SUM(total_amount), 0)::float AS total
+    FROM sales
+    WHERE company_id = ${companyId}
+      AND DATE_TRUNC('month', sale_date) = DATE_TRUNC('month', NOW())
+  `;
+  const totalSales = monthSalesRow.total;
+
+  // ── Achats matières premières du mois ────────────────────────
+  const [purchRow] = await sql`
+    SELECT COALESCE(SUM(total_amount), 0)::float AS total
+    FROM purchases
+    WHERE company_id = ${companyId}
+      AND DATE_TRUNC('month', purchase_date) = DATE_TRUNC('month', NOW())
+  `;
+  const totalPurchases = purchRow.total;
+
+  // ── Alertes stock bas ─────────────────────────────────────────
   const [alertRow] = await sql`
     SELECT COUNT(*)::int AS count FROM raw_materials
     WHERE company_id = ${companyId} AND quantity <= min_alert
   `;
 
-  // 10 dernières ventes
+  // ── 10 dernières ventes ───────────────────────────────────────
   const recentSales = await sql`
     SELECT s.id, u.name AS employee_name, p.name AS product_name,
            s.quantity, s.total_amount::float, s.sale_date
@@ -64,14 +102,16 @@ export default async function handler(req, res) {
   `;
 
   return res.status(200).json({
+    weekSales,
+    weekSalaries,
+    weekNet,
+    weekTaxAmount: weekTax.tax,
+    weekTaxRate:   weekTax.rate,
+    weekBracket:   weekTax.bracket,
+    prevWeeks,
     totalSales,
     totalPurchases,
-    taxableBase,
-    taxes,
-    taxSaving,
-    totalSalaries,
-    netRevenue: totalSales - taxes - totalSalaries - totalPurchases,
-    alertsCount: alertRow.count,
+    alertsCount:   alertRow.count,
     recentSales,
   });
 }
