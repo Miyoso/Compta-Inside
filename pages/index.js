@@ -106,7 +106,7 @@ export default function Home() {
     return (
       <div style={styles.loadingPage}>
         <div style={styles.spinner} />
-        <p style={{ color: '#6e5038', marginTop: 16 }}>Chargement…</p>
+        <p style={{ color: '#6050a0', marginTop: 16 }}>Chargement…</p>
       </div>
     );
   }
@@ -282,12 +282,12 @@ export default function Home() {
   );
 }
 
-// ─── Styles — Dark Café Premium (cohérent avec toute l'app)
-// Fond #0f0c09 · Surface #1c1610 · Accent #d4900a · Texte #f0dfc8
+// ─── Styles — Thème cosmique (Inside Roleplay)
+// Fond #0d0818 · Surface #16102a · Accent #e040fb · Or #f0a820 · Texte #f0e8ff
 const styles = {
   page: {
     minHeight: '100vh',
-    background: '#0f0c09',
+    background: '#0d0818',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -300,20 +300,20 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#0f0c09',
+    background: '#0d0818',
     fontFamily: "'Segoe UI', system-ui, Arial, sans-serif",
   },
   spinner: {
     width: 44,
     height: 44,
-    border: '4px solid #2a1e12',
-    borderTop: '4px solid #d4900a',
+    border: '4px solid #2a1050',
+    borderTop: '4px solid #e040fb',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
   },
   header: {
     textAlign: 'center',
-    paddingTop: 52,
+    paddingTop: 56,
     paddingBottom: 28,
   },
   logo: {
@@ -323,20 +323,22 @@ const styles = {
     gap: 12,
   },
   logoIcon: {
-    fontSize: 38,
+    fontSize: 40,
+    filter: 'drop-shadow(0 0 12px rgba(224,64,251,0.5))',
   },
   logoText: {
     fontSize: 30,
     fontWeight: '800',
-    color: '#f0dfc8',
+    color: '#f0e8ff',
     letterSpacing: '-0.5px',
+    textShadow: '0 0 30px rgba(224,64,251,0.3)',
   },
   headerSub: {
-    color: '#6e5038',
+    color: '#6050a0',
     marginTop: 8,
-    fontSize: 13,
-    fontWeight: 500,
-    letterSpacing: 0.5,
+    fontSize: 12,
+    fontWeight: 600,
+    letterSpacing: 2,
     textTransform: 'uppercase',
   },
   main: {
@@ -348,16 +350,16 @@ const styles = {
     gap: 24,
   },
   card: {
-    background: 'linear-gradient(145deg, #1c1610, #221a0e)',
+    background: 'linear-gradient(145deg, #16102a, #1e1435)',
     borderRadius: 20,
-    boxShadow: '0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,200,80,0.05)',
-    border: '1px solid rgba(212,144,10,0.2)',
+    boxShadow: '0 8px 48px rgba(0,0,0,0.7), 0 0 40px rgba(224,64,251,0.06), inset 0 1px 0 rgba(224,64,251,0.08)',
+    border: '1px solid rgba(224,64,251,0.2)',
     width: '100%',
     overflow: 'hidden',
   },
   tabs: {
     display: 'flex',
-    borderBottom: '1px solid rgba(212,144,10,0.15)',
+    borderBottom: '1px solid rgba(224,64,251,0.12)',
   },
   tab: {
     flex: 1,
@@ -367,19 +369,19 @@ const styles = {
     cursor: 'pointer',
     fontSize: 14,
     fontWeight: '500',
-    color: '#5c4230',
+    color: '#5a4080',
     transition: 'all 0.2s',
   },
   tabActive: {
-    color: '#f0a820',
-    borderBottom: '2px solid #d4900a',
-    background: 'rgba(212,144,10,0.05)',
-    textShadow: '0 0 16px rgba(212,144,10,0.35)',
+    color: '#f060ff',
+    borderBottom: '2px solid #e040fb',
+    background: 'rgba(224,64,251,0.05)',
+    textShadow: '0 0 16px rgba(224,64,251,0.5)',
   },
   alertError: {
     margin: '16px 24px 0',
     padding: '12px 16px',
-    background: 'linear-gradient(135deg, #1a0808, #200c0c)',
+    background: 'linear-gradient(135deg, #180610, #200810)',
     border: '1px solid rgba(239,68,68,0.35)',
     borderRadius: 10,
     color: '#fca5a5',
@@ -388,8 +390,8 @@ const styles = {
   alertSuccess: {
     margin: '16px 24px 0',
     padding: '12px 16px',
-    background: 'rgba(74,222,128,0.08)',
-    border: '1px solid rgba(74,222,128,0.25)',
+    background: 'rgba(74,222,128,0.07)',
+    border: '1px solid rgba(74,222,128,0.22)',
     borderRadius: 10,
     color: '#4ade80',
     fontSize: 14,
@@ -403,18 +405,18 @@ const styles = {
   formTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#f0dfc8',
+    color: '#f0e8ff',
     margin: '0 0 4px',
   },
   formSub: {
-    color: '#5c4230',
+    color: '#5a4080',
     fontSize: 14,
     margin: '0 0 20px',
   },
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#8a6a48',
+    color: '#8060a0',
     marginTop: 14,
     marginBottom: 5,
     textTransform: 'uppercase',
@@ -422,17 +424,17 @@ const styles = {
   },
   hint: {
     fontWeight: '400',
-    color: '#4a3020',
+    color: '#4a3070',
     fontSize: 11,
   },
   input: {
     width: '100%',
     padding: '11px 14px',
-    border: '1.5px solid rgba(212,144,10,0.2)',
+    border: '1.5px solid rgba(224,64,251,0.18)',
     borderRadius: 9,
     fontSize: 15,
-    color: '#f0dfc8',
-    background: '#120e07',
+    color: '#f0e8ff',
+    background: '#0a061a',
     outline: 'none',
     boxSizing: 'border-box',
     transition: 'border-color 0.2s',
@@ -440,11 +442,11 @@ const styles = {
   select: {
     width: '100%',
     padding: '11px 14px',
-    border: '1.5px solid rgba(212,144,10,0.2)',
+    border: '1.5px solid rgba(224,64,251,0.18)',
     borderRadius: 9,
     fontSize: 15,
-    color: '#f0dfc8',
-    background: '#120e07',
+    color: '#f0e8ff',
+    background: '#0a061a',
     outline: 'none',
     boxSizing: 'border-box',
     cursor: 'pointer',
@@ -453,30 +455,30 @@ const styles = {
     marginTop: 22,
     width: '100%',
     padding: '13px',
-    background: 'linear-gradient(135deg, #c8800a, #e09a18)',
-    color: '#0f0c09',
+    background: 'linear-gradient(135deg, #b020d0, #f060ff)',
+    color: '#fff',
     border: 'none',
     borderRadius: 9,
     fontSize: 15,
     fontWeight: '700',
     cursor: 'pointer',
-    boxShadow: '0 4px 18px rgba(212,144,10,0.4)',
+    boxShadow: '0 4px 20px rgba(224,64,251,0.45)',
     transition: 'opacity 0.2s',
   },
   btnDisabled: {
-    opacity: 0.55,
+    opacity: 0.5,
     cursor: 'not-allowed',
   },
   switchText: {
     textAlign: 'center',
     fontSize: 13,
-    color: '#5c4230',
+    color: '#5a4080',
     marginTop: 18,
   },
   link: {
     background: 'none',
     border: 'none',
-    color: '#d4900a',
+    color: '#e040fb',
     cursor: 'pointer',
     fontSize: 13,
     fontWeight: '600',
@@ -489,9 +491,9 @@ const styles = {
   },
   companiesTitle: {
     fontSize: 11,
-    color: '#4a3020',
+    color: '#4a3070',
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    letterSpacing: 1.5,
     marginBottom: 12,
     fontWeight: 700,
   },
@@ -502,18 +504,18 @@ const styles = {
     flexWrap: 'wrap',
   },
   companyBadge: {
-    background: 'linear-gradient(145deg, #1c1610, #221a0e)',
-    border: '1px solid rgba(212,144,10,0.2)',
+    background: 'linear-gradient(145deg, #16102a, #1e1435)',
+    border: '1px solid rgba(224,64,251,0.18)',
     borderRadius: 20,
     padding: '7px 16px',
     fontSize: 13,
-    color: '#d4b888',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+    color: '#d0b8f8',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
   },
   footer: {
     marginTop: 'auto',
     padding: '36px 0 20px',
-    color: '#3a2810',
+    color: '#3a2860',
     fontSize: 12,
     textAlign: 'center',
   },

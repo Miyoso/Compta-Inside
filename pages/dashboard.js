@@ -327,17 +327,17 @@ export default function EmployeeDashboard() {
                     {salaryData.weeks.slice(1).map((w, i) => (
                       <div key={i} style={S.weekRow}>
                         <div style={{ flex: 2 }}>
-                          <div style={{ fontWeight: 600, fontSize: 14, color: '#f0dfc8' }}>{w.label}</div>
-                          <div style={{ fontSize: 12, color: '#5c4230', marginTop: 2 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: '#f0e8ff' }}>{w.label}</div>
+                          <div style={{ fontSize: 12, color: '#5a4080', marginTop: 2 }}>
                             {new Date(w.week_start).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} → {new Date(w.week_end).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                           </div>
                         </div>
                         <div style={{ flex: 2, textAlign: 'center' }}>
-                          <span style={{ fontSize: 15, fontWeight: 600, color: '#f0dfc8', display: 'block' }}>{fmt(w.total_sales)}</span>
-                          <span style={{ fontSize: 12, color: '#5c4230' }}>{w.nb_sales} vente{w.nb_sales !== 1 ? 's' : ''}</span>
+                          <span style={{ fontSize: 15, fontWeight: 600, color: '#f0e8ff', display: 'block' }}>{fmt(w.total_sales)}</span>
+                          <span style={{ fontSize: 12, color: '#5a4080' }}>{w.nb_sales} vente{w.nb_sales !== 1 ? 's' : ''}</span>
                         </div>
                         <div style={{ flex: 1, textAlign: 'right' }}>
-                          <span style={{ fontSize: 18, fontWeight: 800, color: w.salary > 0 ? '#4ade80' : '#5c4230' }}>{fmt(w.salary)}</span>
+                          <span style={{ fontSize: 18, fontWeight: 800, color: w.salary > 0 ? '#4ade80' : '#5a4080' }}>{fmt(w.salary)}</span>
                         </div>
                       </div>
                     ))}
@@ -352,29 +352,29 @@ export default function EmployeeDashboard() {
               <h2 style={S.title}>⚙️ Mon compte</h2>
 
               {/* Infos */}
-              <div style={{ background: 'linear-gradient(145deg, #1c1610, #221a0e)', borderRadius: 14, padding: '20px 24px', marginBottom: 24, border: '1px solid rgba(212,144,10,0.18)', boxShadow: '0 4px 20px rgba(0,0,0,0.35)' }}>
-                <div style={{ fontSize: 11, color: '#8a6a48', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>Nom affiché</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#f0dfc8', marginBottom: 18 }}>{session.user.name}</div>
-                <div style={{ fontSize: 11, color: '#8a6a48', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>Identifiant de connexion</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: '#d4900a' }}>@{session.user.username}</div>
+              <div style={{ background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 14, padding: '20px 24px', marginBottom: 24, border: '1px solid rgba(224,64,251,0.18)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                <div style={{ fontSize: 11, color: '#8060a0', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>Nom affiché</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#f0e8ff', marginBottom: 18 }}>{session.user.name}</div>
+                <div style={{ fontSize: 11, color: '#8060a0', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>Identifiant de connexion</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#e040fb' }}>@{session.user.username}</div>
               </div>
 
               {/* Formulaire changement mdp */}
-              <div style={{ background: 'linear-gradient(145deg, #1c1610, #221a0e)', borderRadius: 14, padding: '20px 24px', border: '1px solid rgba(212,144,10,0.18)', boxShadow: '0 4px 20px rgba(0,0,0,0.35)' }}>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f0dfc8', marginBottom: 16 }}>🔒 Changer mon mot de passe</h3>
+              <div style={{ background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 14, padding: '20px 24px', border: '1px solid rgba(224,64,251,0.18)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f0e8ff', marginBottom: 16 }}>🔒 Changer mon mot de passe</h3>
                 <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
                     <label style={S.label}>Mot de passe actuel</label>
                     <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required placeholder="••••••••" style={S.input} />
                   </div>
                   <div>
-                    <label style={S.label}>Nouveau mot de passe <span style={{ fontWeight: 400, color: '#5c4230', fontSize: 12 }}>(6 car. min.)</span></label>
+                    <label style={S.label}>Nouveau mot de passe <span style={{ fontWeight: 400, color: '#5a4080', fontSize: 12 }}>(6 car. min.)</span></label>
                     <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required minLength={6} placeholder="••••••••" style={S.input} />
                   </div>
                   <div>
                     <label style={S.label}>Confirmer le nouveau mot de passe</label>
                     <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="••••••••"
-                      style={{ ...S.input, borderColor: cpConfirm && cpNew !== cpConfirm ? '#ef4444' : 'rgba(212,144,10,0.2)' }} />
+                      style={{ ...S.input, borderColor: cpConfirm && cpNew !== cpConfirm ? '#ef4444' : 'rgba(224,64,251,0.18)' }} />
                     {cpConfirm && cpNew !== cpConfirm && (
                       <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4 }}>Les mots de passe ne correspondent pas.</div>
                     )}
@@ -394,97 +394,97 @@ export default function EmployeeDashboard() {
   );
 }
 
-// ─── Styles — Dark Café Premium (cohérent avec le dashboard patron)
-// Fond #0f0c09 · Surface #1c1610 · Accent #d4900a · Texte #f0dfc8
+// ─── Styles — Thème cosmique (Inside Roleplay)
+// Fond #0d0818 · Surface #16102a · Accent #e040fb · Or #f0a820 · Texte #f0e8ff
 const S = {
-  page:        { minHeight: '100vh', background: '#0f0c09', fontFamily: "'Segoe UI', system-ui, Arial, sans-serif" },
-  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0c09' },
-  spinner:     { width: 44, height: 44, border: '4px solid #2a1e12', borderTop: '4px solid #d4900a', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-  toast:       { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 22px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', maxWidth: 380 },
+  page:        { minHeight: '100vh', background: '#0d0818', fontFamily: "'Segoe UI', system-ui, Arial, sans-serif" },
+  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d0818' },
+  spinner:     { width: 44, height: 44, border: '4px solid #2a1050', borderTop: '4px solid #e040fb', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+  toast:       { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 22px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', maxWidth: 380 },
 
-  nav:     { background: 'linear-gradient(90deg, #0a0705 0%, #180f08 50%, #0a0705 100%)', borderBottom: '1px solid rgba(212,144,10,0.25)', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, boxShadow: '0 4px 24px rgba(0,0,0,0.6)' },
+  nav:     { background: 'linear-gradient(90deg, #08040f 0%, #110830 50%, #08040f 100%)', borderBottom: '1px solid rgba(224,64,251,0.2)', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, boxShadow: '0 4px 24px rgba(0,0,0,0.7)' },
   navLeft: { display: 'flex', alignItems: 'center', gap: 16 },
-  navLogo: { fontWeight: 800, fontSize: 20, color: '#f0dfc8', letterSpacing: 0.3 },
-  navCompany: { background: 'linear-gradient(135deg, #d4900a, #f0a820)', color: '#0f0c09', padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800, letterSpacing: 0.4 },
+  navLogo: { fontWeight: 800, fontSize: 20, color: '#f0e8ff', letterSpacing: 0.3 },
+  navCompany: { background: 'linear-gradient(135deg, #b020d0, #f060ff)', color: '#fff', padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800, letterSpacing: 0.4, boxShadow: '0 0 14px rgba(224,64,251,0.4)' },
   navRight: { display: 'flex', alignItems: 'center', gap: 14 },
-  navUser:  { color: '#8a6a48', fontSize: 13 },
-  navBtn:   { padding: '7px 16px', background: 'rgba(212,144,10,0.1)', border: '1px solid rgba(212,144,10,0.25)', borderRadius: 9, cursor: 'pointer', fontSize: 13, color: '#d4b080', fontWeight: 500 },
+  navUser:  { color: '#8060a0', fontSize: 13 },
+  navBtn:   { padding: '7px 16px', background: 'rgba(224,64,251,0.08)', border: '1px solid rgba(224,64,251,0.22)', borderRadius: 9, cursor: 'pointer', fontSize: 13, color: '#c090e0', fontWeight: 500 },
 
-  tabBar:   { background: '#130e08', borderBottom: '1px solid rgba(212,144,10,0.15)', display: 'flex', padding: '0 28px', overflowX: 'auto' },
-  tabBtn:   { padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 500, color: '#5c4230', whiteSpace: 'nowrap', borderBottom: '2px solid transparent', transition: 'color 0.2s' },
-  tabActive: { color: '#f0a820', borderBottom: '2px solid #d4900a', fontWeight: 700, textShadow: '0 0 20px rgba(212,144,10,0.4)' },
+  tabBar:   { background: '#0f0820', borderBottom: '1px solid rgba(224,64,251,0.12)', display: 'flex', padding: '0 28px', overflowX: 'auto' },
+  tabBtn:   { padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 500, color: '#5a4080', whiteSpace: 'nowrap', borderBottom: '2px solid transparent', transition: 'color 0.2s' },
+  tabActive: { color: '#f060ff', borderBottom: '2px solid #e040fb', fontWeight: 700, textShadow: '0 0 20px rgba(224,64,251,0.5)' },
 
   main:     { maxWidth: 1100, margin: '0 auto', padding: '28px 24px' },
-  title:    { fontSize: 22, fontWeight: 700, color: '#f0dfc8', marginBottom: 8 },
-  hint:     { fontSize: 14, color: '#5c4230', marginBottom: 20 },
-  subTitle: { fontSize: 16, fontWeight: 600, color: '#d4b888', marginBottom: 12 },
-  empty:    { color: '#5c4230', textAlign: 'center', padding: 32, background: '#1a1208', borderRadius: 12, border: '1px dashed rgba(212,144,10,0.2)' },
-  weekTotal: { marginBottom: 12, fontSize: 15, color: '#d4b888', fontWeight: 500 },
+  title:    { fontSize: 22, fontWeight: 700, color: '#f0e8ff', marginBottom: 8 },
+  hint:     { fontSize: 14, color: '#5a4080', marginBottom: 20 },
+  subTitle: { fontSize: 16, fontWeight: 600, color: '#d0b8f8', marginBottom: 12 },
+  empty:    { color: '#5a4080', textAlign: 'center', padding: 32, background: '#120c22', borderRadius: 12, border: '1px dashed rgba(224,64,251,0.18)' },
+  weekTotal: { marginBottom: 12, fontSize: 15, color: '#d0b8f8', fontWeight: 500 },
 
   // Layout split catalogue / panier
   splitLayout: { display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' },
   catalog: { flex: 3, minWidth: 280 },
-  cartPanel: { flex: 1, minWidth: 260, background: 'linear-gradient(145deg, #1c1610, #221a0e)', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', padding: 20, position: 'sticky', top: 20, border: '1px solid rgba(212,144,10,0.18)' },
-  cartTitle: { fontSize: 17, fontWeight: 700, color: '#f0dfc8', marginBottom: 16 },
-  cartEmpty: { color: '#5c4230', fontSize: 14, textAlign: 'center', lineHeight: 1.6, padding: '16px 0' },
+  cartPanel: { flex: 1, minWidth: 260, background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', padding: 20, position: 'sticky', top: 20, border: '1px solid rgba(224,64,251,0.18)' },
+  cartTitle: { fontSize: 17, fontWeight: 700, color: '#f0e8ff', marginBottom: 16 },
+  cartEmpty: { color: '#5a4080', fontSize: 14, textAlign: 'center', lineHeight: 1.6, padding: '16px 0' },
 
   // Produits
   productGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 },
-  productCard: { position: 'relative', background: 'linear-gradient(145deg, #1c1610, #221a0e)', border: '1px solid rgba(212,144,10,0.18)', borderRadius: 12, padding: '14px 10px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', boxShadow: '0 4px 16px rgba(0,0,0,0.35)' },
-  productCardInCart: { background: 'linear-gradient(145deg, #1e1800, #252000)', border: '2px solid #d4900a', boxShadow: '0 4px 20px rgba(212,144,10,0.2)' },
+  productCard: { position: 'relative', background: 'linear-gradient(145deg, #16102a, #1e1435)', border: '1px solid rgba(224,64,251,0.15)', borderRadius: 12, padding: '14px 10px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', boxShadow: '0 4px 16px rgba(0,0,0,0.4)' },
+  productCardInCart: { background: 'linear-gradient(145deg, #1e0a30, #280d40)', border: '2px solid #e040fb', boxShadow: '0 4px 20px rgba(224,64,251,0.25)' },
   productCardDisabled: { opacity: 0.45, cursor: 'not-allowed' },
-  cartBadge:   { position: 'absolute', top: -8, right: -8, background: 'linear-gradient(135deg, #c8800a, #e09a18)', color: '#0f0c09', borderRadius: '50%', width: 22, height: 22, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  productName: { fontWeight: 700, fontSize: 13, color: '#f0dfc8', marginBottom: 3 },
-  productCat:  { fontSize: 10, color: '#5c4230', marginBottom: 6 },
-  productPrice:{ fontSize: 15, fontWeight: 700, color: '#d4900a' },
+  cartBadge:   { position: 'absolute', top: -8, right: -8, background: 'linear-gradient(135deg, #b020d0, #f060ff)', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  productName: { fontWeight: 700, fontSize: 13, color: '#f0e8ff', marginBottom: 3 },
+  productCat:  { fontSize: 10, color: '#5a4080', marginBottom: 6 },
+  productPrice:{ fontSize: 15, fontWeight: 700, color: '#e040fb' },
   productStock:{ fontSize: 10, marginTop: 4, fontWeight: 600 },
 
   // Panier items
   cartItems: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 },
-  cartItem:  { background: '#1a1208', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(212,144,10,0.1)' },
-  cartItemName: { fontWeight: 600, fontSize: 14, color: '#f0dfc8', marginBottom: 8 },
+  cartItem:  { background: '#120c22', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(224,64,251,0.1)' },
+  cartItemName: { fontWeight: 600, fontSize: 14, color: '#f0e8ff', marginBottom: 8 },
   cartItemRow:  { display: 'flex', alignItems: 'center', gap: 8 },
-  cartItemTotal:{ fontSize: 14, fontWeight: 700, color: '#d4900a', flex: 1, textAlign: 'right' },
+  cartItemTotal:{ fontSize: 14, fontWeight: 700, color: '#e040fb', flex: 1, textAlign: 'right' },
 
   qtyRow: { display: 'flex', alignItems: 'center', gap: 6 },
-  qtyBtn: { width: 28, height: 28, border: '1px solid rgba(212,144,10,0.25)', borderRadius: 6, background: 'rgba(212,144,10,0.1)', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#d4b080', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  qtyVal: { width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#f0dfc8' },
-  removeBtn: { background: 'none', border: 'none', color: '#5c4230', cursor: 'pointer', fontSize: 14, padding: '0 4px' },
+  qtyBtn: { width: 28, height: 28, border: '1px solid rgba(224,64,251,0.22)', borderRadius: 6, background: 'rgba(224,64,251,0.08)', cursor: 'pointer', fontSize: 16, fontWeight: 700, color: '#c090e0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  qtyVal: { width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#f0e8ff' },
+  removeBtn: { background: 'none', border: 'none', color: '#5a4080', cursor: 'pointer', fontSize: 14, padding: '0 4px' },
 
-  cartFooter: { borderTop: '1px solid rgba(212,144,10,0.15)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 },
-  cartTotalRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 15, color: '#d4b888' },
-  cartTotalAmt: { fontSize: 20, fontWeight: 800, color: '#f0dfc8' },
-  btnSubmit:  { width: '100%', padding: '12px', background: 'linear-gradient(135deg, #c8800a, #e09a18)', color: '#0f0c09', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(212,144,10,0.35)' },
-  btnClear:   { width: '100%', padding: '8px', background: 'none', color: '#5c4230', border: '1px solid rgba(212,144,10,0.2)', borderRadius: 8, fontSize: 13, cursor: 'pointer' },
+  cartFooter: { borderTop: '1px solid rgba(224,64,251,0.12)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 },
+  cartTotalRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 15, color: '#d0b8f8' },
+  cartTotalAmt: { fontSize: 20, fontWeight: 800, color: '#f0e8ff' },
+  btnSubmit:  { width: '100%', padding: '12px', background: 'linear-gradient(135deg, #b020d0, #f060ff)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(224,64,251,0.4)' },
+  btnClear:   { width: '100%', padding: '8px', background: 'none', color: '#5a4080', border: '1px solid rgba(224,64,251,0.18)', borderRadius: 8, fontSize: 13, cursor: 'pointer' },
 
   // Factures
   invoiceList: { display: 'flex', flexDirection: 'column', gap: 8 },
-  invoiceCard: { background: 'linear-gradient(145deg, #1c1610, #221a0e)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', border: '1px solid rgba(212,144,10,0.12)' },
+  invoiceCard: { background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', border: '1px solid rgba(224,64,251,0.12)' },
   invoiceHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', cursor: 'pointer' },
-  invoiceNum:  { fontWeight: 700, fontSize: 14, color: '#f0dfc8', marginRight: 10 },
-  invoiceDate: { fontSize: 12, color: '#5c4230' },
-  invoiceTotal:{ fontSize: 16, fontWeight: 800, color: '#d4900a' },
-  invoiceToggle:{ fontSize: 12, color: '#5c4230' },
-  invoiceItems:{ padding: '0 18px 14px', display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px solid rgba(212,144,10,0.1)' },
-  invoiceItem: { display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#d4b888', paddingTop: 6 },
+  invoiceNum:  { fontWeight: 700, fontSize: 14, color: '#f0e8ff', marginRight: 10 },
+  invoiceDate: { fontSize: 12, color: '#5a4080' },
+  invoiceTotal:{ fontSize: 16, fontWeight: 800, color: '#e040fb' },
+  invoiceToggle:{ fontSize: 12, color: '#5a4080' },
+  invoiceItems:{ padding: '0 18px 14px', display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px solid rgba(224,64,251,0.08)' },
+  invoiceItem: { display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#d0b8f8', paddingTop: 6 },
 
   // Salaire
-  infoBox: { background: 'rgba(212,144,10,0.08)', border: '1px solid rgba(212,144,10,0.2)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 14, color: '#d4a060' },
-  currentWeekCard: { background: 'linear-gradient(145deg, #1c1610, #221a0e)', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.4)', overflow: 'hidden', marginBottom: 8, border: '1px solid rgba(212,144,10,0.18)' },
-  cwHeader: { background: 'linear-gradient(135deg, #1c1300 0%, #2a1e00 100%)', borderBottom: '1px solid rgba(212,144,10,0.2)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  cwBadge:  { color: '#f0a820', fontWeight: 700, fontSize: 15 },
-  cwDates:  { color: '#8a6a48', fontSize: 13 },
+  infoBox: { background: 'rgba(224,64,251,0.07)', border: '1px solid rgba(224,64,251,0.18)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 14, color: '#c090e0' },
+  currentWeekCard: { background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', overflow: 'hidden', marginBottom: 8, border: '1px solid rgba(224,64,251,0.18)' },
+  cwHeader: { background: 'linear-gradient(135deg, #160830 0%, #200c40 100%)', borderBottom: '1px solid rgba(224,64,251,0.18)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  cwBadge:  { color: '#f060ff', fontWeight: 700, fontSize: 15 },
+  cwDates:  { color: '#8060a0', fontSize: 13 },
   cwStats:  { padding: '24px', display: 'flex', alignItems: 'center', gap: 24 },
   cwStat:   { flex: 1 },
-  cwStatLabel: { fontSize: 13, color: '#8a6a48', marginBottom: 4 },
-  cwStatValue: { fontSize: 26, fontWeight: 800, color: '#f0dfc8' },
-  cwStatSub:   { fontSize: 12, color: '#5c4230', marginTop: 2 },
-  cwDivider:   { width: 1, height: 60, background: 'rgba(212,144,10,0.15)' },
+  cwStatLabel: { fontSize: 13, color: '#8060a0', marginBottom: 4 },
+  cwStatValue: { fontSize: 26, fontWeight: 800, color: '#f0e8ff' },
+  cwStatSub:   { fontSize: 12, color: '#5a4080', marginTop: 2 },
+  cwDivider:   { width: 1, height: 60, background: 'rgba(224,64,251,0.12)' },
   weekList: { display: 'flex', flexDirection: 'column', gap: 10 },
-  weekRow:  { background: 'linear-gradient(145deg, #1c1610, #221a0e)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.3)', border: '1px solid rgba(212,144,10,0.12)' },
+  weekRow:  { background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 4px 16px rgba(0,0,0,0.4)', border: '1px solid rgba(224,64,251,0.1)' },
 
   // Compte
-  label:      { fontSize: 11, fontWeight: 700, color: '#8a6a48', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: 0.6 },
-  input:      { width: '100%', padding: '11px 14px', border: '1.5px solid rgba(212,144,10,0.2)', borderRadius: 9, fontSize: 14, color: '#f0dfc8', background: '#120e07', boxSizing: 'border-box', outline: 'none' },
-  btnPrimary: { padding: '10px 20px', background: 'linear-gradient(135deg, #c8800a, #e09a18)', color: '#0f0c09', border: 'none', borderRadius: 9, cursor: 'pointer', fontSize: 14, fontWeight: 700, width: '100%', boxShadow: '0 4px 16px rgba(212,144,10,0.35)' },
+  label:      { fontSize: 11, fontWeight: 700, color: '#8060a0', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: 0.6 },
+  input:      { width: '100%', padding: '11px 14px', border: '1.5px solid rgba(224,64,251,0.18)', borderRadius: 9, fontSize: 14, color: '#f0e8ff', background: '#0a061a', boxSizing: 'border-box', outline: 'none' },
+  btnPrimary: { padding: '10px 20px', background: 'linear-gradient(135deg, #b020d0, #f060ff)', color: '#fff', border: 'none', borderRadius: 9, cursor: 'pointer', fontSize: 14, fontWeight: 700, width: '100%', boxShadow: '0 4px 18px rgba(224,64,251,0.4)' },
 };
