@@ -486,7 +486,7 @@ export default function PatronDashboard() {
                         à verser sur le compte IRS
                       </div>
                       {overview.weekTaxRate === 0 && (
-                        <div style={{ marginTop: 10, background: '#dcfce7', color: '#16a34a', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
+                        <div style={{ marginTop: 10, background: 'rgba(74,222,128,0.1)', color: '#4ade80', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
                           ✅ Exonéré cette semaine
                         </div>
                       )}
@@ -571,8 +571,8 @@ export default function PatronDashboard() {
                                 <td style={{ ...S.td, color: '#d97706' }}>− {fmt(w.purchases)}</td>
                                 <td style={{ ...S.td, color: '#7c3aed' }}>− {fmt(w.salaries)}</td>
                                 <td style={{ ...S.td, fontWeight: 600 }}>{fmt(w.net)}</td>
-                                <td style={{ ...S.td, fontSize: 12, color: '#64748b' }}>{w.bracket}</td>
-                                <td style={{ ...S.td, fontWeight: 700, color: w.tax > 0 ? '#dc2626' : '#94a3b8' }}>{fmt(w.tax)}</td>
+                                <td style={{ ...S.td, fontSize: 12, color: '#8060a0' }}>{w.bracket}</td>
+                                <td style={{ ...S.td, fontWeight: 700, color: w.tax > 0 ? '#dc2626' : '#5a4080' }}>{fmt(w.tax)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -615,7 +615,7 @@ export default function PatronDashboard() {
 
                   {/* Comptes refusés */}
                   {pendingUsers.filter(u => u.status === 'rejected').length > 0 && (
-                    <div style={{ ...S.pendingBox, borderColor: '#fca5a5', background: '#fff7f7' }}>
+                    <div style={{ ...S.pendingBox, borderColor: 'rgba(220,38,38,0.4)', background: 'rgba(220,38,38,0.08)' }}>
                       <div style={{ ...S.pendingTitle, color: '#dc2626' }}>
                         ❌ Comptes refusés ({pendingUsers.filter(u => u.status === 'rejected').length})
                       </div>
@@ -656,7 +656,7 @@ export default function PatronDashboard() {
                               <td style={S.td}>{s.product_name}</td>
                               <td style={S.td}>{s.quantity}</td>
                               <td style={{ ...S.td, fontWeight: 600 }}>{fmt(s.total_amount)}</td>
-                              <td style={{ ...S.td, color: '#94a3b8', fontSize: 13 }}>{fmtDate(s.sale_date)}</td>
+                              <td style={{ ...S.td, color: '#5a4080', fontSize: 13 }}>{fmtDate(s.sale_date)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -691,17 +691,17 @@ export default function PatronDashboard() {
                       const inCart = cart.find((i) => i.product_id === p.id);
                       return (
                         <button key={p.id} type="button" onClick={() => addToCart(p)}
-                          style={{ position: 'relative', background: inCart ? '#eff6ff' : '#f8fafc', border: `2px solid ${inCart ? '#2563eb' : '#e2e8f0'}`, borderRadius: 12, padding: '12px 10px', cursor: 'pointer', textAlign: 'center' }}>
-                          {inCart && <div style={{ position: 'absolute', top: -8, right: -8, background: '#2563eb', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{inCart.quantity}</div>}
+                          style={{ position: 'relative', background: inCart ? 'linear-gradient(145deg,#1e0a30,#280d40)' : 'linear-gradient(145deg,#16102a,#1e1435)', border: `2px solid ${inCart ? '#e040fb' : 'rgba(224,64,251,0.15)'}`, borderRadius: 12, padding: '12px 10px', cursor: 'pointer', textAlign: 'center', boxShadow: inCart ? '0 4px 20px rgba(224,64,251,0.25)' : '0 4px 16px rgba(0,0,0,0.4)' }}>
+                          {inCart && <div style={{ position: 'absolute', top: -8, right: -8, background: 'linear-gradient(135deg,#b020d0,#f060ff)', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{inCart.quantity}</div>}
                           {p.image_url
                             ? <img src={p.image_url} alt={p.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 8, display: 'block', margin: '0 auto 8px' }} onError={e => e.target.style.display='none'} />
                             : <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
                           }
-                          <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', marginBottom: 3 }}>{p.name}</div>
-                          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>{p.category}</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb', marginBottom: 4 }}>{fmt(p.price)}</div>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: '#f0e8ff', marginBottom: 3 }}>{p.name}</div>
+                          <div style={{ fontSize: 10, color: '#5a4080', marginBottom: 4 }}>{p.category}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#e040fb', marginBottom: 4 }}>{fmt(p.price)}</div>
                           {p.recipe_count > 0 && (
-                            <div style={{ fontSize: 10, color: '#16a34a', fontWeight: 600 }}>🧪 -{p.recipe_count} mat.</div>
+                            <div style={{ fontSize: 10, color: '#4ade80', fontWeight: 600 }}>🧪 -{p.recipe_count} mat.</div>
                           )}
                         </button>
                       );
@@ -710,37 +710,37 @@ export default function PatronDashboard() {
                 </div>
 
                 {/* Panier */}
-                <div style={{ flex: 1, minWidth: 250, background: '#fff', borderRadius: 14, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', padding: 20, position: 'sticky', top: 20 }}>
-                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>🛒 Panier</h3>
+                <div style={{ flex: 1, minWidth: 250, background: 'linear-gradient(145deg,#16102a,#1e1435)', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', border: '1px solid rgba(224,64,251,0.18)', padding: 20, position: 'sticky', top: 20 }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#f0e8ff', marginBottom: 16 }}>🛒 Panier</h3>
                   {cart.length === 0 ? (
-                    <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '16px 0' }}>Aucun article sélectionné.</p>
+                    <p style={{ color: '#5a4080', fontSize: 14, textAlign: 'center', padding: '16px 0' }}>Aucun article sélectionné.</p>
                   ) : (
                     <>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
                         {cart.map((item) => (
-                          <div key={item.product_id} style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
-                            <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b', marginBottom: 8 }}>{item.name}</div>
+                          <div key={item.product_id} style={{ background: '#120c22', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(224,64,251,0.1)' }}>
+                            <div style={{ fontWeight: 600, fontSize: 14, color: '#f0e8ff', marginBottom: 8 }}>{item.name}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <button style={S.qtyBtn2} onClick={() => item.quantity === 1 ? removeFromCart(item.product_id) : setCartQty(item.product_id, item.quantity - 1)}>−</button>
-                                <span style={{ width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{item.quantity}</span>
+                                <span style={{ width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#f0e8ff' }}>{item.quantity}</span>
                                 <button style={S.qtyBtn2} onClick={() => setCartQty(item.product_id, item.quantity + 1)}>+</button>
                               </div>
-                              <span style={{ fontSize: 14, fontWeight: 700, color: '#2563eb', flex: 1, textAlign: 'right' }}>{fmt(item.price * item.quantity)}</span>
-                              <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 14 }} onClick={() => removeFromCart(item.product_id)}>✕</button>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: '#e040fb', flex: 1, textAlign: 'right' }}>{fmt(item.price * item.quantity)}</span>
+                              <button style={{ background: 'none', border: 'none', color: '#5a4080', cursor: 'pointer', fontSize: 14 }} onClick={() => removeFromCart(item.product_id)}>✕</button>
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#374151' }}>
+                      <div style={{ borderTop: '1px solid rgba(224,64,251,0.12)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#d0b8f8' }}>
                           <span>Total</span>
-                          <span style={{ fontSize: 20, fontWeight: 800, color: '#1e293b' }}>{fmt(cartTotal)}</span>
+                          <span style={{ fontSize: 20, fontWeight: 800, color: '#f0e8ff' }}>{fmt(cartTotal)}</span>
                         </div>
                         <button onClick={submitCart} disabled={loading} style={{ ...S.btnPrimary, width: '100%', padding: 12, fontSize: 14, opacity: loading ? 0.6 : 1 }}>
                           {loading ? 'Validation…' : '✅ Valider la facture'}
                         </button>
-                        <button onClick={() => setCart([])} style={{ width: '100%', padding: 8, background: 'none', color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>
+                        <button onClick={() => setCart([])} style={{ width: '100%', padding: 8, background: 'none', color: '#5a4080', border: '1px solid rgba(224,64,251,0.18)', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>
                           🗑️ Vider le panier
                         </button>
                       </div>
@@ -756,24 +756,24 @@ export default function PatronDashboard() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {invoices.map((inv) => (
-                    <div key={inv.id} style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                    <div key={inv.id} style={{ background: 'linear-gradient(145deg,#16102a,#1e1435)', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(224,64,251,0.12)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', cursor: 'pointer' }}
                         onClick={() => setExpandedInv(expandedInv === inv.id ? null : inv.id)}>
                         <div>
-                          <span style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', marginRight: 10 }}>Facture #{inv.id}</span>
-                          <span style={{ fontSize: 12, color: '#64748b', marginRight: 8 }}>👤 {inv.employee_name}</span>
-                          <span style={{ fontSize: 12, color: '#94a3b8' }}>{fmtDate(inv.created_at)}</span>
+                          <span style={{ fontWeight: 700, fontSize: 14, color: '#f0e8ff', marginRight: 10 }}>Facture #{inv.id}</span>
+                          <span style={{ fontSize: 12, color: '#8060a0', marginRight: 8 }}>👤 {inv.employee_name}</span>
+                          <span style={{ fontSize: 12, color: '#5a4080' }}>{fmtDate(inv.created_at)}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <span style={{ fontSize: 16, fontWeight: 800, color: '#2563eb' }}>{fmt(inv.total_amount)}</span>
-                          <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(inv.id); }}>🗑️ Annuler</button>
-                          <span style={{ fontSize: 12, color: '#94a3b8' }}>{expandedInv === inv.id ? '▲' : '▼'}</span>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: '#e040fb' }}>{fmt(inv.total_amount)}</span>
+                          <button style={{ ...S.btnSmall, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(inv.id); }}>🗑️ Annuler</button>
+                          <span style={{ fontSize: 12, color: '#5a4080' }}>{expandedInv === inv.id ? '▲' : '▼'}</span>
                         </div>
                       </div>
                       {expandedInv === inv.id && (
-                        <div style={{ padding: '0 18px 14px', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ padding: '0 18px 14px', borderTop: '1px solid rgba(224,64,251,0.08)', display: 'flex', flexDirection: 'column', gap: 6 }}>
                           {inv.items.map((item, idx) => (
-                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#374151', paddingTop: 6 }}>
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#d0b8f8', paddingTop: 6 }}>
                               <span>{item.product_name} × {item.quantity} ({fmt(item.unit_price)} / unité)</span>
                               <span style={{ fontWeight: 600 }}>{fmt(item.total_amount)}</span>
                             </div>
@@ -805,13 +805,13 @@ export default function PatronDashboard() {
                     <div style={S.pSumLabel}>Achats déduits</div>
                     <div style={{ ...S.pSumValue, color: '#dc2626' }}>− {fmt(overview.totalPurchases)}</div>
                   </div>
-                  <div style={{ ...S.pSumItem, color: '#64748b' }}>
+                  <div style={{ ...S.pSumItem }}>
                     <div style={S.pSumLabel}>Base imposable</div>
-                    <div style={{ ...S.pSumValue, color: '#64748b' }}>{fmt(overview.taxableBase)}</div>
+                    <div style={{ ...S.pSumValue, color: '#8060a0' }}>{fmt(overview.taxableBase)}</div>
                   </div>
-                  <div style={{ ...S.pSumItem, color: '#16a34a' }}>
+                  <div style={{ ...S.pSumItem }}>
                     <div style={S.pSumLabel}>💚 Économie impôts (15%)</div>
-                    <div style={{ ...S.pSumValue, color: '#16a34a' }}>{fmt(overview.taxSaving)}</div>
+                    <div style={{ ...S.pSumValue, color: '#4ade80' }}>{fmt(overview.taxSaving)}</div>
                   </div>
                   <div style={{ ...S.pSumItem, color: '#dc2626' }}>
                     <div style={S.pSumLabel}>🏛️ Impôts dus</div>
@@ -831,7 +831,7 @@ export default function PatronDashboard() {
                       setAcMaterial(val);
                       const rm = rawMaterials.find(m => String(m.id) === String(val));
                       setAcName(rm ? rm.name : '');
-                    }} required style={{ ...S.select, borderColor: acMaterial ? '#86efac' : '#e2e8f0', background: acMaterial ? '#f0fdf4' : '#fafafa' }}>
+                    }} required style={{ ...S.select, borderColor: acMaterial ? '#4ade80' : 'rgba(224,64,251,0.18)', background: acMaterial ? 'rgba(74,222,128,0.06)' : '#0a061a' }}>
                       <option value="">-- Sélectionner une matière première --</option>
                       {rawMaterials.map(m => (
                         <option key={m.id} value={m.id}>{m.name} (stock actuel : {m.quantity} {m.unit})</option>
@@ -843,13 +843,13 @@ export default function PatronDashboard() {
                     <input type="number" min="0.001" step="0.001" value={acQty} onChange={e => setAcQty(e.target.value)} required
                       placeholder="Ex: 24"
                       style={S.input} />
-                    {acMaterial && <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>unité : <strong>{rawMaterials.find(m => String(m.id) === String(acMaterial))?.unit || '—'}</strong></div>}
+                    {acMaterial && <div style={{ fontSize: 12, color: '#8060a0', marginTop: 4 }}>unité : <strong>{rawMaterials.find(m => String(m.id) === String(acMaterial))?.unit || '—'}</strong></div>}
                   </div>
                   <div>
                     <label style={S.label}>Prix d'un lot ($) *</label>
                     <input type="number" min="0" step="0.01" value={acPrice} onChange={e => setAcPrice(e.target.value)} required placeholder="Ex: 120.00" style={S.input} />
                     {acPrice && acQty && parseFloat(acQty) > 0 && (
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: '#8060a0', marginTop: 4 }}>
                         → <strong>{fmt(parseFloat(acPrice) / parseFloat(acQty))}</strong> / unité
                       </div>
                     )}
@@ -864,7 +864,7 @@ export default function PatronDashboard() {
                     )}
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={S.label}>Notes <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(optionnel)</span></label>
+                    <label style={S.label}>Notes <span style={{ fontWeight: 400, color: '#5a4080', fontSize: 12 }}>(optionnel)</span></label>
                     <input value={acNotes} onChange={e => setAcNotes(e.target.value)} placeholder="Ex: Fournisseur X, livraison urgente…" style={S.input} />
                   </div>
 
@@ -878,35 +878,35 @@ export default function PatronDashboard() {
                     const totalCost = lots * lotPrice;
                     const unitPrice = lotPrice / qtyPerLot;
                     return (
-                      <div style={{ gridColumn: '1 / -1', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '14px 16px' }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#14532d', marginBottom: 10 }}>
+                      <div style={{ gridColumn: '1 / -1', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 10, padding: '14px 16px' }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: '#4ade80', marginBottom: 10 }}>
                           📦 Récapitulatif — {lots > 1 ? `${lots} lots de ${qtyPerLot} ${rm?.unit}` : `1 lot de ${qtyPerLot} ${rm?.unit}`}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
-                          <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>MATIÈRE</div>
+                          <div style={{ fontSize: 13, color: '#d0b8f8' }}>
+                            <div style={{ color: '#8060a0', fontSize: 11, marginBottom: 2 }}>MATIÈRE</div>
                             <strong>{rm?.name}</strong>
                           </div>
-                          <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>QTÉ TOTALE AJOUTÉE</div>
+                          <div style={{ fontSize: 13, color: '#d0b8f8' }}>
+                            <div style={{ color: '#8060a0', fontSize: 11, marginBottom: 2 }}>QTÉ TOTALE AJOUTÉE</div>
                             <strong>+{totalQty} {rm?.unit}</strong>
                           </div>
-                          <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>PRIX / UNITÉ</div>
+                          <div style={{ fontSize: 13, color: '#d0b8f8' }}>
+                            <div style={{ color: '#8060a0', fontSize: 11, marginBottom: 2 }}>PRIX / UNITÉ</div>
                             <strong>{fmt(unitPrice)} / {rm?.unit}</strong>
                           </div>
                           {lots > 1 && (
-                            <div style={{ fontSize: 13, color: '#166534' }}>
-                              <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>PRIX / LOT</div>
+                            <div style={{ fontSize: 13, color: '#d0b8f8' }}>
+                              <div style={{ color: '#8060a0', fontSize: 11, marginBottom: 2 }}>PRIX / LOT</div>
                               <strong>{fmt(lotPrice)}</strong>
                             </div>
                           )}
-                          <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>TOTAL À PAYER</div>
-                            <strong style={{ fontSize: 16, color: '#15803d' }}>{fmt(totalCost)}</strong>
+                          <div style={{ fontSize: 13, color: '#d0b8f8' }}>
+                            <div style={{ color: '#8060a0', fontSize: 11, marginBottom: 2 }}>TOTAL À PAYER</div>
+                            <strong style={{ fontSize: 16, color: '#4ade80' }}>{fmt(totalCost)}</strong>
                           </div>
-                          <div style={{ fontSize: 13, color: '#166534' }}>
-                            <div style={{ color: '#64748b', fontSize: 11, marginBottom: 2 }}>STOCK APRÈS</div>
+                          <div style={{ fontSize: 13, color: '#d0b8f8' }}>
+                            <div style={{ color: '#8060a0', fontSize: 11, marginBottom: 2 }}>STOCK APRÈS</div>
                             <strong>{parseFloat(rm?.quantity || 0) + totalQty} {rm?.unit}</strong>
                           </div>
                         </div>
@@ -928,10 +928,10 @@ export default function PatronDashboard() {
                 <p style={S.empty}>Aucun achat enregistré ce mois-ci.</p>
               ) : (
                 <>
-                  <div style={{ marginBottom: 12, fontSize: 15, color: '#374151', fontWeight: 500 }}>
-                    Total dépensé : <strong style={{ color: '#dc2626' }}>{fmt(purchasesData.totalPurchases)}</strong>
-                    <span style={{ color: '#94a3b8', marginLeft: 12, fontSize: 13 }}>
-                      · Économie impôts : <span style={{ color: '#16a34a', fontWeight: 600 }}>{fmt(purchasesData.totalPurchases * 0.15)}</span>
+                  <div style={{ marginBottom: 12, fontSize: 15, color: '#d0b8f8', fontWeight: 500 }}>
+                    Total dépensé : <strong style={{ color: '#ef4444' }}>{fmt(purchasesData.totalPurchases)}</strong>
+                    <span style={{ color: '#5a4080', marginLeft: 12, fontSize: 13 }}>
+                      · Économie impôts : <span style={{ color: '#4ade80', fontWeight: 600 }}>{fmt(purchasesData.totalPurchases * 0.15)}</span>
                     </span>
                   </div>
                   <div style={S.tableWrap}>
@@ -957,12 +957,12 @@ export default function PatronDashboard() {
                             <td style={{ ...S.td, fontWeight: 700, color: '#dc2626' }}>− {fmt(p.total_amount)}</td>
                             <td style={S.td}>
                               {p.material_name
-                                ? <span style={{ ...S.badge, background: '#dcfce7', color: '#16a34a' }}>🧪 {p.material_name} ({p.material_unit})</span>
-                                : <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>
+                                ? <span style={{ ...S.badge, background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>🧪 {p.material_name} ({p.material_unit})</span>
+                                : <span style={{ color: '#5a4080', fontSize: 12 }}>—</span>
                               }
                             </td>
-                            <td style={{ ...S.td, color: '#64748b', fontSize: 13 }}>{p.notes || '—'}</td>
-                            <td style={{ ...S.td, color: '#94a3b8', fontSize: 12 }}>{fmtDate(p.purchase_date)}</td>
+                            <td style={{ ...S.td, color: '#8060a0', fontSize: 13 }}>{p.notes || '—'}</td>
+                            <td style={{ ...S.td, color: '#5a4080', fontSize: 12 }}>{fmtDate(p.purchase_date)}</td>
                             <td style={S.td}>
                               <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeletePurchase(p.id)}>🗑️</button>
                             </td>
@@ -990,33 +990,34 @@ export default function PatronDashboard() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 28 }}>
                     {employees.map((emp) => (
                       <div key={emp.id} style={{
-                        background: '#fff',
+                        background: 'linear-gradient(145deg,#16102a,#1e1435)',
+                        border: '1px solid rgba(224,64,251,0.15)',
                         borderRadius: 14,
                         padding: '18px 20px',
-                        border: `2px solid ${emp.week_salary > 0 ? '#fde68a' : '#e2e8f0'}`,
+                        border: `2px solid ${emp.week_salary > 0 ? '#fcd34d' : 'rgba(224,64,251,0.15)'}`,
                         boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: '#1e293b' }}>{emp.name}</div>
-                            <span style={{ ...S.badge, background: emp.role === 'patron' ? '#dbeafe' : '#f1f5f9', color: emp.role === 'patron' ? '#1d4ed8' : '#475569', fontSize: 11 }}>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: '#f0e8ff' }}>{emp.name}</div>
+                            <span style={{ ...S.badge, background: emp.role === 'patron' ? 'rgba(224,64,251,0.15)' : 'rgba(255,255,255,0.05)', color: emp.role === 'patron' ? '#e040fb' : '#8060a0', fontSize: 11 }}>
                               {emp.role === 'patron' ? '👑 Patron' : '👤 Employé'}
                             </span>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 11, color: '#94a3b8' }}>taux</div>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: '#374151' }}>{emp.salary_percent}%</div>
+                            <div style={{ fontSize: 11, color: '#5a4080' }}>taux</div>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: '#d0b8f8' }}>{emp.salary_percent}%</div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b', marginBottom: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#8060a0', marginBottom: 6 }}>
                           <span>Ventes semaine</span>
-                          <span style={{ fontWeight: 600, color: '#1e293b' }}>{fmt(emp.week_sales)}</span>
+                          <span style={{ fontWeight: 600, color: '#f0e8ff' }}>{fmt(emp.week_sales)}</span>
                         </div>
 
-                        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10, marginTop: 4 }}>
-                          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 2 }}>À verser cette semaine</div>
-                          <div style={{ fontSize: 22, fontWeight: 900, color: emp.week_salary > 0 ? '#d97706' : '#94a3b8' }}>
+                        <div style={{ borderTop: '1px solid rgba(224,64,251,0.1)', paddingTop: 10, marginTop: 4 }}>
+                          <div style={{ fontSize: 12, color: '#5a4080', marginBottom: 2 }}>À verser cette semaine</div>
+                          <div style={{ fontSize: 22, fontWeight: 900, color: emp.week_salary > 0 ? '#f0a820' : '#5a4080' }}>
                             {fmt(emp.week_salary)}
                           </div>
                         </div>
@@ -1042,12 +1043,12 @@ export default function PatronDashboard() {
                     const totalWeekSal = employees.reduce((a, e) => a + e.week_salary, 0);
                     const totalMonthSal = employees.reduce((a, e) => a + e.salary_due, 0);
                     return totalWeekSal > 0 ? (
-                      <div style={{ background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 12, padding: '14px 20px', marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                      <div style={{ background: 'linear-gradient(145deg,#1a1408,#221c08)', border: '1.5px solid #fcd34d', borderRadius: 12, padding: '14px 20px', marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                         <div>
-                          <div style={{ fontSize: 13, color: '#92400e', fontWeight: 600 }}>💰 Total salaires à distribuer cette semaine</div>
-                          <div style={{ fontSize: 28, fontWeight: 900, color: '#d97706', marginTop: 2 }}>{fmt(totalWeekSal)}</div>
+                          <div style={{ fontSize: 13, color: '#fcd34d', fontWeight: 600 }}>💰 Total salaires à distribuer cette semaine</div>
+                          <div style={{ fontSize: 28, fontWeight: 900, color: '#fbbf24', marginTop: 2 }}>{fmt(totalWeekSal)}</div>
                         </div>
-                        <div style={{ fontSize: 13, color: '#92400e' }}>
+                        <div style={{ fontSize: 13, color: '#a08040' }}>
                           Total du mois : <strong>{fmt(totalMonthSal)}</strong>
                         </div>
                       </div>
@@ -1099,7 +1100,7 @@ export default function PatronDashboard() {
                         ))}
                       </tbody>
                       <tfoot>
-                        <tr style={{ background: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
+                        <tr style={{ background: '#0f0820', borderTop: '2px solid rgba(224,64,251,0.2)' }}>
                           <td colSpan={2} style={{ ...S.td, fontWeight: 700 }}>TOTAL</td>
                           <td style={{ ...S.td, fontWeight: 700 }}>{fmt(employees.reduce((a, e) => a + e.week_sales, 0))}</td>
                           <td style={{ ...S.td, fontWeight: 800, color: '#d97706' }}>{fmt(employees.reduce((a, e) => a + e.week_salary, 0))}</td>
@@ -1143,13 +1144,13 @@ export default function PatronDashboard() {
                       <input type="number" min="0" step="0.01" value={pPrice} onChange={e => setPPrice(e.target.value)} required placeholder="0" style={S.input} />
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={S.label}>Image du produit <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(lien URL — ex: goopics, imgur…)</span></label>
+                      <label style={S.label}>Image du produit <span style={{ fontWeight: 400, color: '#5a4080', fontSize: 12 }}>(lien URL — ex: goopics, imgur…)</span></label>
                       <input type="url" value={pImageUrl} onChange={e => setPImageUrl(e.target.value)} placeholder="https://i.goopics.net/abc123.png" style={S.input} />
                       {pImageUrl && (
                         <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                           <img src={pImageUrl} alt="Aperçu" onError={e => e.target.style.display='none'}
-                            style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1px solid #e2e8f0' }} />
-                          <span style={{ fontSize: 12, color: '#64748b' }}>Aperçu de l'image</span>
+                            style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(224,64,251,0.2)' }} />
+                          <span style={{ fontSize: 12, color: '#8060a0' }}>Aperçu de l'image</span>
                         </div>
                       )}
                     </div>
@@ -1178,12 +1179,12 @@ export default function PatronDashboard() {
                     </thead>
                     <tbody>
                       {products.map((p) => (
-                        <tr key={p.id} style={{ ...S.tr, background: recipeProduct?.id === p.id ? '#f0f9ff' : '#fff' }}>
+                        <tr key={p.id} style={{ ...S.tr, background: recipeProduct?.id === p.id ? 'rgba(224,64,251,0.06)' : 'transparent' }}>
                           <td style={S.td}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                               {p.image_url
-                                ? <img src={p.image_url} alt={p.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0', flexShrink: 0 }} onError={e => e.target.style.display='none'} />
-                                : <div style={{ width: 40, height: 40, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>📦</div>
+                                ? <img src={p.image_url} alt={p.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(224,64,251,0.2)', flexShrink: 0 }} onError={e => e.target.style.display='none'} />
+                                : <div style={{ width: 40, height: 40, borderRadius: 8, background: '#120c22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>📦</div>
                               }
                               <strong>{p.name}</strong>
                             </div>
@@ -1192,15 +1193,15 @@ export default function PatronDashboard() {
                           <td style={{ ...S.td, fontWeight: 600 }}>{fmt(p.price)}</td>
                           <td style={S.td}>
                             {p.recipe_count > 0
-                              ? <span style={{ ...S.badge, background: '#dcfce7', color: '#16a34a' }}>🧪 {p.recipe_count} ingrédient{p.recipe_count > 1 ? 's' : ''}</span>
-                              : <span style={{ ...S.badge, background: '#f1f5f9', color: '#94a3b8' }}>Aucune</span>
+                              ? <span style={{ ...S.badge, background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>🧪 {p.recipe_count} ingrédient{p.recipe_count > 1 ? 's' : ''}</span>
+                              : <span style={{ ...S.badge, background: 'rgba(255,255,255,0.05)', color: '#5a4080' }}>Aucune</span>
                             }
                           </td>
                           <td style={S.td}>
                             <div style={{ display: 'flex', gap: 6 }}>
                               <button style={S.btnSmall} onClick={() => openEditProduct(p)}>✏️ Modifier</button>
                               <button
-                                style={{ ...S.btnSmall, background: recipeProduct?.id === p.id ? '#dbeafe' : '#fff', color: '#2563eb', borderColor: '#93c5fd' }}
+                                style={{ ...S.btnSmall, background: recipeProduct?.id === p.id ? 'rgba(224,64,251,0.15)' : 'transparent', color: '#e040fb', borderColor: 'rgba(224,64,251,0.3)' }}
                                 onClick={() => {
                                   if (recipeProduct?.id === p.id) { setRecipeProduct(null); setRecipe([]); }
                                   else { setRecipeProduct(p); loadRecipe(p.id); }
@@ -1218,15 +1219,15 @@ export default function PatronDashboard() {
 
               {/* Panel de gestion de la recette */}
               {recipeProduct && (
-                <div style={{ marginTop: 20, background: '#f0f9ff', border: '1.5px solid #93c5fd', borderRadius: 14, padding: '20px 24px' }}>
+                <div style={{ marginTop: 20, background: 'linear-gradient(145deg,#16102a,#1e1435)', border: '1.5px solid rgba(224,64,251,0.25)', borderRadius: 14, padding: '20px 24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e40af', margin: 0 }}>
-                      🧪 Recette de <span style={{ color: '#2563eb' }}>{recipeProduct.name}</span>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f0e8ff', margin: 0 }}>
+                      🧪 Recette de <span style={{ color: '#e040fb' }}>{recipeProduct.name}</span>
                     </h3>
                     <button style={S.btnSmall} onClick={() => { setRecipeProduct(null); setRecipe([]); }}>✕ Fermer</button>
                   </div>
 
-                  <p style={{ fontSize: 13, color: '#3b82f6', marginBottom: 16 }}>
+                  <p style={{ fontSize: 13, color: '#8060a0', marginBottom: 16 }}>
                     Définir quelles matières premières (et en quelle quantité) sont consommées pour fabriquer <strong>1 unité</strong> de ce produit. Le stock sera déduit automatiquement à chaque vente.
                   </p>
 
@@ -1236,27 +1237,27 @@ export default function PatronDashboard() {
                       {recipe.map((ing) => {
                         const isLow = ing.stock <= ing.min_alert;
                         return (
-                          <div key={ing.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', borderRadius: 10, padding: '10px 14px', border: '1px solid #bfdbfe' }}>
+                          <div key={ing.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#120c22', borderRadius: 10, padding: '10px 14px', border: '1px solid rgba(224,64,251,0.15)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                               <span style={{ fontSize: 20 }}>🧪</span>
                               <div>
-                                <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b' }}>{ing.name}</div>
-                                <div style={{ fontSize: 12, color: '#64748b' }}>
-                                  <strong style={{ color: '#2563eb' }}>{ing.quantity_per_unit} {ing.unit}</strong> par unité vendue
+                                <div style={{ fontWeight: 600, fontSize: 14, color: '#f0e8ff' }}>{ing.name}</div>
+                                <div style={{ fontSize: 12, color: '#8060a0' }}>
+                                  <strong style={{ color: '#e040fb' }}>{ing.quantity_per_unit} {ing.unit}</strong> par unité vendue
                                   {' · '}
-                                  <span style={{ color: isLow ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
+                                  <span style={{ color: isLow ? '#ef4444' : '#4ade80', fontWeight: 600 }}>
                                     Stock : {ing.stock} {ing.unit}{isLow ? ' ⚠️' : ''}
                                   </span>
                                 </div>
                               </div>
                             </div>
-                            <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDeleteIngredient(ing.id)}>🗑️</button>
+                            <button style={{ ...S.btnSmall, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} onClick={() => handleDeleteIngredient(ing.id)}>🗑️</button>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 16 }}>Aucun ingrédient défini. Les ventes de ce produit ne déduiront rien du stock.</p>
+                    <p style={{ color: '#5a4080', fontSize: 13, marginBottom: 16 }}>Aucun ingrédient défini. Les ventes de ce produit ne déduiront rien du stock.</p>
                   )}
 
                   {/* Formulaire ajout ingrédient */}
@@ -1276,7 +1277,7 @@ export default function PatronDashboard() {
                       <input type="number" min="0.001" step="0.001" value={recipeQty} onChange={e => setRecipeQty(e.target.value)} style={S.input} />
                     </div>
                     {recipeRm && (
-                      <div style={{ fontSize: 12, color: '#64748b', alignSelf: 'flex-end', paddingBottom: 12 }}>
+                      <div style={{ fontSize: 12, color: '#8060a0', alignSelf: 'flex-end', paddingBottom: 12 }}>
                         unité : <strong>{rawMaterials.find(m => String(m.id) === String(recipeRm))?.unit}</strong>
                       </div>
                     )}
@@ -1352,23 +1353,23 @@ export default function PatronDashboard() {
                       {rawMaterials.map((m) => {
                         const isLow = m.quantity <= m.min_alert;
                         return (
-                          <tr key={m.id} style={{ ...S.tr, background: isLow ? '#fff7f7' : '#fff' }}>
+                          <tr key={m.id} style={{ ...S.tr, background: isLow ? 'rgba(220,38,38,0.08)' : 'transparent' }}>
                             <td style={S.td}><strong>{m.name}</strong></td>
                             <td style={S.td}><span style={S.chip}>{m.unit}</span></td>
                             <td style={S.td}>
                               {editingRmStock === m.id ? (
                                 <StockEditor current={m.quantity} onSave={(v) => handleUpdateRmStock(m.id, v)} onCancel={() => setEditingRmStock(null)} />
                               ) : (
-                                <span style={{ fontSize: 16, fontWeight: 700, color: isLow ? '#dc2626' : '#1e293b' }}>{m.quantity}</span>
+                                <span style={{ fontSize: 16, fontWeight: 700, color: isLow ? '#dc2626' : '#f0e8ff' }}>{m.quantity}</span>
                               )}
                             </td>
                             <td style={S.td}>{m.min_alert}</td>
                             <td style={S.td}>
                               {m.quantity === 0
-                                ? <span style={{ ...S.badge, background: '#fee2e2', color: '#dc2626' }}>❌ Épuisé</span>
+                                ? <span style={{ ...S.badge, background: 'rgba(220,38,38,0.15)', color: '#dc2626' }}>❌ Épuisé</span>
                                 : isLow
-                                ? <span style={{ ...S.badge, background: '#fef3c7', color: '#d97706' }}>⚠️ Stock bas</span>
-                                : <span style={{ ...S.badge, background: '#dcfce7', color: '#16a34a' }}>✅ OK</span>
+                                ? <span style={{ ...S.badge, background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>⚠️ Stock bas</span>
+                                : <span style={{ ...S.badge, background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>✅ OK</span>
                               }
                             </td>
                             <td style={S.td}>
@@ -1397,33 +1398,33 @@ export default function PatronDashboard() {
               <h2 style={S.sectionTitle}>⚙️ Mon compte</h2>
 
               {/* Infos */}
-              <div style={{ background: '#fff', borderRadius: 14, padding: '20px 24px', marginBottom: 24, border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>Nom affiché</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 14 }}>{session.user.name}</div>
-                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>Identifiant de connexion</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: '#2563eb', marginBottom: 14 }}>@{session.user.username}</div>
-                <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>Entreprise</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: '#374151' }}>{session.user.companyName}</div>
+              <div style={{ background: 'linear-gradient(145deg,#16102a,#1e1435)', borderRadius: 14, padding: '20px 24px', marginBottom: 24, border: '1px solid rgba(224,64,251,0.18)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                <div style={{ fontSize: 11, color: '#8060a0', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>Nom affiché</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#f0e8ff', marginBottom: 18 }}>{session.user.name}</div>
+                <div style={{ fontSize: 11, color: '#8060a0', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>Identifiant de connexion</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#e040fb', marginBottom: 18 }}>@{session.user.username}</div>
+                <div style={{ fontSize: 11, color: '#8060a0', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700 }}>Entreprise</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#d0b8f8' }}>{session.user.companyName}</div>
               </div>
 
               {/* Formulaire changement mdp */}
-              <div style={{ background: '#fff', borderRadius: 14, padding: '20px 24px', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>🔒 Changer mon mot de passe</h3>
+              <div style={{ background: 'linear-gradient(145deg,#16102a,#1e1435)', borderRadius: 14, padding: '20px 24px', border: '1px solid rgba(224,64,251,0.18)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f0e8ff', marginBottom: 16 }}>🔒 Changer mon mot de passe</h3>
                 <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
                     <label style={S.label}>Mot de passe actuel</label>
                     <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required placeholder="••••••••" style={S.input} />
                   </div>
                   <div>
-                    <label style={S.label}>Nouveau mot de passe <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 12 }}>(6 car. min.)</span></label>
+                    <label style={S.label}>Nouveau mot de passe <span style={{ fontWeight: 400, color: '#5a4080', fontSize: 12 }}>(6 car. min.)</span></label>
                     <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required minLength={6} placeholder="••••••••" style={S.input} />
                   </div>
                   <div>
                     <label style={S.label}>Confirmer le nouveau mot de passe</label>
                     <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="••••••••"
-                      style={{ ...S.input, borderColor: cpConfirm && cpNew !== cpConfirm ? '#dc2626' : '#e2e8f0' }} />
+                      style={{ ...S.input, borderColor: cpConfirm && cpNew !== cpConfirm ? '#ef4444' : 'rgba(224,64,251,0.18)' }} />
                     {cpConfirm && cpNew !== cpConfirm && (
-                      <div style={{ fontSize: 12, color: '#dc2626', marginTop: 4 }}>Les mots de passe ne correspondent pas.</div>
+                      <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4 }}>Les mots de passe ne correspondent pas.</div>
                     )}
                   </div>
                   <button type="submit" disabled={cpLoading || Boolean(cpConfirm && cpNew !== cpConfirm)}
@@ -1447,8 +1448,8 @@ function StockEditor({ current, onSave, onCancel }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <input type="number" min="0" value={val} onChange={e => setVal(e.target.value)}
-        style={{ width: 70, padding: '5px 9px', border: '1.5px solid #b5541a', borderRadius: 7, fontSize: 14 }} />
-      <button style={{ ...S.btnSmall, background: '#b5541a', color: '#fff', borderColor: '#b5541a' }} onClick={() => onSave(val)}>✓</button>
+        style={{ width: 70, padding: '5px 9px', border: '1.5px solid rgba(224,64,251,0.35)', borderRadius: 7, fontSize: 14, background: '#0a061a', color: '#f0e8ff' }} />
+      <button style={{ ...S.btnSmall, background: 'linear-gradient(135deg,#b020d0,#f060ff)', color: '#fff', borderColor: 'transparent' }} onClick={() => onSave(val)}>✓</button>
       <button style={S.btnSmall} onClick={onCancel}>✕</button>
     </div>
   );
@@ -1476,7 +1477,7 @@ function TaxBracketBar({ net, rate, bracket }) {
           );
         })}
       </div>
-      <div style={{ fontSize: 11, color: '#64748b', display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ fontSize: 11, color: '#5a4080', display: 'flex', justifyContent: 'space-between' }}>
         <span>$0</span><span>$15k</span><span>$31k</span><span>$51k</span><span>$100k+</span>
       </div>
       <div style={{ marginTop: 6, fontSize: 12, fontWeight: 700, color: rate === 0 ? '#16a34a' : '#dc2626' }}>
@@ -1491,9 +1492,9 @@ function SalaryEditor({ current, onSave, onCancel }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <input type="number" min="0" max="100" step="0.5" value={val} onChange={e => setVal(e.target.value)}
-        style={{ width: 70, padding: '5px 9px', border: '1.5px solid #b5541a', borderRadius: 7, fontSize: 14 }} />
-      <span style={{ color: '#9c7a60', fontWeight: 600 }}>%</span>
-      <button style={{ ...S.btnSmall, background: '#b5541a', color: '#fff', borderColor: '#b5541a' }} onClick={() => onSave(val)}>✓</button>
+        style={{ width: 70, padding: '5px 9px', border: '1.5px solid rgba(224,64,251,0.35)', borderRadius: 7, fontSize: 14, background: '#0a061a', color: '#f0e8ff' }} />
+      <span style={{ color: '#a080c0', fontWeight: 600 }}>%</span>
+      <button style={{ ...S.btnSmall, background: 'linear-gradient(135deg,#b020d0,#f060ff)', color: '#fff', borderColor: 'transparent' }} onClick={() => onSave(val)}>✓</button>
       <button style={S.btnSmall} onClick={onCancel}>✕</button>
     </div>
   );
@@ -1709,10 +1710,4 @@ const S = {
   purchaseSummary: { display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 },
   pSumItem: {
     background: 'linear-gradient(145deg, #16102a, #1e1435)',
-    borderRadius: 14, padding: '18px 20px', flex: 1, minWidth: 150,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-    border: '1px solid rgba(224,64,251,0.18)',
-  },
-  pSumLabel: { fontSize: 11, color: '#6a4890', marginBottom: 7, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 },
-  pSumValue: { fontSize: 22, fontWeight: 800, color: '#f0e8ff' },
-};
+    borderRadius: 14, padding: '18px 

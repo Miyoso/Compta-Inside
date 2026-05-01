@@ -5,18 +5,64 @@
 }
 
 html, body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f5f7fa;
-  color: #1e293b;
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  background: #0d0818;
+  color: #f0e8ff;
+  color-scheme: dark;
 }
 
-input:focus, select:focus {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+/* ── Inputs & selects — thème sombre cosmique ── */
+input, select, textarea {
+  color-scheme: dark;
+  background-color: #0a061a;
+  color: #f0e8ff;
 }
 
+/* ── Dropdown list sombre (Chrome/Edge) ── */
+select option {
+  background-color: #16102a;
+  color: #f0e8ff;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: #2a1050;
+  color: #f060ff;
+}
+
+/* ── Focus ring cosmique ── */
+input:focus, select:focus, textarea:focus {
+  border-color: #e040fb !important;
+  box-shadow: 0 0 0 3px rgba(224, 64, 251, 0.18) !important;
+  outline: none;
+}
+
+/* ── Scrollbars sombres ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0818;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(224, 64, 251, 0.25);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(224, 64, 251, 0.5);
+}
+
+/* ── Hover boutons ── */
 button:hover:not(:disabled) {
-  opacity: 0.92;
+  opacity: 0.88;
+}
+
+/* ── Sélection de texte ── */
+::selection {
+  background: rgba(224, 64, 251, 0.3);
+  color: #fff;
 }
 
 @keyframes spin {
