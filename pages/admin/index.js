@@ -123,6 +123,7 @@ export default function AdminDashboard() {
                   <tr>
                     <th style={S.th}>Entreprise</th>
                     <th style={S.th}>CA semaine</th>
+                    <th style={S.th}>− Achats</th>
                     <th style={S.th}>− Salaires</th>
                     <th style={S.th}>Base imposable</th>
                     <th style={S.th}>Tranche</th>
@@ -141,6 +142,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td style={{ ...S.td, fontWeight: 600 }}>{fmt(c.weekSales)}</td>
+                      <td style={{ ...S.td, color: '#d97706' }}>− {fmt(c.weekPurchases)}</td>
                       <td style={{ ...S.td, color: '#7c3aed' }}>− {fmt(c.weekSalaries)}</td>
                       <td style={S.td}>{fmt(c.weekNet)}</td>
                       <td style={{ ...S.td, fontSize: 12 }}>
@@ -172,7 +174,8 @@ export default function AdminDashboard() {
                   <tr style={{ background: '#1e1b4b', color: '#fff' }}>
                     <td style={{ ...S.td, color: '#fff', fontWeight: 700 }}>TOTAL IRS À PERCEVOIR</td>
                     <td style={{ ...S.td, color: '#a5b4fc', fontWeight: 700 }}>{fmt(totals.globalWeekSales)}</td>
-                    <td style={{ ...S.td, color: '#c4b5fd' }}>— </td>
+                    <td style={{ ...S.td, color: '#c4b5fd' }}>—</td>
+                    <td style={{ ...S.td, color: '#c4b5fd' }}>—</td>
                     <td colSpan={2} style={{ ...S.td, color: '#a5b4fc' }}>—</td>
                     <td style={S.td}>
                       <span style={{ display: 'inline-block', padding: '6px 14px', borderRadius: 20, fontWeight: 900, fontSize: 18, background: '#dc2626', color: '#fff' }}>
@@ -230,10 +233,10 @@ function CompanyCard({ company: c }) {
           {/* KPIs semaine courante */}
           <div style={S.miniKpiGrid}>
             <div style={S.miniKpi}><div style={S.miniKpiLabel}>CA semaine</div><div style={S.miniKpiValue}>{fmt(c.weekSales)}</div></div>
-            <div style={S.miniKpi}><div style={S.miniKpiLabel}>Salaires semaine</div><div style={{ ...S.miniKpiValue, color: '#7c3aed' }}>− {fmt(c.weekSalaries)}</div></div>
-            <div style={S.miniKpi}><div style={S.miniKpiLabel}>Base imposable</div><div style={S.miniKpiValue}>{fmt(c.weekNet)}</div></div>
-            <div style={S.miniKpi}><div style={S.miniKpiLabel}>Taxe IRS</div><div style={{ ...S.miniKpiValue, color: '#dc2626' }}>{fmt(c.weekTaxAmount)}</div></div>
-            <div style={S.miniKpi}><div style={S.miniKpiLabel}>Tranche</div><div style={{ fontSize: 13, fontWeight: 700, color: '#374151', marginTop: 4 }}>{c.weekBracket}</div></div>
+            <div style={S.miniKpi}><div style={S.miniKpiLabel}>− Achats semaine</div><div style={{ ...S.miniKpiValue, color: '#d97706' }}>− {fmt(c.weekPurchases)}</div></div>
+            <div style={S.miniKpi}><div style={S.miniKpiLabel}>− Salaires semaine</div><div style={{ ...S.miniKpiValue, color: '#7c3aed' }}>− {fmt(c.weekSalaries)}</div></div>
+            <div style={S.miniKpi}><div style={S.miniKpiLabel}>= Base imposable</div><div style={{ ...S.miniKpiValue, color: '#1e293b' }}>{fmt(c.weekNet)}</div></div>
+            <div style={S.miniKpi}><div style={S.miniKpiLabel}>Taxe IRS ({(c.weekTaxRate * 100).toFixed(0)}%)</div><div style={{ ...S.miniKpiValue, color: '#dc2626' }}>{fmt(c.weekTaxAmount)}</div></div>
             <div style={S.miniKpi}><div style={S.miniKpiLabel}>IRS cumulé (5 sem.)</div><div style={{ ...S.miniKpiValue, color: '#7c3aed' }}>{fmt(c.totalTaxesDue)}</div></div>
           </div>
 

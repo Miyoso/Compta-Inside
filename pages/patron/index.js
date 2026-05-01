@@ -450,21 +450,31 @@ export default function PatronDashboard() {
                       <div style={{ fontSize: 13, color: '#b91c1c', marginTop: 6 }}>
                         à verser sur le compte IRS
                       </div>
+                      {overview.weekTaxRate === 0 && (
+                        <div style={{ marginTop: 10, background: '#dcfce7', color: '#16a34a', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600 }}>
+                          ✅ Exonéré cette semaine
+                        </div>
+                      )}
                     </div>
                     <div style={S.irsRight}>
+                      {/* Calcul détaillé */}
                       <div style={S.irsRow}>
                         <span>CA de la semaine</span>
                         <strong>{fmt(overview.weekSales)}</strong>
                       </div>
+                      <div style={{ ...S.irsRow, color: '#d97706' }}>
+                        <span>− Achats matières premières</span>
+                        <strong>− {fmt(overview.weekPurchases)}</strong>
+                      </div>
                       <div style={{ ...S.irsRow, color: '#7c3aed' }}>
-                        <span>− Salaires</span>
+                        <span>− Salaires distribués</span>
                         <strong>− {fmt(overview.weekSalaries)}</strong>
                       </div>
-                      <div style={{ ...S.irsRow, borderTop: '1px solid #fca5a5', paddingTop: 8, marginTop: 4 }}>
-                        <span>Base imposable</span>
-                        <strong>{fmt(overview.weekNet)}</strong>
+                      <div style={{ ...S.irsRow, borderTop: '2px solid #fca5a5', paddingTop: 10, marginTop: 6, fontWeight: 700, fontSize: 15 }}>
+                        <span>= Base imposable</span>
+                        <strong style={{ color: '#dc2626' }}>{fmt(overview.weekNet)}</strong>
                       </div>
-                      <div style={{ marginTop: 10 }}>
+                      <div style={{ marginTop: 12 }}>
                         <TaxBracketBar net={overview.weekNet} rate={overview.weekTaxRate} bracket={overview.weekBracket} />
                       </div>
                     </div>
@@ -474,12 +484,17 @@ export default function PatronDashboard() {
                   <div style={S.kpiGrid}>
                     <div style={S.kpiCard}>
                       <div style={S.kpiIcon}>💵</div>
-                      <div style={S.kpiLabel}>CA semaine en cours</div>
+                      <div style={S.kpiLabel}>CA semaine</div>
                       <div style={S.kpiValue}>{fmt(overview.weekSales)}</div>
+                    </div>
+                    <div style={{ ...S.kpiCard, borderColor: '#f59e0b' }}>
+                      <div style={S.kpiIcon}>🛍️</div>
+                      <div style={S.kpiLabel}>Achats semaine</div>
+                      <div style={{ ...S.kpiValue, color: '#d97706' }}>− {fmt(overview.weekPurchases)}</div>
                     </div>
                     <div style={{ ...S.kpiCard, borderColor: '#8b5cf6' }}>
                       <div style={S.kpiIcon}>👥</div>
-                      <div style={S.kpiLabel}>Salaires de la semaine</div>
+                      <div style={S.kpiLabel}>Salaires semaine</div>
                       <div style={{ ...S.kpiValue, color: '#7c3aed' }}>− {fmt(overview.weekSalaries)}</div>
                     </div>
                     <div style={{ ...S.kpiCard, borderColor: '#dc2626' }}>
@@ -487,15 +502,12 @@ export default function PatronDashboard() {
                       <div style={S.kpiLabel}>Taxe IRS ({(overview.weekTaxRate * 100).toFixed(0)}%)</div>
                       <div style={{ ...S.kpiValue, color: '#dc2626' }}>{fmt(overview.weekTaxAmount)}</div>
                     </div>
-                    <div style={{ ...S.kpiCard, borderColor: '#f59e0b' }}>
-                      <div style={S.kpiIcon}>🛍️</div>
-                      <div style={S.kpiLabel}>Achats mois (compta)</div>
-                      <div style={{ ...S.kpiValue, color: '#d97706' }}>{fmt(overview.totalPurchases)}</div>
-                    </div>
                     <div style={{ ...S.kpiCard, borderColor: '#16a34a' }}>
                       <div style={S.kpiIcon}>📈</div>
-                      <div style={S.kpiLabel}>Net après salaires & taxe</div>
-                      <div style={{ ...S.kpiValue, color: '#16a34a' }}>{fmt(overview.weekNet - overview.weekTaxAmount)}</div>
+                      <div style={S.kpiLabel}>Bénéfice net de la semaine</div>
+                      <div style={{ ...S.kpiValue, color: overview.weekNet - overview.weekTaxAmount >= 0 ? '#16a34a' : '#dc2626' }}>
+                        {fmt(overview.weekNet - overview.weekTaxAmount)}
+                      </div>
                     </div>
                   </div>
 
@@ -509,7 +521,8 @@ export default function PatronDashboard() {
                             <tr>
                               <th style={S.th}>Semaine</th>
                               <th style={S.th}>CA</th>
-                              <th style={S.th}>Salaires</th>
+                              <th style={S.th}>− Achats</th>
+                              <th style={S.th}>− Salaires</th>
                               <th style={S.th}>Base imposable</th>
                               <th style={S.th}>Tranche</th>
                               <th style={S.th}>Taxe IRS</th>
@@ -520,8 +533,9 @@ export default function PatronDashboard() {
                               <tr key={i} style={S.tr}>
                                 <td style={S.td}>Sem. du {new Date(w.weekStart).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</td>
                                 <td style={S.td}>{fmt(w.sales)}</td>
+                                <td style={{ ...S.td, color: '#d97706' }}>− {fmt(w.purchases)}</td>
                                 <td style={{ ...S.td, color: '#7c3aed' }}>− {fmt(w.salaries)}</td>
-                                <td style={S.td}>{fmt(w.net)}</td>
+                                <td style={{ ...S.td, fontWeight: 600 }}>{fmt(w.net)}</td>
                                 <td style={{ ...S.td, fontSize: 12, color: '#64748b' }}>{w.bracket}</td>
                                 <td style={{ ...S.td, fontWeight: 700, color: w.tax > 0 ? '#dc2626' : '#94a3b8' }}>{fmt(w.tax)}</td>
                               </tr>
