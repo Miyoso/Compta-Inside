@@ -481,4 +481,9 @@ const S = {
   cwDivider:   { width: 1, height: 60, background: '#e2e8f0' },
   weekList: { display: 'flex', flexDirection: 'column', gap: 10 },
   weekRow:  { background: '#fff', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' },
+
+  // Compte
+  label:      { fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' },
+  input:      { width: '100%', padding: '10px 12px', border: '1.5px solid #e2e8f0', borderRadius: 8, fontSize: 14, color: '#1e293b', background: '#fafafa', boxSizing: 'border-box' },
+  btnPrimary: { padding: '10px 20px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, width: '100%' },
 };
