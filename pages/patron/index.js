@@ -1786,7 +1786,33 @@ const S = {
   pendingActions: { display: 'flex', gap: 8 },
   btnApprove:     { padding: '7px 16px', background: 'linear-gradient(135deg,#15803d,#16a34a)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, boxShadow: '0 2px 10px rgba(22,163,74,0.3)' },
   btnReject:      { padding: '7px 16px', background: 'linear-gradient(135deg,#b91c1c,#dc2626)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, boxShadow: '0 2px 10px rgba(220,38,38,0.3)' },
-
   // ── Bloc IRS — rouge sur fond sombre cosmique
-  irsBox:   {
-    background: 'linear-gradient(135de
+  irsBox: {
+    background: 'linear-gradient(135deg, #1a0510 0%, #220818 50%, #160830 100%)',
+    border: '2px solid rgba(220,38,38,0.3)',
+    borderRadius: 18, padding: '24px 28px', marginBottom: 28,
+    display: 'flex', gap: 32, flexWrap: 'wrap',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(220,38,38,0.08)',
+  },
+  irsLeft: { flex: '1 1 200px', minWidth: 180 },
+  irsTitle: { fontSize: 11, fontWeight: 700, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  irsRight: { flex: '2 1 300px', display: 'flex', flexDirection: 'column', gap: 6 },
+  irsRow: { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#c0a0d8', paddingBottom: 6 },
+
+  // ── Récap achats / déductions fiscales
+  purchaseSummary: {
+    display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24,
+    background: 'linear-gradient(145deg,#120c22,#1a1030)',
+    border: '1px solid rgba(224,64,251,0.18)',
+    borderRadius: 14, padding: '18px 22px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+  },
+  pSumItem:  { flex: '1 1 140px', display: 'flex', flexDirection: 'column', gap: 4 },
+  pSumLabel: { fontSize: 11, color: '#6a4890', marginBottom: 7, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 },
+  pSumValue: { fontSize: 22, fontWeight: 800, color: '#f0e8ff', letterSpacing: -0.3 },
+
+  // ── Ventes / Panier
+  cwHeader: { background: 'linear-gradient(135deg, #160830 0%, #200c40 100%)', borderRadius: 14, padding: '18px 22px', marginBottom: 20, border: '1px solid rgba(224,64,251,0.18)' },
+  cwBadge:  { color: '#f060ff', fontWeight: 700, fontSize: 15 },
+
+};
