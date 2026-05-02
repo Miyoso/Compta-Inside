@@ -1395,17 +1395,19 @@ export default function PatronDashboard() {
                       {rawMaterials.map((m) => {
                         const isLow = m.quantity <= m.min_alert;
                         return (
-                          <tr key={m.id} style={{ ...S.tr, background: isLow ? 'rgba(220,38,38,0.08)' : 'transparent' }}>
-                            <td style={S.td}><strong>{m.name}</strong></td>
+                          <tr key={m.id} style={{ ...S.tr, background: isLow ? 'rgba(220,38,38,0.08)' : 'rgba(255,255,255,0.015)' }}>
+                            <td style={S.td}>
+                              <strong style={{ color: isLow ? '#fca5a5' : '#c084fc' }}>{m.name}</strong>
+                            </td>
                             <td style={S.td}><span style={S.chip}>{m.unit}</span></td>
                             <td style={S.td}>
                               {editingRmStock === m.id ? (
                                 <StockEditor current={m.quantity} onSave={(v) => handleUpdateRmStock(m.id, v)} onCancel={() => setEditingRmStock(null)} />
                               ) : (
-                                <span style={{ fontSize: 16, fontWeight: 700, color: isLow ? '#dc2626' : '#f0e8ff' }}>{m.quantity}</span>
+                                <span style={{ fontSize: 16, fontWeight: 800, color: isLow ? '#dc2626' : '#e040fb' }}>{m.quantity}</span>
                               )}
                             </td>
-                            <td style={S.td}>{m.min_alert}</td>
+                            <td style={{ ...S.td, color: '#6a4890' }}>{m.min_alert}</td>
                             <td style={S.td}>
                               {m.quantity === 0
                                 ? <span style={{ ...S.badge, background: 'rgba(220,38,38,0.15)', color: '#dc2626' }}>❌ Épuisé</span>
