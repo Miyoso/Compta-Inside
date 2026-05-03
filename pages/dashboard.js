@@ -288,62 +288,72 @@ export default function EmployeeDashboard() {
           {/* ══ ONGLET SALAIRE ══ */}
           {tab === 'salaire' && (
             <div>
-              <h2 style={S.title}>Mon salaire hebdomadaire</h2>
-              {!salaryData ? <p style={S.empty}>Chargement…</p> : (
-                <>
-                  <div style={S.infoBox}>
-                    ℹ️ Ton salaire est calculé à <strong>{salaryData.salaryPercent}%</strong> de tes ventes.
-                    {salaryData.salaryPercent === 0 && ' Contacte ton patron pour définir ton taux.'}
-                  </div>
+              <h2 style={S.title}>💵 Mon salaire</h2>
+              {!salaryData ? <p style={S.empty}>Chargement…</p> : (() => {
+                const cp = salaryData.currentPeriod;
+                const lp = salaryData.lastPaid;
+                return (
+                  <>
+                    <div style={S.infoBox}>
+                      ℹ️ Ton salaire est calculé à <strong>{salaryData.salaryPercent}%</strong> de ta marge (vente − coût matières).
+                      {salaryData.salaryPercent === 0 && ' Contacte ton patron pour définir ton taux.'}
+                    </div>
 
-                  {salaryData.weeks[0] && (
+                    {/* Bloc période en cours */}
                     <div style={S.currentWeekCard}>
                       <div style={S.cwHeader}>
-                        <span style={S.cwBadge}>📅 Cette semaine</span>
+                        <span style={S.cwBadge}>⏳ Période en cours</span>
                         <span style={S.cwDates}>
-                          {new Date(salaryData.weeks[0].week_start).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                          {' → '}
-                          {new Date(salaryData.weeks[0].week_end).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                          {salaryData.everPaid
+                            ? `Depuis le ${new Date(lp).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+                            : 'Depuis le début'}
                         </span>
                       </div>
                       <div style={S.cwStats}>
                         <div style={S.cwStat}>
-                          <div style={S.cwStatLabel}>Ventes réalisées</div>
-                          <div style={S.cwStatValue}>{fmt(salaryData.weeks[0].total_sales)}</div>
-                          <div style={S.cwStatSub}>{salaryData.weeks[0].nb_sales} vente{salaryData.weeks[0].nb_sales !== 1 ? 's' : ''}</div>
+                          <div style={S.cwStatLabel}>CA brut réalisé</div>
+                          <div style={S.cwStatValue}>{fmt(cp.grossSales)}</div>
+                          <div style={S.cwStatSub}>{cp.nbSales} vente{cp.nbSales !== 1 ? 's' : ''}</div>
+                        </div>
+                        <div style={S.cwDivider} />
+                        <div style={S.cwStat}>
+                          <div style={S.cwStatLabel}>Marge (base)</div>
+                          <div style={{ ...S.cwStatValue, color: '#a78bfa', fontSize: 22 }}>{fmt(cp.margin)}</div>
+                          <div style={S.cwStatSub}>après coût matières</div>
                         </div>
                         <div style={S.cwDivider} />
                         <div style={{ ...S.cwStat, textAlign: 'right' }}>
-                          <div style={S.cwStatLabel}>💵 Salaire à recevoir</div>
-                          <div style={{ ...S.cwStatValue, color: '#4ade80', fontSize: 32 }}>{fmt(salaryData.weeks[0].salary)}</div>
-                          <div style={S.cwStatSub}>{salaryData.salaryPercent}% des ventes</div>
+                          <div style={S.cwStatLabel}>💵 À recevoir</div>
+                          <div style={{ ...S.cwStatValue, color: '#4ade80', fontSize: 32 }}>{fmt(cp.salary)}</div>
+                          <div style={S.cwStatSub}>{salaryData.salaryPercent}% de la marge</div>
                         </div>
                       </div>
                     </div>
-                  )}
 
-                  <h3 style={{ ...S.subTitle, marginTop: 28 }}>Semaines précédentes</h3>
-                  <div style={S.weekList}>
-                    {salaryData.weeks.slice(1).map((w, i) => (
-                      <div key={i} style={S.weekRow}>
-                        <div style={{ flex: 2 }}>
-                          <div style={{ fontWeight: 600, fontSize: 14, color: '#f0e8ff' }}>{w.label}</div>
-                          <div style={{ fontSize: 12, color: '#5a4080', marginTop: 2 }}>
-                            {new Date(w.week_start).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} → {new Date(w.week_end).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                          </div>
+                    {/* Historique des paiements passés */}
+                    {salaryData.paymentHistory?.length > 0 && (
+                      <>
+                        <h3 style={{ ...S.subTitle, marginTop: 28 }}>Paiements reçus</h3>
+                        <div style={S.weekList}>
+                          {salaryData.paymentHistory.map((p, i) => (
+                            <div key={i} style={S.weekRow}>
+                              <div style={{ flex: 2 }}>
+                                <div style={{ fontWeight: 600, fontSize: 14, color: '#4ade80' }}>✅ Salaires payés</div>
+                                <div style={{ fontSize: 12, color: '#5a4080', marginTop: 2 }}>
+                                  {new Date(p.paid_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              </div>
+                              <div style={{ flex: 1, textAlign: 'right' }}>
+                                <span style={{ fontSize: 15, fontWeight: 700, color: '#fbbf24' }}>Clôture semaine</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div style={{ flex: 2, textAlign: 'center' }}>
-                          <span style={{ fontSize: 15, fontWeight: 600, color: '#f0e8ff', display: 'block' }}>{fmt(w.total_sales)}</span>
-                          <span style={{ fontSize: 12, color: '#5a4080' }}>{w.nb_sales} vente{w.nb_sales !== 1 ? 's' : ''}</span>
-                        </div>
-                        <div style={{ flex: 1, textAlign: 'right' }}>
-                          <span style={{ fontSize: 18, fontWeight: 800, color: w.salary > 0 ? '#4ade80' : '#5a4080' }}>{fmt(w.salary)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
           {/* ══ ONGLET MON COMPTE ══ */}

@@ -94,6 +94,7 @@ export default function PatronDashboard() {
   // Paiement salaires
   const [salaryPayment, setSalaryPayment]   = useState(null);
   const [payingNow, setPayingNow]           = useState(false);
+  const [lastPaidDate, setLastPaidDate]     = useState(null);
 
   // Redirection si pas patron
   useEffect(() => {
@@ -117,7 +118,9 @@ export default function PatronDashboard() {
 
   const loadEmployees = useCallback(async () => {
     const r = await fetch('/api/patron/employees');
-    setEmployees(await r.json());
+    const d = await r.json();
+    setEmployees(d.employees ?? d);  // { employees, lastPaid } or plain array
+    if (d.lastPaid) setLastPaidDate(d.lastPaid);
   }, []);
 
   const loadProducts = useCallback(async () => {
@@ -1158,7 +1161,7 @@ export default function PatronDashboard() {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#8060a0', marginBottom: 4 }}>
-                          <span>CA brut semaine</span>
+                          <span>CA brut (période)</span>
                           <span style={{ fontWeight: 600, color: '#c0a0d8' }}>{fmt(emp.week_sales)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#8060a0', marginBottom: 6 }}>
@@ -1167,7 +1170,7 @@ export default function PatronDashboard() {
                         </div>
 
                         <div style={{ borderTop: '1px solid rgba(224,64,251,0.1)', paddingTop: 10, marginTop: 4 }}>
-                          <div style={{ fontSize: 12, color: '#5a4080', marginBottom: 2 }}>À verser cette semaine ({emp.salary_percent}% marge)</div>
+                          <div style={{ fontSize: 12, color: '#5a4080', marginBottom: 2 }}>Dû depuis le dernier paiement ({emp.salary_percent}% marge)</div>
                           <div style={{ fontSize: 22, fontWeight: 900, color: emp.week_salary > 0 ? '#f0a820' : '#5a4080' }}>
                             {fmt(emp.week_salary)}
                           </div>
@@ -1189,7 +1192,13 @@ export default function PatronDashboard() {
                     ))}
                   </div>
 
-                  {/* ── Paiement salaires de la semaine ─────────���───── */}
+                  {/* ── Paiement salaires ───────────────────────────── */}
+                  {lastPaidDate && (
+                    <div style={{ fontSize: 12, color: '#5a4080', marginBottom: 10 }}>
+                      📅 Dernier paiement : <strong style={{ color: '#a080c8' }}>{new Date(lastPaidDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
+                    </div>
+                  )}
+                  {/* ────────────────────────────────────────────────── */}
                   {(() => {
                     const totalWeekSal  = employees.reduce((a, e) => a + e.week_salary, 0);
                     const totalMonthSal = employees.reduce((a, e) => a + e.salary_due, 0);
@@ -1278,9 +1287,9 @@ export default function PatronDashboard() {
                         <tr>
                           <th style={S.th}>Employé</th>
                           <th style={S.th}>Rôle</th>
-                          <th style={S.th}>CA brut sem.</th>
-                          <th style={S.th}>Marge sem.</th>
-                          <th style={S.th}>Salaire sem.</th>
+                          <th style={S.th}>CA brut (période)</th>
+                          <th style={S.th}>Marge (période)</th>
+                          <th style={S.th}>Salaire dû</th>
                           <th style={S.th}>CA brut mois</th>
                           <th style={S.th}>Marge mois</th>
                           <th style={S.th}>Salaire mois</th>
