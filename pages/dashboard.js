@@ -424,7 +424,7 @@ const S = {
   tabBtn:   { padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 500, color: '#5a4080', whiteSpace: 'nowrap', borderBottom: '2px solid transparent', transition: 'color 0.2s' },
   tabActive: { color: '#f060ff', borderBottom: '2px solid #e040fb', fontWeight: 700, textShadow: '0 0 20px rgba(224,64,251,0.5)' },
 
-  main:     { maxWidth: 1100, margin: '0 auto', padding: '28px 24px' },
+  main:     { maxWidth: 1600, margin: '0 auto', padding: '24px 48px' },
   title:    { fontSize: 22, fontWeight: 700, color: '#f0e8ff', marginBottom: 8 },
   hint:     { fontSize: 14, color: '#5a4080', marginBottom: 20 },
   subTitle: { fontSize: 16, fontWeight: 600, color: '#d0b8f8', marginBottom: 12 },

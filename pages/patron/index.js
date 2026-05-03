@@ -541,8 +541,10 @@ export default function PatronDashboard() {
 
               {!overview ? <p style={S.loading}>Chargement…</p> : (
                 <>
+                  {/* Overview two-column: IRS left + KPIs right */}
+                  <div style={{ display: 'flex', gap: 24, marginBottom: 28, flexWrap: 'wrap' }}>
                   {/* Bloc IRS taxe hebdomadaire — mis en avant */}
-                  <div style={S.irsBox}>
+                  <div style={{ ...S.irsBox, marginBottom: 0, flex: '0 0 auto', width: 'clamp(340px, 38%, 520px)' }}>
                     <div style={S.irsLeft}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
                         🏛️ Taxe IRS — Semaine en cours
@@ -585,8 +587,8 @@ export default function PatronDashboard() {
                     </div>
                   </div>
 
-                  {/* KPI Cards */}
-                  <div style={S.kpiGrid}>
+                  {/* KPI Cards — right column */}
+                  <div style={{ ...S.kpiGrid, flex: 1, minWidth: 300, alignContent: 'start' }}>
                     <div style={S.kpiCard}>
                       <div style={S.kpiIcon}>💵</div>
                       <div style={S.kpiLabel}>CA semaine</div>
@@ -614,7 +616,8 @@ export default function PatronDashboard() {
                         {fmt(Math.max(0, overview.weekNet) - overview.weekTaxAmount)}
                       </div>
                     </div>
-                  </div>
+                  </div>{/* end kpiGrid */}
+                  </div>{/* end overview two-column outer flex */}
 
                   {/* ── Solde Compte Bancaire ─────────────────────────── */}
                   {balance && (() => {
@@ -1137,7 +1140,7 @@ export default function PatronDashboard() {
                 <>
                   {/* ── Salaires à verser cette semaine ── */}
                   <h3 style={S.subTitle}>💸 Salaires à verser — semaine en cours</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 28 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14, marginBottom: 28 }}>
                     {employees.map((emp) => (
                       <div key={emp.id} style={{
                         background: 'linear-gradient(145deg,#16102a,#1e1435)',
@@ -1867,7 +1870,7 @@ const S = {
     textShadow: '0 0 20px rgba(224,64,251,0.5)',
   },
 
-  main: { maxWidth: 1100, margin: '0 auto', padding: '30px 24px' },
+  main: { maxWidth: 1600, margin: '0 auto', padding: '24px 48px' },
   sectionTitle: { fontSize: 22, fontWeight: 700, color: '#f0e8ff', marginBottom: 22, letterSpacing: -0.3 },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22, flexWrap: 'wrap', gap: 10 },
   subTitle: { fontSize: 11, fontWeight: 700, color: '#8060a0', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
@@ -1879,7 +1882,7 @@ const S = {
   },
 
   // ── KPI cards — surface violet sombre avec halo rose
-  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14, marginBottom: 28 },
+  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 16, marginBottom: 28 },
   kpiCard: {
     background: 'linear-gradient(145deg, #16102a, #1e1435)',
     borderRadius: 16, padding: '22px 20px',
@@ -2006,7 +2009,7 @@ const S = {
     background: 'linear-gradient(135deg, #1a0510 0%, #220818 50%, #160830 100%)',
     border: '2px solid rgba(220,38,38,0.3)',
     borderRadius: 18, padding: '24px 28px', marginBottom: 28,
-    display: 'flex', gap: 32, flexWrap: 'wrap',
+    display: 'flex', gap: 24, flexWrap: 'wrap',
     boxShadow: '0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(220,38,38,0.08)',
   },
   irsLeft: { flex: '1 1 200px', minWidth: 180 },
