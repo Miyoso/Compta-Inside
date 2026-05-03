@@ -1132,13 +1132,17 @@ export default function PatronDashboard() {
                           </div>
                         </div>
 
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#8060a0', marginBottom: 4 }}>
+                          <span>CA brut semaine</span>
+                          <span style={{ fontWeight: 600, color: '#c0a0d8' }}>{fmt(emp.week_sales)}</span>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#8060a0', marginBottom: 6 }}>
-                          <span>Ventes semaine</span>
-                          <span style={{ fontWeight: 600, color: '#f0e8ff' }}>{fmt(emp.week_sales)}</span>
+                          <span>Marge (base salaire)</span>
+                          <span style={{ fontWeight: 700, color: '#4ade80' }}>{fmt(emp.week_margin ?? emp.week_sales)}</span>
                         </div>
 
                         <div style={{ borderTop: '1px solid rgba(224,64,251,0.1)', paddingTop: 10, marginTop: 4 }}>
-                          <div style={{ fontSize: 12, color: '#5a4080', marginBottom: 2 }}>À verser cette semaine</div>
+                          <div style={{ fontSize: 12, color: '#5a4080', marginBottom: 2 }}>À verser cette semaine ({emp.salary_percent}% marge)</div>
                           <div style={{ fontSize: 22, fontWeight: 900, color: emp.week_salary > 0 ? '#f0a820' : '#5a4080' }}>
                             {fmt(emp.week_salary)}
                           </div>
@@ -1185,10 +1189,12 @@ export default function PatronDashboard() {
                         <tr>
                           <th style={S.th}>Employé</th>
                           <th style={S.th}>Rôle</th>
-                          <th style={S.th}>Ventes semaine</th>
-                          <th style={S.th}>Salaire semaine</th>
-                          <th style={S.th}>Ventes du mois</th>
-                          <th style={S.th}>Salaire du mois</th>
+                          <th style={S.th}>CA brut sem.</th>
+                          <th style={S.th}>Marge sem.</th>
+                          <th style={S.th}>Salaire sem.</th>
+                          <th style={S.th}>CA brut mois</th>
+                          <th style={S.th}>Marge mois</th>
+                          <th style={S.th}>Salaire mois</th>
                           <th style={S.th}>% Salaire</th>
                         </tr>
                       </thead>
@@ -1202,8 +1208,10 @@ export default function PatronDashboard() {
                               </span>
                             </td>
                             <td style={S.td}>{fmt(emp.week_sales)}</td>
+                            <td style={{ ...S.td, color: '#4ade80', fontWeight: 600 }}>{fmt(emp.week_margin ?? emp.week_sales)}</td>
                             <td style={{ ...S.td, fontWeight: 700, color: '#d97706' }}>{fmt(emp.week_salary)}</td>
                             <td style={S.td}>{fmt(emp.total_sales)}</td>
+                            <td style={{ ...S.td, color: '#4ade80', fontWeight: 600 }}>{fmt(emp.total_margin ?? emp.total_sales)}</td>
                             <td style={{ ...S.td, fontWeight: 600, color: '#7c3aed' }}>{fmt(emp.salary_due)}</td>
                             <td style={S.td}>
                               {editingEmployee === emp.id ? (
@@ -1225,8 +1233,10 @@ export default function PatronDashboard() {
                         <tr style={{ background: '#0f0820', borderTop: '2px solid rgba(224,64,251,0.2)' }}>
                           <td colSpan={2} style={{ ...S.td, fontWeight: 700 }}>TOTAL</td>
                           <td style={{ ...S.td, fontWeight: 700 }}>{fmt(employees.reduce((a, e) => a + e.week_sales, 0))}</td>
+                          <td style={{ ...S.td, fontWeight: 700, color: '#4ade80' }}>{fmt(employees.reduce((a, e) => a + (e.week_margin ?? e.week_sales), 0))}</td>
                           <td style={{ ...S.td, fontWeight: 800, color: '#d97706' }}>{fmt(employees.reduce((a, e) => a + e.week_salary, 0))}</td>
                           <td style={{ ...S.td, fontWeight: 700 }}>{fmt(employees.reduce((a, e) => a + e.total_sales, 0))}</td>
+                          <td style={{ ...S.td, fontWeight: 700, color: '#4ade80' }}>{fmt(employees.reduce((a, e) => a + (e.total_margin ?? e.total_sales), 0))}</td>
                           <td style={{ ...S.td, fontWeight: 800, color: '#7c3aed' }}>{fmt(employees.reduce((a, e) => a + e.salary_due, 0))}</td>
                           <td style={S.td} />
                         </tr>
