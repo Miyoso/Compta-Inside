@@ -91,6 +91,10 @@ export default function PatronDashboard() {
   const [editingBalance, setEditingBalance] = useState(false);
   const [newBalanceVal, setNewBalanceVal]   = useState('');
 
+  // Paiement salaires
+  const [salaryPayment, setSalaryPayment]   = useState(null);
+  const [payingNow, setPayingNow]           = useState(false);
+
   // Redirection si pas patron
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/');
@@ -161,17 +165,22 @@ export default function PatronDashboard() {
     setBalance(await r.json());
   }, []);
 
+  const loadSalaryPayment = useCallback(async () => {
+    const r = await fetch('/api/patron/salary-payment');
+    setSalaryPayment(await r.json());
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     loadOverview();
     loadBalance();
     loadPending(); // toujours chargé pour le badge
-    if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); }
+    if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); loadSalaryPayment(); }
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
     if (tab === 'produits') { loadProducts(); loadRawMaterials(); loadCostPrices(); }
     if (tab === 'stocks')   { loadRawMaterials(); loadStockMovements(); }
     if (tab === 'achats')   { loadPurchases(); loadRawMaterials(); }
-  }, [tab, status, loadOverview, loadBalance, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials, loadCostPrices, loadStockMovements]);
+  }, [tab, status, loadOverview, loadBalance, loadSalaryPayment, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials, loadCostPrices, loadStockMovements]);
 
   // ── Changement de mot de passe ────────────────────────────
   async function handleChangePassword(e) {
@@ -205,6 +214,22 @@ export default function PatronDashboard() {
       setNewBalanceVal('');
       loadBalance();
     } else showToast('Erreur lors de la mise à jour', 'error');
+  }
+
+  // ── Paiement des salaires de la semaine ──────────────────────
+  async function handlePaySalaries() {
+    if (!confirm('Confirmer le paiement des salaires de la semaine ? Cette action est irréversible.')) return;
+    setPayingNow(true);
+    const r = await fetch('/api/patron/salary-payment', { method: 'POST' });
+    const d = await r.json();
+    setPayingNow(false);
+    if (r.ok) {
+      showToast(`✅ Salaires payés — ${fmt(d.total)} déduits du solde`);
+      loadSalaryPayment();
+      loadBalance();
+    } else {
+      showToast(d.error, 'error');
+    }
   }
 
   // ── Actions matières premières ─────────────────────────────
@@ -1164,21 +1189,85 @@ export default function PatronDashboard() {
                     ))}
                   </div>
 
-                  {/* Total à distribuer cette semaine */}
+                  {/* ── Paiement salaires de la semaine ─────────���───── */}
                   {(() => {
-                    const totalWeekSal = employees.reduce((a, e) => a + e.week_salary, 0);
+                    const totalWeekSal  = employees.reduce((a, e) => a + e.week_salary, 0);
                     const totalMonthSal = employees.reduce((a, e) => a + e.salary_due, 0);
-                    return totalWeekSal > 0 ? (
-                      <div style={{ background: 'linear-gradient(145deg,#1a1408,#221c08)', border: '1.5px solid #fcd34d', borderRadius: 12, padding: '14px 20px', marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                        <div>
-                          <div style={{ fontSize: 13, color: '#fcd34d', fontWeight: 600 }}>💰 Total salaires à distribuer cette semaine</div>
-                          <div style={{ fontSize: 28, fontWeight: 900, color: '#fbbf24', marginTop: 2 }}>{fmt(totalWeekSal)}</div>
+                    const isPaid        = salaryPayment?.isPaid;
+                    const paidAmount    = salaryPayment?.paidAmount;
+                    const paidAt        = salaryPayment?.paidAt;
+                    const history       = salaryPayment?.history ?? [];
+
+                    return (
+                      <div style={{ marginBottom: 28 }}>
+                        {/* Bloc principal */}
+                        <div style={{ background: 'linear-gradient(145deg,#1a1408,#221c08)', border: `2px solid ${isPaid ? '#16a34a' : '#fcd34d'}`, borderRadius: 16, padding: '20px 24px', marginBottom: 16 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+
+                            {/* Montant */}
+                            <div>
+                              <div style={{ fontSize: 12, color: '#fcd34d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                                💰 Salaires semaine en cours
+                              </div>
+                              <div style={{ fontSize: 34, fontWeight: 900, color: isPaid ? '#4ade80' : '#fbbf24', lineHeight: 1 }}>
+                                {fmt(totalWeekSal)}
+                              </div>
+                              <div style={{ fontSize: 12, color: '#a08040', marginTop: 4 }}>
+                                Total du mois : <strong style={{ color: '#f0e8ff' }}>{fmt(totalMonthSal)}</strong>
+                              </div>
+                            </div>
+
+                            {/* Bouton ou badge payé */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, justifyContent: 'center' }}>
+                              {isPaid ? (
+                                <div style={{ background: 'rgba(22,163,74,0.15)', border: '1.5px solid #16a34a', borderRadius: 10, padding: '10px 18px', textAlign: 'center' }}>
+                                  <div style={{ fontSize: 14, fontWeight: 800, color: '#4ade80' }}>✅ Payés</div>
+                                  <div style={{ fontSize: 11, color: '#6a4890', marginTop: 3 }}>
+                                    {fmt(paidAmount)} · {new Date(paidAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
+                              ) : totalWeekSal > 0 ? (
+                                <button
+                                  onClick={handlePaySalaries}
+                                  disabled={payingNow}
+                                  style={{ padding: '12px 28px', background: payingNow ? '#5a4080' : 'linear-gradient(135deg,#d97706,#fbbf24)', color: '#1a0c00', border: 'none', borderRadius: 10, cursor: payingNow ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 900, boxShadow: '0 4px 20px rgba(251,191,36,0.35)', letterSpacing: 0.3 }}>
+                                  {payingNow ? '⏳ Paiement…' : `💸 Payer ${fmt(totalWeekSal)}`}
+                                </button>
+                              ) : (
+                                <div style={{ fontSize: 13, color: '#5a4080' }}>Aucun salaire cette semaine</div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div style={{ fontSize: 13, color: '#a08040' }}>
-                          Total du mois : <strong>{fmt(totalMonthSal)}</strong>
-                        </div>
+
+                        {/* Historique des paiements */}
+                        {history.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 12, color: '#5a4080', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>Historique des paiements</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              {history.map(p => {
+                                const wDate = new Date(p.week_start);
+                                return (
+                                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: '9px 14px', border: '1px solid rgba(22,163,74,0.18)', flexWrap: 'wrap', gap: 8 }}>
+                                    <div style={{ fontSize: 13 }}>
+                                      <span style={{ color: '#4ade80', fontWeight: 700 }}>✅ Semaine du </span>
+                                      <span style={{ color: '#f0e8ff' }}>{wDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                                      <span style={{ fontWeight: 700, color: '#fbbf24', fontSize: 14 }}>{fmt(p.total_amount)}</span>
+                                      <span style={{ fontSize: 11, color: '#5a4080' }}>
+                                        {new Date(p.paid_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        {p.paid_by_name ? ` · ${p.paid_by_name}` : ''}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ) : null;
+                    );
                   })()}
 
                   {/* ── Tableau récap mois ── */}
