@@ -86,6 +86,11 @@ export default function PatronDashboard() {
   const [stockMovements, setStockMovements] = useState([]);
   const [showMovements, setShowMovements] = useState(false);
 
+  // Solde bancaire
+  const [balance, setBalance]               = useState(null);
+  const [editingBalance, setEditingBalance] = useState(false);
+  const [newBalanceVal, setNewBalanceVal]   = useState('');
+
   // Redirection si pas patron
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/');
@@ -151,16 +156,22 @@ export default function PatronDashboard() {
     setStockMovements(await r.json());
   }, []);
 
+  const loadBalance = useCallback(async () => {
+    const r = await fetch('/api/patron/balance');
+    setBalance(await r.json());
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     loadOverview();
+    loadBalance();
     loadPending(); // toujours chargé pour le badge
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); }
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
     if (tab === 'produits') { loadProducts(); loadRawMaterials(); loadCostPrices(); }
     if (tab === 'stocks')   { loadRawMaterials(); loadStockMovements(); }
     if (tab === 'achats')   { loadPurchases(); loadRawMaterials(); }
-  }, [tab, status, loadOverview, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials, loadCostPrices, loadStockMovements]);
+  }, [tab, status, loadOverview, loadBalance, loadEmployees, loadProducts, loadSales, loadInvoices, loadPurchases, loadPending, loadRawMaterials, loadCostPrices, loadStockMovements]);
 
   // ── Changement de mot de passe ────────────────────────────
   async function handleChangePassword(e) {
@@ -176,6 +187,24 @@ export default function PatronDashboard() {
     setCpLoading(false);
     if (r.ok) { showToast('✅ Mot de passe modifié !'); setCpCurrent(''); setCpNew(''); setCpConfirm(''); }
     else showToast(d.error, 'error');
+  }
+
+  // ── Recalibrage solde bancaire ─────────────────────────────
+  async function handleUpdateBalance(e) {
+    e.preventDefault();
+    const val = parseFloat(newBalanceVal);
+    if (isNaN(val)) return showToast('Solde invalide', 'error');
+    const r = await fetch('/api/patron/balance', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ balance: val }),
+    });
+    if (r.ok) {
+      showToast('\u2705 Solde de référence mis à jour !');
+      setEditingBalance(false);
+      setNewBalanceVal('');
+      loadBalance();
+    } else showToast('Erreur lors de la mise à jour', 'error');
   }
 
   // ── Actions matières premières ─────────────────────────────
@@ -558,6 +587,84 @@ export default function PatronDashboard() {
                       </div>
                     </div>
                   </div>
+
+                  {/* ── Solde Compte Bancaire ─────────────────────────── */}
+                  {balance && (() => {
+                    const bal      = balance.currentBalance;
+                    const isPos    = bal >= 0;
+                    const accent   = isPos ? '#16a34a' : '#dc2626';
+                    const accentBorder = isPos ? 'rgba(22,163,74,0.35)' : 'rgba(220,38,38,0.35)';
+                    const weeks    = balance.weeklyHistory || [];
+                    const maxAbs   = Math.max(1, ...weeks.map(w => Math.abs(w.delta)));
+                    const W = 400, H = 60, pad = 4;
+                    const bw = weeks.length ? Math.floor((W - pad * 2) / weeks.length) - 2 : 40;
+                    return (
+                      <div style={{ background: 'linear-gradient(135deg,#0a0618 0%,#110820 100%)', border: `2px solid ${accentBorder}`, borderRadius: 18, padding: '22px 26px', marginBottom: 28, boxShadow: `0 8px 40px rgba(0,0,0,0.55)` }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+
+                          {/* Solde principal */}
+                          <div style={{ flex: '1 1 180px' }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>🏦 Solde Compte Bancaire</div>
+                            <div style={{ fontSize: 40, fontWeight: 900, color: accent, lineHeight: 1, letterSpacing: -1 }}>{fmt(bal)}</div>
+                            <div style={{ fontSize: 12, color: '#6a4890', marginTop: 6 }}>
+                              Réf. {fmt(balance.refBalance)} · màj {new Date(balance.refDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
+                            </div>
+                            {!editingBalance ? (
+                              <button onClick={() => { setEditingBalance(true); setNewBalanceVal(bal.toFixed(2)); }}
+                                style={{ marginTop: 12, padding: '6px 14px', background: 'rgba(224,64,251,0.12)', color: '#c084fc', border: '1px solid rgba(224,64,251,0.3)', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                                ✏️ Recalibrer
+                              </button>
+                            ) : (
+                              <form onSubmit={handleUpdateBalance} style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <input type="number" step="0.01" value={newBalanceVal} onChange={e => setNewBalanceVal(e.target.value)}
+                                  style={{ ...S.input, width: 130, padding: '6px 10px', fontSize: 13 }} placeholder="Solde réel" autoFocus />
+                                <button type="submit" style={{ padding: '6px 14px', background: accent, color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>✓</button>
+                                <button type="button" onClick={() => setEditingBalance(false)} style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.06)', color: '#8060a0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>✕</button>
+                              </form>
+                            )}
+                          </div>
+
+                          {/* Décomposition */}
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8, borderLeft: '1px solid rgba(255,255,255,0.06)', paddingLeft: 22 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#a080c8' }}>
+                              <span>Solde de référence</span><strong style={{ color: '#f0e8ff' }}>{fmt(balance.refBalance)}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
+                              <span>+ Ventes encaissées</span><strong>+ {fmt(balance.salesSince)}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#f87171' }}>
+                              <span>− Achats réglés</span><strong>− {fmt(balance.purchasesSince)}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, borderTop: `1px solid ${accentBorder}`, paddingTop: 8, marginTop: 4 }}>
+                              <span style={{ color: '#c0a0d8' }}> = Solde actuel</span><strong style={{ color: accent }}>{fmt(bal)}</strong>
+                            </div>
+                          </div>
+
+                          {/* Sparkline 8 semaines */}
+                          <div style={{ flex: '1 1 180px' }}>
+                            <div style={{ fontSize: 11, color: '#6a4890', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Flux net · 8 sem.</div>
+                            <svg viewBox={`0 0 ${W} ${H + 18}`} style={{ width: '100%', maxWidth: W, height: 'auto', overflow: 'visible' }}>
+                              {weeks.map((w, i) => {
+                                const barH = Math.max(3, Math.round((Math.abs(w.delta) / maxAbs) * (H - pad * 2)));
+                                const x = pad + i * (bw + 2);
+                                const col = w.delta >= 0 ? '#16a34a' : '#dc2626';
+                                const barY = w.delta >= 0 ? H - pad - barH : H - pad;
+                                const d = new Date(w.week_start);
+                                return (
+                                  <g key={i}>
+                                    <rect x={x} y={barY} width={bw} height={barH} rx={2} fill={col} opacity={0.8} />
+                                    <text x={x + bw / 2} y={H + 14} textAnchor="middle" fontSize="8" fill="#5a4080">{d.getDate()}/{d.getMonth()+1}</text>
+                                  </g>
+                                );
+                              })}
+                              <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                            </svg>
+                          </div>
+
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Historique des 4 semaines précédentes */}
                   {overview.prevWeeks && overview.prevWeeks.some(w => w.sales > 0) && (
