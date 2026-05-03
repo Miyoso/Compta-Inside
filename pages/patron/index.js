@@ -1824,7 +1824,7 @@ const S = {
   loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d0818' },
   spinner: { width: 44, height: 44, border: '4px solid #2a1050', borderTop: '4px solid #e040fb', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
 
-  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 22px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' },
+  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 22px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 15, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' },
 
   // ── Navigation cosmique
   nav: {
@@ -1836,20 +1836,20 @@ const S = {
     boxShadow: '0 4px 24px rgba(0,0,0,0.7)',
   },
   navLeft: { display: 'flex', alignItems: 'center', gap: 16 },
-  navLogo: { fontWeight: 800, fontSize: 20, color: '#f0e8ff', letterSpacing: 0.3 },
+  navLogo: { fontWeight: 800, fontSize: 22, color: '#f0e8ff', letterSpacing: 0.3 },
   navCompany: {
     background: 'linear-gradient(135deg, #b020d0, #f060ff)',
     color: '#fff',
-    padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800, letterSpacing: 0.4,
+    padding: '4px 14px', borderRadius: 20, fontSize: 13, fontWeight: 800, letterSpacing: 0.4,
     boxShadow: '0 0 14px rgba(224,64,251,0.4)',
   },
   navRight: { display: 'flex', alignItems: 'center', gap: 14 },
-  navUser: { color: '#8060a0', fontSize: 13 },
+  navUser: { color: '#8060a0', fontSize: 14 },
   navBtn: {
     padding: '7px 16px',
     background: 'rgba(224,64,251,0.08)',
     border: '1px solid rgba(224,64,251,0.22)',
-    borderRadius: 9, cursor: 'pointer', fontSize: 13, color: '#c090e0', fontWeight: 500,
+    borderRadius: 9, cursor: 'pointer', fontSize: 14, color: '#c090e0', fontWeight: 500,
   },
 
   // ── Onglets violet sombre
@@ -1860,7 +1860,7 @@ const S = {
   },
   tabBtn: {
     padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer',
-    fontSize: 13.5, fontWeight: 500, color: '#5a4080', whiteSpace: 'nowrap',
+    fontSize: 14.5, fontWeight: 500, color: '#5a4080', whiteSpace: 'nowrap',
     borderBottom: '2px solid transparent', transition: 'color 0.2s',
   },
   tabBtnActive: {
@@ -1871,9 +1871,9 @@ const S = {
   },
 
   main: { maxWidth: 1600, margin: '0 auto', padding: '24px 48px' },
-  sectionTitle: { fontSize: 22, fontWeight: 700, color: '#f0e8ff', marginBottom: 22, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 24, fontWeight: 700, color: '#f0e8ff', marginBottom: 22, letterSpacing: -0.3 },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22, flexWrap: 'wrap', gap: 10 },
-  subTitle: { fontSize: 11, fontWeight: 700, color: '#8060a0', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  subTitle: { fontSize: 12, fontWeight: 700, color: '#8060a0', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
   loading: { color: '#5a4080', fontStyle: 'italic' },
   empty: {
     color: '#5a4080', textAlign: 'center', padding: 48,
@@ -1889,9 +1889,9 @@ const S = {
     border: '1px solid rgba(224,64,251,0.18)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(224,64,251,0.06)',
   },
-  kpiIcon: { fontSize: 28, marginBottom: 10 },
-  kpiLabel: { fontSize: 11, color: '#6a4890', marginBottom: 6, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 },
-  kpiValue: { fontSize: 28, fontWeight: 800, color: '#f0e8ff', letterSpacing: -0.5 },
+  kpiIcon: { fontSize: 30, marginBottom: 10 },
+  kpiLabel: { fontSize: 12, color: '#6a4890', marginBottom: 6, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 },
+  kpiValue: { fontSize: 30, fontWeight: 800, color: '#f0e8ff', letterSpacing: -0.5 },
 
   alertBanner: {
     background: 'linear-gradient(135deg, #1a0a30, #220d3a)',
@@ -1908,22 +1908,22 @@ const S = {
     display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420,
     boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
   },
-  taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#c0a0d8' },
+  taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 16, color: '#c0a0d8' },
 
   // ── Tableaux cosmiques
   tableWrap: { overflowX: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' },
   table: { width: '100%', borderCollapse: 'collapse', background: '#120c22', borderRadius: 14, overflow: 'hidden' },
   th: {
     background: '#0a061a', padding: '13px 16px', textAlign: 'left',
-    fontSize: 11, fontWeight: 700, color: '#8060a0',
+    fontSize: 12, fontWeight: 700, color: '#8060a0',
     textTransform: 'uppercase', letterSpacing: 0.8,
     borderBottom: '1px solid rgba(224,64,251,0.18)',
   },
   tr: { borderBottom: '1px solid rgba(255,255,255,0.04)' },
-  td: { padding: '14px 16px', fontSize: 14, color: '#d0b8f8', verticalAlign: 'middle' },
+  td: { padding: '14px 16px', fontSize: 15, color: '#d0b8f8', verticalAlign: 'middle' },
 
-  badge: { padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 },
-  chip: { background: 'rgba(224,64,251,0.12)', color: '#e040fb', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 },
+  badge: { padding: '3px 10px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
+  chip: { background: 'rgba(224,64,251,0.12)', color: '#e040fb', padding: '3px 10px', borderRadius: 20, fontSize: 13, fontWeight: 500 },
 
   // ── Boutons rose magenta lumineux
   btnPrimary: {
@@ -1957,17 +1957,17 @@ const S = {
   },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, alignItems: 'start' },
   form: { display: 'flex', flexDirection: 'column', gap: 12 },
-  label: { fontSize: 11, fontWeight: 700, color: '#8060a0', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: 0.6 },
+  label: { fontSize: 12, fontWeight: 700, color: '#8060a0', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: 0.6 },
   input: {
     width: '100%', padding: '11px 14px',
     border: '1.5px solid rgba(224,64,251,0.18)',
-    borderRadius: 9, fontSize: 14, color: '#f0e8ff',
+    borderRadius: 9, fontSize: 15, color: '#f0e8ff',
     background: '#0a061a', boxSizing: 'border-box', outline: 'none',
   },
   select: {
     width: '100%', padding: '11px 14px',
     border: '1.5px solid rgba(224,64,251,0.18)',
-    borderRadius: 9, fontSize: 14, color: '#f0e8ff',
+    borderRadius: 9, fontSize: 15, color: '#f0e8ff',
     background: '#0a061a', boxSizing: 'border-box',
   },
   calcPreview: {
@@ -1984,7 +1984,7 @@ const S = {
     border: '1px solid rgba(224,64,251,0.22)',
     boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 0 40px rgba(224,64,251,0.08)',
   },
-  modalTitle: { fontSize: 18, fontWeight: 700, color: '#f0e8ff', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 700, color: '#f0e8ff', marginBottom: 20 },
   modalActions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 },
   qtyBtn2: {
     width: 30, height: 30,
@@ -1995,15 +1995,15 @@ const S = {
 
   // ── Validation comptes
   pendingBox:     { background: '#130a28', border: '1px solid rgba(224,64,251,0.25)', borderRadius: 14, padding: '18px 22px', marginBottom: 22, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' },
-  pendingTitle:   { fontWeight: 700, fontSize: 15, color: '#e060ff', marginBottom: 14 },
+  pendingTitle:   { fontWeight: 700, fontSize: 16, color: '#e060ff', marginBottom: 14 },
   pendingList:    { display: 'flex', flexDirection: 'column', gap: 10 },
   pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '13px 16px', flexWrap: 'wrap', gap: 10, border: '1px solid rgba(224,64,251,0.1)' },
   pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 3 },
-  pendingEmail:   { fontSize: 13, color: '#7050a0' },
-  pendingDate:    { fontSize: 12, color: '#4a3070' },
+  pendingEmail:   { fontSize: 14, color: '#7050a0' },
+  pendingDate:    { fontSize: 13, color: '#4a3070' },
   pendingActions: { display: 'flex', gap: 8 },
-  btnApprove:     { padding: '7px 16px', background: 'linear-gradient(135deg,#15803d,#16a34a)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, boxShadow: '0 2px 10px rgba(22,163,74,0.3)' },
-  btnReject:      { padding: '7px 16px', background: 'linear-gradient(135deg,#b91c1c,#dc2626)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, boxShadow: '0 2px 10px rgba(220,38,38,0.3)' },
+  btnApprove:     { padding: '7px 16px', background: 'linear-gradient(135deg,#15803d,#16a34a)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, boxShadow: '0 2px 10px rgba(22,163,74,0.3)' },
+  btnReject:      { padding: '7px 16px', background: 'linear-gradient(135deg,#b91c1c,#dc2626)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, boxShadow: '0 2px 10px rgba(220,38,38,0.3)' },
   // ── Bloc IRS — rouge sur fond sombre cosmique
   irsBox: {
     background: 'linear-gradient(135deg, #1a0510 0%, #220818 50%, #160830 100%)',
@@ -2013,9 +2013,9 @@ const S = {
     boxShadow: '0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(220,38,38,0.08)',
   },
   irsLeft: { flex: '1 1 200px', minWidth: 180 },
-  irsTitle: { fontSize: 11, fontWeight: 700, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  irsTitle: { fontSize: 12, fontWeight: 700, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
   irsRight: { flex: '2 1 300px', display: 'flex', flexDirection: 'column', gap: 6 },
-  irsRow: { display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#c0a0d8', paddingBottom: 6 },
+  irsRow: { display: 'flex', justifyContent: 'space-between', fontSize: 15, color: '#c0a0d8', paddingBottom: 6 },
 
   // ── Récap achats / déductions fiscales
   purchaseSummary: {
@@ -2026,11 +2026,11 @@ const S = {
     boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
   },
   pSumItem:  { flex: '1 1 140px', display: 'flex', flexDirection: 'column', gap: 4 },
-  pSumLabel: { fontSize: 11, color: '#6a4890', marginBottom: 7, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 },
-  pSumValue: { fontSize: 22, fontWeight: 800, color: '#f0e8ff', letterSpacing: -0.3 },
+  pSumLabel: { fontSize: 12, color: '#6a4890', marginBottom: 7, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 },
+  pSumValue: { fontSize: 24, fontWeight: 800, color: '#f0e8ff', letterSpacing: -0.3 },
 
   // ── Ventes / Panier
   cwHeader: { background: 'linear-gradient(135deg, #160830 0%, #200c40 100%)', borderRadius: 14, padding: '18px 22px', marginBottom: 20, border: '1px solid rgba(224,64,251,0.18)' },
-  cwBadge:  { color: '#f060ff', fontWeight: 700, fontSize: 15 },
+  cwBadge:  { color: '#f060ff', fontWeight: 700, fontSize: 16 },
 
 };
