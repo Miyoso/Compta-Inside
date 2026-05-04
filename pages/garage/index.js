@@ -186,6 +186,7 @@ export default function GarageDashboard() {
         </div>
         <div style={{display:'flex',alignItems:'center',gap:16}}>
           <span style={{color:'#8060a0',fontSize:14}}>{session.user.name}</span>
+          <a href='/patron' style={{padding:'6px 14px',background:'rgba(224,64,251,0.1)',border:'1px solid rgba(224,64,251,0.25)',borderRadius:8,color:'#c084fc',fontSize:13,fontWeight:700,textDecoration:'none'}}>📊 Café</a>
           <button onClick={()=>signOut({callbackUrl:'/'})} style={{padding:'6px 16px',background:'rgba(224,64,251,0.08)',border:'1px solid rgba(224,64,251,0.2)',borderRadius:8,color:'#c090e0',cursor:'pointer',fontSize:13}}>Déconnexion</button>
         </div>
       </nav>
