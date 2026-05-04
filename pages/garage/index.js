@@ -1,37 +1,33 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
-// ─── Données tarifaires (issues de la grille Excel) ──────────────────────────
 const CATEGORIES = ['Compacts','Sedans','Coupés','Motos','Muscle','SUV','Sport','Sports classic','Super'];
-
 const PERF_PRICES = {
-  'Moteur 1':       [2000,2500,6000,9500,12500,20000,50000,60000,110000],
-  'Moteur 2':       [3000,5000,8000,13000,15000,30000,60000,75000,120000],
-  'Moteur 3':       [5000,8000,20000,20000,25000,50000,80000,85000,130000],
-  'Moteur 4':       [10000,15000,35000,45000,40000,65000,95000,98000,140000],
-  'Moteur 5':       [20000,35000,60000,75000,80000,90000,125000,110000,150000],
-  'Turbo':          [50000,60000,75000,95000,120000,140000,160000,160000,200000],
-  'Transmission 1': [8000,10000,10000,25000,25000,35000,40000,40000,50000],
-  'Transmission 2': [12000,15000,15000,35000,35000,45000,55000,55000,60000],
-  'Transmission 3': [15000,25000,25000,42500,42500,56000,62500,62500,75000],
-  'Transmission 4': [20000,40000,40000,55000,55000,70000,75000,75000,90000],
-  'Freins 1':       [6500,8000,8000,11000,11000,15000,20000,20000,30000],
-  'Freins 2':       [9000,11000,11000,16500,16500,20000,30000,30000,40000],
-  'Freins 3':       [11500,16500,16500,20000,20000,25000,40000,40000,60000],
-  'Freins 4':       [18000,20000,20000,30000,30000,40000,60000,60000,85000],
-  'Suspensions 1':  [5000,6000,8000,6000,20000,20000,25000,25000,30000],
-  'Suspensions 2':  [7500,8000,11000,8000,25000,30000,40000,40000,50000],
-  'Suspensions 3':  [10000,10000,13500,10000,30000,40000,60000,60000,70000],
+  'Moteur 1':[2000,2500,6000,9500,12500,20000,50000,60000,110000],
+  'Moteur 2':[3000,5000,8000,13000,15000,30000,60000,75000,120000],
+  'Moteur 3':[5000,8000,20000,20000,25000,50000,80000,85000,130000],
+  'Moteur 4':[10000,15000,35000,45000,40000,65000,95000,98000,140000],
+  'Moteur 5':[20000,35000,60000,75000,80000,90000,125000,110000,150000],
+  'Turbo':[50000,60000,75000,95000,120000,140000,160000,160000,200000],
+  'Transmission 1':[8000,10000,10000,25000,25000,35000,40000,40000,50000],
+  'Transmission 2':[12000,15000,15000,35000,35000,45000,55000,55000,60000],
+  'Transmission 3':[15000,25000,25000,42500,42500,56000,62500,62500,75000],
+  'Transmission 4':[20000,40000,40000,55000,55000,70000,75000,75000,90000],
+  'Freins 1':[6500,8000,8000,11000,11000,15000,20000,20000,30000],
+  'Freins 2':[9000,11000,11000,16500,16500,20000,30000,30000,40000],
+  'Freins 3':[11500,16500,16500,20000,20000,25000,40000,40000,60000],
+  'Freins 4':[18000,20000,20000,30000,30000,40000,60000,60000,85000],
+  'Suspensions 1':[5000,6000,8000,6000,20000,20000,25000,25000,30000],
+  'Suspensions 2':[7500,8000,11000,8000,25000,30000,40000,40000,50000],
+  'Suspensions 3':[10000,10000,13500,10000,30000,40000,60000,60000,70000],
 };
-
 const PERF_GROUPS = {
-  '🔧 Moteur':       ['Moteur 1','Moteur 2','Moteur 3','Moteur 4','Moteur 5','Turbo'],
-  '⚙️ Transmission': ['Transmission 1','Transmission 2','Transmission 3','Transmission 4'],
-  '🛑 Freins':       ['Freins 1','Freins 2','Freins 3','Freins 4'],
-  '🔩 Suspensions':  ['Suspensions 1','Suspensions 2','Suspensions 3'],
+  '🔧 Moteur':['Moteur 1','Moteur 2','Moteur 3','Moteur 4','Moteur 5','Turbo'],
+  '⚙️ Transmission':['Transmission 1','Transmission 2','Transmission 3','Transmission 4'],
+  '🛑 Freins':['Freins 1','Freins 2','Freins 3','Freins 4'],
+  '🔩 Suspensions':['Suspensions 1','Suspensions 2','Suspensions 3'],
 };
-
 const CUSTOM_PRICES = {
   'Aileron':1500,'Bas de caisse':1200,'Pare-choc AV':1500,'Pare-choc AR':1500,
   'Échappement':800,'Arceaux de sécurité':800,'Grille':800,'Capot':1000,
@@ -42,464 +38,426 @@ const CUSTOM_PRICES = {
   'Light bar':400,'Klaxon':150,'Phares':650,'Roues':900,'Vitres':900,
   'Intérieur':450,'Plaques':450,'Extra':1000,
 };
-
 const PAINT_GROUPS = {
-  '🎨 Peinture principale': {
-    'Principale - Normale':500,'Principale - Métallique':750,'Principale - Pearl':750,
-    'Principale - Matte':850,'Principale - Metal':850,'Principale - Chrome':1200,
-  },
-  '🖌️ Peinture secondaire': {
-    'Secondaire - Normale':500,'Secondaire - Métallique':750,'Secondaire - Pearl':750,
-    'Secondaire - Matte':850,'Secondaire - Metal':850,'Secondaire - Chrome':1200,
-  },
-  '✨ Finitions': {
-    'Nacrage':700,'Motifs':1000,'Stickers':1000,
-    'Couleurs intérieur':500,'Couleurs tableau de bord':500,
-  },
+  '🎨 Peinture principale':{'Principale - Normale':500,'Principale - Métallique':750,'Principale - Pearl':750,'Principale - Matte':850,'Principale - Metal':850,'Principale - Chrome':1200},
+  '🖌️ Peinture secondaire':{'Secondaire - Normale':500,'Secondaire - Métallique':750,'Secondaire - Pearl':750,'Secondaire - Matte':850,'Secondaire - Metal':850,'Secondaire - Chrome':1200},
+  '✨ Finitions':{'Nacrage':700,'Motifs':1000,'Stickers':1000,'Couleurs intérieur':500,'Couleurs tableau de bord':500},
 };
+const EXPENSE_CATS = ['Pièces','Outillage','Fournitures','Loyer','Autre'];
 
-const fmt = (n) => {
-  if (n === null || n === undefined) return '$0';
-  return '$' + Number(n).toLocaleString('fr-CA', { maximumFractionDigits: 0 });
-};
-
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+const fmt  = (n) => '$' + Number(n||0).toLocaleString('fr-CA',{maximumFractionDigits:0});
+const fmtD = (d) => d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
 
 export default function GarageDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-
-  const [tab, setTab]         = useState('devis');
-  const [toast, setToast]     = useState(null);
+  const [tab, setTab] = useState('overview');
+  const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ── Devis builder state ──────────────────────────────────────────
-  const [client, setClient]   = useState({ firstName:'', lastName:'', model:'', category:'Sport' });
+  // ── Overview ─────────────────────────────────────────────────────
+  const [overview, setOverview] = useState(null);
+  const [editingBalance, setEditingBalance] = useState(false);
+  const [newBalanceVal, setNewBalanceVal] = useState('');
+
+  // ── Devis builder ─────────────────────────────────────────────────
+  const [client, setClient] = useState({firstName:'',lastName:'',model:'',category:'Sport'});
   const [selPerfs, setSelPerfs]     = useState(new Set());
   const [selCustoms, setSelCustoms] = useState(new Set());
   const [selPaints, setSelPaints]   = useState(new Set());
   const [devisNotes, setDevisNotes] = useState('');
   const [activeSection, setActiveSection] = useState('perfs');
 
-  // ── Registre state ───────────────────────────────────────────────
-  const [quotes, setQuotes]   = useState([]);
+  // ── Registre ──────────────────────────────────────────────────────
+  const [quotes, setQuotes]           = useState([]);
   const [expandedQuote, setExpandedQuote] = useState(null);
 
-  const showToast = (msg, ok = true) => {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3000);
-  };
+  // ── Dépenses ──────────────────────────────────────────────────────
+  const [expenses, setExpenses] = useState([]);
+  const [newExp, setNewExp]     = useState({description:'',amount:'',category:'Pièces',expense_date:new Date().toISOString().slice(0,10),notes:''});
 
-  useEffect(() => {
-    if (status === 'unauthenticated') router.replace('/');
-  }, [status, router]);
+  // ── Employés ──────────────────────────────────────────────────────
+  const [employees, setEmployees] = useState([]);
+  const [lastPaid, setLastPaid]   = useState(null);
+  const [salaryInfo, setSalaryInfo] = useState(null);
+  const [payingNow, setPayingNow]   = useState(false);
 
-  useEffect(() => {
-    if (tab === 'registre') loadQuotes();
-  }, [tab]);
+  const showToast = (msg, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),3500); };
 
-  const loadQuotes = async () => {
-    const r = await fetch('/api/garage/devis');
-    if (r.ok) { const d = await r.json(); setQuotes(d.quotes || []); }
-  };
+  useEffect(() => { if (status==='unauthenticated') router.replace('/'); },[status,router]);
 
-  // ── Totaux calculés ──────────────────────────────────────────────
+  const loadOverview  = useCallback(async () => { const r=await fetch('/api/garage/overview'); if(r.ok){const d=await r.json();setOverview(d);} },[]);
+  const loadQuotes    = useCallback(async () => { const r=await fetch('/api/garage/devis'); if(r.ok){const d=await r.json();setQuotes(d.quotes||[]);} },[]);
+  const loadExpenses  = useCallback(async () => { const r=await fetch('/api/garage/expenses'); if(r.ok){const d=await r.json();setExpenses(d.expenses||[]);} },[]);
+  const loadEmployees = useCallback(async () => {
+    const [re,rs] = await Promise.all([fetch('/api/garage/employees'),fetch('/api/garage/salary-payment')]);
+    if(re.ok){const d=await re.json();setEmployees(d.employees||[]);setLastPaid(d.lastPaid);}
+    if(rs.ok){const d=await rs.json();setSalaryInfo(d);}
+  },[]);
+
+  useEffect(()=>{ if(tab==='overview') loadOverview(); },[tab]);
+  useEffect(()=>{ if(tab==='registre') loadQuotes(); },[tab]);
+  useEffect(()=>{ if(tab==='depenses') loadExpenses(); },[tab]);
+  useEffect(()=>{ if(tab==='employes') loadEmployees(); },[tab]);
+
+  // ── Totaux devis ──────────────────────────────────────────────────
   const catIdx = CATEGORIES.indexOf(client.category);
+  const perfsTotal   = useMemo(()=>{let t=0;selPerfs.forEach(p=>{t+=(PERF_PRICES[p]?.[catIdx]||0);});return t;},[selPerfs,catIdx]);
+  const customsTotal = useMemo(()=>{let t=0;selCustoms.forEach(c=>{t+=(CUSTOM_PRICES[c]||0);});return t;},[selCustoms]);
+  const paintsTotal  = useMemo(()=>{let t=0;selPaints.forEach(p=>{for(const g of Object.values(PAINT_GROUPS)){if(g[p]){t+=g[p];break;}}});return t;},[selPaints]);
+  const grandTotal   = perfsTotal+customsTotal+paintsTotal;
 
-  const perfsTotal = useMemo(() => {
-    let t = 0;
-    selPerfs.forEach(p => { t += (PERF_PRICES[p]?.[catIdx] || 0); });
-    return t;
-  }, [selPerfs, catIdx]);
-
-  const customsTotal = useMemo(() => {
-    let t = 0;
-    selCustoms.forEach(c => { t += (CUSTOM_PRICES[c] || 0); });
-    return t;
-  }, [selCustoms]);
-
-  const paintsTotal = useMemo(() => {
-    let t = 0;
-    selPaints.forEach(p => {
-      for (const grp of Object.values(PAINT_GROUPS)) { if (grp[p]) { t += grp[p]; break; } }
-    });
-    return t;
-  }, [selPaints]);
-
-  const grandTotal = perfsTotal + customsTotal + paintsTotal;
-
-  const togglePerf = (p) => {
-    setSelPerfs(prev => { const s = new Set(prev); s.has(p) ? s.delete(p) : s.add(p); return s; });
-  };
-  const toggleCustom = (c) => {
-    setSelCustoms(prev => { const s = new Set(prev); s.has(c) ? s.delete(c) : s.add(c); return s; });
-  };
-  const togglePaint = (p) => {
-    setSelPaints(prev => { const s = new Set(prev); s.has(p) ? s.delete(p) : s.add(p); return s; });
-  };
-
-  const resetDevis = () => {
-    setClient({ firstName:'', lastName:'', model:'', category:'Sport' });
-    setSelPerfs(new Set()); setSelCustoms(new Set()); setSelPaints(new Set());
-    setDevisNotes(''); setActiveSection('perfs');
-  };
+  const togglePerf   = (p) => setSelPerfs(s=>{const n=new Set(s);n.has(p)?n.delete(p):n.add(p);return n;});
+  const toggleCustom = (c) => setSelCustoms(s=>{const n=new Set(s);n.has(c)?n.delete(c):n.add(c);return n;});
+  const togglePaint  = (p) => setSelPaints(s=>{const n=new Set(s);n.has(p)?n.delete(p):n.add(p);return n;});
+  const resetDevis   = () => { setClient({firstName:'',lastName:'',model:'',category:'Sport'}); setSelPerfs(new Set()); setSelCustoms(new Set()); setSelPaints(new Set()); setDevisNotes(''); setActiveSection('perfs'); };
 
   const submitDevis = async () => {
-    if (!client.firstName && !client.lastName) return showToast('Indiquez au moins un nom client', false);
+    if (!client.firstName && !client.lastName) return showToast('Indiquez un nom client',false);
     setLoading(true);
-    const r = await fetch('/api/garage/devis', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        clientFirstName: client.firstName,
-        clientLastName:  client.lastName,
-        vehicleModel:    client.model,
-        vehicleCategory: client.category,
-        selectedPerformances: [...selPerfs].map(p => ({ type:p, price: PERF_PRICES[p]?.[catIdx]||0 })),
-        selectedCustoms:      [...selCustoms].map(c => ({ type:c, price: CUSTOM_PRICES[c]||0 })),
-        selectedPaints:       [...selPaints].map(p => {
-          let price = 0;
-          for (const grp of Object.values(PAINT_GROUPS)) { if (grp[p]) { price = grp[p]; break; } }
-          return { type:p, price };
-        }),
-        perfsTotal, customsTotal, paintsTotal, grandTotal,
-        notes: devisNotes,
-      }),
-    });
+    const r = await fetch('/api/garage/devis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      clientFirstName:client.firstName, clientLastName:client.lastName, vehicleModel:client.model, vehicleCategory:client.category,
+      selectedPerformances:[...selPerfs].map(p=>({type:p,price:PERF_PRICES[p]?.[catIdx]||0})),
+      selectedCustoms:[...selCustoms].map(c=>({type:c,price:CUSTOM_PRICES[c]||0})),
+      selectedPaints:[...selPaints].map(p=>{let price=0;for(const g of Object.values(PAINT_GROUPS)){if(g[p]){price=g[p];break;}}return{type:p,price};}),
+      perfsTotal,customsTotal,paintsTotal,grandTotal,notes:devisNotes,
+    })});
     setLoading(false);
-    if (r.ok) { showToast('Devis enregistré !'); resetDevis(); }
-    else showToast('Erreur lors de l\'enregistrement', false);
+    if(r.ok){showToast('Devis enregistré !');resetDevis();loadOverview();}
+    else showToast('Erreur enregistrement',false);
   };
 
-  if (status === 'loading') return <div style={{ background:'#0a061a', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#8060a0', fontFamily:'system-ui' }}>Chargement…</div>;
+  const submitExpense = async (e) => {
+    e.preventDefault();
+    if(!newExp.description||!newExp.amount) return showToast('Description et montant requis',false);
+    const r = await fetch('/api/garage/expenses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newExp)});
+    if(r.ok){showToast('Dépense ajoutée !');setNewExp({description:'',amount:'',category:'Pièces',expense_date:new Date().toISOString().slice(0,10),notes:''});loadExpenses();loadOverview();}
+    else showToast('Erreur',false);
+  };
+
+  const deleteExpense = async (id) => {
+    await fetch(`/api/garage/expenses?id=${id}`,{method:'DELETE'});
+    loadExpenses(); loadOverview();
+  };
+
+  const handlePaySalaries = async () => {
+    if(!salaryInfo||salaryInfo.totalToPay<=0) return;
+    setPayingNow(true);
+    const r = await fetch('/api/garage/salary-payment',{method:'POST'});
+    setPayingNow(false);
+    if(r.ok){showToast('Salaires payés !');loadEmployees();loadOverview();}
+    else showToast('Erreur paiement',false);
+  };
+
+  const handleUpdateBalance = async (e) => {
+    e.preventDefault();
+    const r = await fetch('/api/garage/balance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({balance:parseFloat(newBalanceVal)})});
+    if(r.ok){setEditingBalance(false);loadOverview();showToast('Solde mis à jour !');}
+  };
+
+  if (status==='loading') return <div style={{background:'#0a061a',minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#8060a0',fontFamily:'system-ui'}}>Chargement…</div>;
   if (!session) return null;
 
-  const TABS = [
-    { key:'devis',    label:'🔧 Nouveau Devis' },
-    { key:'registre', label:'📋 Registre' },
-    { key:'compte',   label:'👤 Mon Compte' },
+  const TABS=[
+    {key:'overview', label:'📊 Vue d\'ensemble'},
+    {key:'devis',    label:'🔧 Nouveau Devis'},
+    {key:'registre', label:'📋 Registre'},
+    {key:'depenses', label:'🛒 Dépenses'},
+    {key:'employes', label:'👥 Employés'},
+    {key:'compte',   label:'👤 Mon Compte'},
   ];
 
-  return (
-    <div style={{ background:'#0a061a', minHeight:'100vh', fontFamily:"'Inter','Segoe UI',system-ui,sans-serif", color:'#f0e8ff' }}>
+  // ── Styles communs ────────────────────────────────────────────────
+  const card = {background:'linear-gradient(145deg,#16102a,#1e1435)',border:'1px solid rgba(224,64,251,0.18)',borderRadius:16,padding:'22px 26px'};
+  const inputS = {width:'100%',background:'#0a061a',border:'1.5px solid rgba(224,64,251,0.25)',borderRadius:9,padding:'10px 14px',fontSize:14,color:'#f0e8ff',boxSizing:'border-box'};
+  const labelS = {fontSize:12,color:'#8060a0',fontWeight:700,textTransform:'uppercase',letterSpacing:0.6,marginBottom:5,display:'block'};
+  const btnPrimary = {background:'linear-gradient(135deg,#7c3aed,#9f67fa)',color:'#fff',border:'none',borderRadius:10,padding:'11px 22px',fontWeight:700,fontSize:14,cursor:'pointer',boxShadow:'0 4px 16px rgba(124,58,237,0.3)'};
 
-      {/* Toast */}
-      {toast && (
-        <div style={{ position:'fixed', top:20, right:20, zIndex:9999, padding:'13px 22px', borderRadius:12, color:'#fff', fontWeight:600, fontSize:15, boxShadow:'0 8px 32px rgba(0,0,0,0.6)', background: toast.ok ? 'linear-gradient(135deg,#15803d,#16a34a)' : 'linear-gradient(135deg,#b91c1c,#dc2626)' }}>
-          {toast.msg}
-        </div>
-      )}
+  return (
+    <div style={{background:'#0a061a',minHeight:'100vh',fontFamily:"'Inter','Segoe UI',system-ui,sans-serif",color:'#f0e8ff'}}>
+
+      {toast && <div style={{position:'fixed',top:20,right:20,zIndex:9999,padding:'13px 22px',borderRadius:12,color:'#fff',fontWeight:600,fontSize:15,boxShadow:'0 8px 32px rgba(0,0,0,0.6)',background:toast.ok?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#b91c1c,#dc2626)'}}>{toast.msg}</div>}
 
       {/* Navbar */}
-      <nav style={{ background:'rgba(10,6,26,0.95)', borderBottom:'1px solid rgba(224,64,251,0.12)', padding:'0 48px', display:'flex', alignItems:'center', justifyContent:'space-between', height:58, position:'sticky', top:0, zIndex:100, backdropFilter:'blur(12px)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-          <span style={{ fontSize:22, fontWeight:800, color:'#f0e8ff', letterSpacing:0.3 }}>🔧 Piers 76</span>
-          <span style={{ background:'rgba(251,191,36,0.15)', color:'#fbbf24', border:'1px solid rgba(251,191,36,0.3)', borderRadius:20, padding:'3px 12px', fontSize:12, fontWeight:700 }}>GARAGE</span>
+      <nav style={{background:'rgba(10,6,26,0.95)',borderBottom:'1px solid rgba(251,191,36,0.15)',padding:'0 48px',display:'flex',alignItems:'center',justifyContent:'space-between',height:58,position:'sticky',top:0,zIndex:100,backdropFilter:'blur(12px)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:14}}>
+          <span style={{fontSize:22,fontWeight:800,color:'#f0e8ff'}}>🔧 Piers 76</span>
+          <span style={{background:'rgba(251,191,36,0.15)',color:'#fbbf24',border:'1px solid rgba(251,191,36,0.3)',borderRadius:20,padding:'3px 12px',fontSize:12,fontWeight:700}}>GARAGE</span>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-          <span style={{ color:'#8060a0', fontSize:14 }}>{session.user.name}</span>
-          <button onClick={() => signOut({ callbackUrl:'/' })} style={{ padding:'6px 16px', background:'rgba(224,64,251,0.08)', border:'1px solid rgba(224,64,251,0.2)', borderRadius:8, color:'#c090e0', cursor:'pointer', fontSize:13 }}>Déconnexion</button>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <span style={{color:'#8060a0',fontSize:14}}>{session.user.name}</span>
+          <button onClick={()=>signOut({callbackUrl:'/'})} style={{padding:'6px 16px',background:'rgba(224,64,251,0.08)',border:'1px solid rgba(224,64,251,0.2)',borderRadius:8,color:'#c090e0',cursor:'pointer',fontSize:13}}>Déconnexion</button>
         </div>
       </nav>
 
       {/* Tab bar */}
-      <div style={{ background:'#0f0820', borderBottom:'1px solid rgba(224,64,251,0.12)', display:'flex', padding:'0 48px', overflowX:'auto' }}>
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ padding:'14px 22px', background:'none', border:'none', cursor:'pointer', fontSize:14, fontWeight:500, color: tab === t.key ? '#f0e8ff' : '#5a4080', borderBottom: tab === t.key ? '2.5px solid #e040fb' : '2.5px solid transparent', whiteSpace:'nowrap', transition:'all 0.15s' }}>
+      <div style={{background:'#0f0820',borderBottom:'1px solid rgba(224,64,251,0.12)',display:'flex',padding:'0 48px',overflowX:'auto'}}>
+        {TABS.map(t=>(
+          <button key={t.key} onClick={()=>setTab(t.key)} style={{padding:'14px 20px',background:'none',border:'none',cursor:'pointer',fontSize:14,fontWeight:500,color:tab===t.key?'#f0e8ff':'#5a4080',borderBottom:tab===t.key?'2.5px solid #fbbf24':'2.5px solid transparent',whiteSpace:'nowrap',transition:'all 0.15s'}}>
             {t.label}
           </button>
         ))}
       </div>
 
-      {/* Main */}
-      <div style={{ maxWidth:1600, margin:'0 auto', padding:'24px 48px' }}>
+      <div style={{maxWidth:1600,margin:'0 auto',padding:'24px 48px'}}>
 
-        {/* ══ ONGLET : NOUVEAU DEVIS ══ */}
-        {tab === 'devis' && (
+        {/* ══ VUE D'ENSEMBLE ══ */}
+        {tab==='overview' && (
           <div>
-            <h2 style={{ fontSize:24, fontWeight:700, color:'#f0e8ff', marginBottom:22 }}>Nouveau Devis</h2>
-
-            <div style={{ display:'flex', gap:24, alignItems:'flex-start', flexWrap:'wrap' }}>
-
-              {/* ── Colonne gauche : formulaire ── */}
-              <div style={{ flex:3, minWidth:340 }}>
-
-                {/* Infos client + véhicule */}
-                <div style={{ background:'linear-gradient(145deg,#16102a,#1e1435)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:16, padding:'22px 26px', marginBottom:20 }}>
-                  <div style={{ fontSize:12, fontWeight:800, color:'#fbbf24', textTransform:'uppercase', letterSpacing:1, marginBottom:16 }}>👤 Client & Véhicule</div>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:14 }}>
-                    <div>
-                      <label style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, marginBottom:5, display:'block' }}>Prénom</label>
-                      <input value={client.firstName} onChange={e => setClient(c => ({...c, firstName:e.target.value}))}
-                        style={{ width:'100%', background:'#0a061a', border:'1.5px solid rgba(224,64,251,0.25)', borderRadius:9, padding:'10px 14px', fontSize:14, color:'#f0e8ff', boxSizing:'border-box' }} placeholder="Michel" />
+            <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',marginBottom:22}}>Vue d'ensemble — semaine en cours</h2>
+            {!overview ? <p style={{color:'#5a4080',fontStyle:'italic'}}>Chargement…</p> : (
+              <>
+                {/* IRS + KPIs */}
+                <div style={{display:'flex',gap:24,marginBottom:28,flexWrap:'wrap'}}>
+                  {/* IRS box */}
+                  <div style={{background:'linear-gradient(135deg,#1a0510 0%,#220818 50%,#160830 100%)',border:'2px solid rgba(220,38,38,0.3)',borderRadius:18,padding:'24px 28px',flex:'0 0 auto',width:'clamp(340px,38%,520px)',display:'flex',gap:24,flexWrap:'wrap',boxShadow:'0 8px 40px rgba(0,0,0,0.6)'}}>
+                    <div style={{flex:'1 1 180px',minWidth:160}}>
+                      <div style={{fontSize:13,fontWeight:700,color:'#991b1b',textTransform:'uppercase',letterSpacing:1,marginBottom:6}}>🏛️ Taxe IRS — Semaine</div>
+                      <div style={{fontSize:36,fontWeight:900,color:'#dc2626',lineHeight:1}}>{fmt(overview.weekTaxAmount)}</div>
+                      <div style={{fontSize:13,color:'#b91c1c',marginTop:6}}>à verser sur le compte IRS</div>
+                      {overview.weekTaxRate===0 && <div style={{marginTop:10,background:'rgba(74,222,128,0.1)',color:'#4ade80',borderRadius:8,padding:'6px 12px',fontSize:13,fontWeight:600}}>✅ Exonéré cette semaine</div>}
                     </div>
-                    <div>
-                      <label style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, marginBottom:5, display:'block' }}>Nom</label>
-                      <input value={client.lastName} onChange={e => setClient(c => ({...c, lastName:e.target.value}))}
-                        style={{ width:'100%', background:'#0a061a', border:'1.5px solid rgba(224,64,251,0.25)', borderRadius:9, padding:'10px 14px', fontSize:14, color:'#f0e8ff', boxSizing:'border-box' }} placeholder="Dupont" />
+                    <div style={{flex:'2 1 260px',display:'flex',flexDirection:'column',gap:6}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'#c0a0d8',paddingBottom:6}}><span>CA devis semaine</span><strong>{fmt(overview.weekRevenue)}</strong></div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'#d97706',paddingBottom:6}}><span>− Dépenses</span><strong>− {fmt(overview.weekExpenses)}</strong></div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'#7c3aed',paddingBottom:6}}><span>− Salaires distribués</span><strong>− {fmt(overview.weekSalaries)}</strong></div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:15,color:'#f0e8ff',fontWeight:700,borderTop:'2px solid #fca5a5',paddingTop:10,marginTop:4}}><span>= Base imposable</span><strong style={{color:overview.weekNet<0?'#fbbf24':'#dc2626'}}>{fmt(Math.max(0,overview.weekNet))}</strong></div>
                     </div>
-                    <div>
-                      <label style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, marginBottom:5, display:'block' }}>Modèle du véhicule</label>
-                      <input value={client.model} onChange={e => setClient(c => ({...c, model:e.target.value}))}
-                        style={{ width:'100%', background:'#0a061a', border:'1.5px solid rgba(224,64,251,0.25)', borderRadius:9, padding:'10px 14px', fontSize:14, color:'#f0e8ff', boxSizing:'border-box' }} placeholder="Sultan RS" />
+                  </div>
+                  {/* KPIs */}
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:16,flex:1,minWidth:300,alignContent:'start'}}>
+                    {[
+                      {icon:'💵',label:'CA semaine',val:fmt(overview.weekRevenue),sub:`${overview.weekCount} devis`},
+                      {icon:'📅',label:'CA mois',val:fmt(overview.monthRevenue),sub:`${overview.monthCount} devis`},
+                      {icon:'🛒',label:'Dépenses semaine',val:`− ${fmt(overview.weekExpenses)}`,col:'#d97706'},
+                      {icon:'👥',label:'Salaires semaine',val:`− ${fmt(overview.weekSalaries)}`,col:'#7c3aed'},
+                      {icon:'🏛️',label:`Taxe IRS (${(overview.weekTaxRate*100).toFixed(0)}%)`,val:fmt(overview.weekTaxAmount),col:'#dc2626'},
+                      {icon:'📈',label:'Bénéfice net',val:fmt(Math.max(0,overview.weekNet)-overview.weekTaxAmount),col:(overview.weekNet-overview.weekTaxAmount)>=0?'#16a34a':'#dc2626'},
+                    ].map((k,i)=>(
+                      <div key={i} style={{background:'linear-gradient(145deg,#16102a,#1e1435)',borderRadius:16,padding:'20px',border:'1px solid rgba(224,64,251,0.18)',boxShadow:'0 4px 24px rgba(0,0,0,0.5)'}}>
+                        <div style={{fontSize:28,marginBottom:10}}>{k.icon}</div>
+                        <div style={{fontSize:12,color:'#6a4890',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:0.7}}>{k.label}</div>
+                        <div style={{fontSize:28,fontWeight:800,color:k.col||'#f0e8ff',letterSpacing:-0.5}}>{k.val}</div>
+                        {k.sub && <div style={{fontSize:12,color:'#5a4080',marginTop:4}}>{k.sub}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Solde bancaire */}
+                {(() => {
+                  const b = overview.balance;
+                  const bal = b.currentBalance;
+                  const accent = bal>=0?'#16a34a':'#dc2626';
+                  const weeks = b.weeklyHistory||[];
+                  const maxAbs = Math.max(1,...weeks.map(w=>Math.abs(w.delta)));
+                  const W=400,H=60,pad=4;
+                  const bw = weeks.length ? Math.floor((W-pad*2)/weeks.length)-2 : 40;
+                  return (
+                    <div style={{background:'linear-gradient(135deg,#0a0618,#110820)',border:`2px solid ${bal>=0?'rgba(22,163,74,0.35)':'rgba(220,38,38,0.35)'}`,borderRadius:18,padding:'22px 26px',marginBottom:28,boxShadow:'0 8px 40px rgba(0,0,0,0.55)'}}>
+                      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:20}}>
+                        <div style={{flex:'1 1 180px'}}>
+                          <div style={{fontSize:11,fontWeight:700,color:accent,textTransform:'uppercase',letterSpacing:1,marginBottom:6}}>🏦 Solde Compte Bancaire</div>
+                          <div style={{fontSize:40,fontWeight:900,color:accent,lineHeight:1,letterSpacing:-1}}>{fmt(bal)}</div>
+                          <div style={{fontSize:12,color:'#6a4890',marginTop:6}}>Réf. {fmt(b.refBalance)} · màj {fmtD(b.refDate)}</div>
+                          {!editingBalance ? (
+                            <button onClick={()=>{setEditingBalance(true);setNewBalanceVal(bal.toFixed(2));}} style={{marginTop:12,padding:'6px 14px',background:'rgba(224,64,251,0.12)',color:'#c084fc',border:'1px solid rgba(224,64,251,0.3)',borderRadius:8,cursor:'pointer',fontSize:12,fontWeight:600}}>✏️ Recalibrer</button>
+                          ) : (
+                            <form onSubmit={handleUpdateBalance} style={{marginTop:12,display:'flex',gap:8,flexWrap:'wrap'}}>
+                              <input type="number" step="0.01" value={newBalanceVal} onChange={e=>setNewBalanceVal(e.target.value)} style={{...inputS,width:130,padding:'6px 10px',fontSize:13}} placeholder="Solde réel" autoFocus />
+                              <button type="submit" style={{padding:'6px 14px',background:accent,color:'#fff',border:'none',borderRadius:8,cursor:'pointer',fontSize:13,fontWeight:700}}>✓</button>
+                              <button type="button" onClick={()=>setEditingBalance(false)} style={{padding:'6px 10px',background:'rgba(255,255,255,0.06)',color:'#8060a0',border:'none',borderRadius:8,cursor:'pointer',fontSize:12}}>✕</button>
+                            </form>
+                          )}
+                        </div>
+                        <div style={{flex:'1 1 200px',display:'flex',flexDirection:'column',gap:8,borderLeft:'1px solid rgba(255,255,255,0.06)',paddingLeft:22}}>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#a080c8'}}><span>Référence</span><strong style={{color:'#f0e8ff'}}>{fmt(b.refBalance)}</strong></div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#4ade80'}}><span>+ Devis encaissés</span><strong>+ {fmt(b.revSince)}</strong></div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#f87171'}}><span>− Dépenses</span><strong>− {fmt(b.expSince)}</strong></div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#7c3aed'}}><span>− Salaires</span><strong>− {fmt(b.salSince)}</strong></div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:15,fontWeight:700,borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:8,marginTop:4}}><span style={{color:'#c0a0d8'}}>= Solde actuel</span><strong style={{color:accent}}>{fmt(bal)}</strong></div>
+                        </div>
+                        <div style={{flex:'1 1 180px'}}>
+                          <div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',letterSpacing:0.6,marginBottom:8}}>Flux net · 8 sem.</div>
+                          <svg viewBox={`0 0 ${W} ${H+18}`} style={{width:'100%',maxWidth:W,height:'auto',overflow:'visible'}}>
+                            {weeks.map((w,i)=>{
+                              const barH=Math.max(3,Math.round((Math.abs(w.delta)/maxAbs)*(H-pad*2)));
+                              const x=pad+i*(bw+2);
+                              const col=w.delta>=0?'#16a34a':'#dc2626';
+                              const barY=w.delta>=0?H-pad-barH:H-pad;
+                              const d=new Date(w.week_start);
+                              return (<g key={i}><rect x={x} y={barY} width={bw} height={barH} rx={2} fill={col} opacity={0.8}/><text x={x+bw/2} y={H+14} textAnchor="middle" fontSize="8" fill="#5a4080">{d.getDate()}/{d.getMonth()+1}</text></g>);
+                            })}
+                            <line x1={pad} y1={H-pad} x2={W-pad} y2={H-pad} stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                          </svg>
+                        </div>
+                      </div>
                     </div>
+                  );
+                })()}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ══ NOUVEAU DEVIS ══ */}
+        {tab==='devis' && (
+          <div>
+            <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',marginBottom:22}}>Nouveau Devis</h2>
+            <div style={{display:'flex',gap:24,alignItems:'flex-start',flexWrap:'wrap'}}>
+              <div style={{flex:3,minWidth:340}}>
+                {/* Client */}
+                <div style={{...card,border:'1px solid rgba(251,191,36,0.2)',marginBottom:20}}>
+                  <div style={{fontSize:12,fontWeight:800,color:'#fbbf24',textTransform:'uppercase',letterSpacing:1,marginBottom:16}}>👤 Client & Véhicule</div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14}}>
+                    {[['Prénom','firstName','Michel'],['Nom','lastName','Dupont'],['Modèle','model','Sultan RS']].map(([lbl,key,ph])=>(
+                      <div key={key}>
+                        <label style={labelS}>{lbl}</label>
+                        <input value={client[key]} onChange={e=>setClient(c=>({...c,[key]:e.target.value}))} style={inputS} placeholder={ph}/>
+                      </div>
+                    ))}
                     <div>
-                      <label style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, marginBottom:5, display:'block' }}>Catégorie</label>
-                      <select value={client.category} onChange={e => setClient(c => ({...c, category:e.target.value}))}
-                        style={{ width:'100%', background:'#0a061a', border:'1.5px solid rgba(224,64,251,0.25)', borderRadius:9, padding:'10px 14px', fontSize:14, color:'#f0e8ff', boxSizing:'border-box' }}>
-                        {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      <label style={labelS}>Catégorie</label>
+                      <select value={client.category} onChange={e=>setClient(c=>({...c,category:e.target.value}))} style={inputS}>
+                        {CATEGORIES.map(cat=><option key={cat} value={cat}>{cat}</option>)}
                       </select>
                     </div>
                   </div>
                 </div>
-
                 {/* Section tabs */}
-                <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-                  {[['perfs','🔧 Performances', selPerfs.size],['customs','🎨 Customs', selCustoms.size],['paints','💅 Peintures', selPaints.size]].map(([key, label, count]) => (
-                    <button key={key} onClick={() => setActiveSection(key)}
-                      style={{ padding:'10px 18px', borderRadius:10, border: activeSection === key ? '2px solid #e040fb' : '1px solid rgba(224,64,251,0.2)', background: activeSection === key ? 'rgba(224,64,251,0.12)' : 'rgba(255,255,255,0.03)', color: activeSection === key ? '#f0e8ff' : '#5a4080', fontWeight:600, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', gap:8 }}>
-                      {label}
-                      {count > 0 && <span style={{ background:'#e040fb', color:'#fff', borderRadius:'50%', width:20, height:20, fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>{count}</span>}
+                <div style={{display:'flex',gap:8,marginBottom:16}}>
+                  {[['perfs','🔧 Performances',selPerfs.size],['customs','🎨 Customs',selCustoms.size],['paints','💅 Peintures',selPaints.size]].map(([key,label,count])=>(
+                    <button key={key} onClick={()=>setActiveSection(key)} style={{padding:'10px 18px',borderRadius:10,border:activeSection===key?'2px solid #e040fb':'1px solid rgba(224,64,251,0.2)',background:activeSection===key?'rgba(224,64,251,0.12)':'rgba(255,255,255,0.03)',color:activeSection===key?'#f0e8ff':'#5a4080',fontWeight:600,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',gap:8}}>
+                      {label}{count>0&&<span style={{background:'#e040fb',color:'#fff',borderRadius:'50%',width:20,height:20,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{count}</span>}
                     </button>
                   ))}
                 </div>
-
-                {/* ── PERFORMANCES ── */}
-                {activeSection === 'perfs' && (
-                  <div style={{ background:'linear-gradient(145deg,#16102a,#1e1435)', border:'1px solid rgba(224,64,251,0.18)', borderRadius:16, padding:'22px 26px' }}>
-                    <div style={{ fontSize:12, color:'#8060a0', marginBottom:16 }}>
-                      Prix basés sur la catégorie : <strong style={{ color:'#fbbf24' }}>{client.category}</strong>
-                    </div>
-                    {Object.entries(PERF_GROUPS).map(([groupName, items]) => (
-                      <div key={groupName} style={{ marginBottom:20 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:'#c084fc', marginBottom:10 }}>{groupName}</div>
-                        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:10 }}>
-                          {items.map(item => {
-                            const price = PERF_PRICES[item]?.[catIdx] || 0;
-                            const sel = selPerfs.has(item);
-                            return (
-                              <button key={item} onClick={() => togglePerf(item)}
-                                style={{ background: sel ? 'linear-gradient(145deg,#1e0a30,#280d40)' : '#120c22', border: sel ? '2px solid #e040fb' : '1px solid rgba(224,64,251,0.15)', borderRadius:10, padding:'12px 16px', cursor:'pointer', textAlign:'left', transition:'all 0.15s', boxShadow: sel ? '0 4px 16px rgba(224,64,251,0.2)' : 'none' }}>
-                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                                  <span style={{ fontWeight:600, fontSize:14, color: sel ? '#f0e8ff' : '#c0a0d8' }}>{item}</span>
-                                  {sel && <span style={{ color:'#e040fb', fontSize:16 }}>✓</span>}
-                                </div>
-                                <div style={{ fontSize:15, fontWeight:700, color: sel ? '#e040fb' : '#8060a0', marginTop:4 }}>{fmt(price)}</div>
-                              </button>
-                            );
+                {/* Performances */}
+                {activeSection==='perfs' && (
+                  <div style={card}>
+                    <div style={{fontSize:12,color:'#8060a0',marginBottom:16}}>Prix basés sur la catégorie : <strong style={{color:'#fbbf24'}}>{client.category}</strong></div>
+                    {Object.entries(PERF_GROUPS).map(([grp,items])=>(
+                      <div key={grp} style={{marginBottom:20}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'#c084fc',marginBottom:10}}>{grp}</div>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:10}}>
+                          {items.map(item=>{
+                            const price=PERF_PRICES[item]?.[catIdx]||0;
+                            const sel=selPerfs.has(item);
+                            return (<button key={item} onClick={()=>togglePerf(item)} style={{background:sel?'linear-gradient(145deg,#1e0a30,#280d40)':'#120c22',border:sel?'2px solid #e040fb':'1px solid rgba(224,64,251,0.15)',borderRadius:10,padding:'12px 16px',cursor:'pointer',textAlign:'left'}}>
+                              <div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontWeight:600,fontSize:14,color:sel?'#f0e8ff':'#c0a0d8'}}>{item}</span>{sel&&<span style={{color:'#e040fb'}}>✓</span>}</div>
+                              <div style={{fontSize:15,fontWeight:700,color:sel?'#e040fb':'#8060a0',marginTop:4}}>{fmt(price)}</div>
+                            </button>);
                           })}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-
-                {/* ── CUSTOMS ── */}
-                {activeSection === 'customs' && (
-                  <div style={{ background:'linear-gradient(145deg,#16102a,#1e1435)', border:'1px solid rgba(224,64,251,0.18)', borderRadius:16, padding:'22px 26px' }}>
-                    <div style={{ fontSize:12, color:'#8060a0', marginBottom:16 }}>Prix fixe quelle que soit la catégorie du véhicule</div>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(175px,1fr))', gap:10 }}>
-                      {Object.entries(CUSTOM_PRICES).map(([item, price]) => {
-                        const sel = selCustoms.has(item);
-                        return (
-                          <button key={item} onClick={() => toggleCustom(item)}
-                            style={{ background: sel ? 'linear-gradient(145deg,#1e0a30,#280d40)' : '#120c22', border: sel ? '2px solid #e040fb' : '1px solid rgba(224,64,251,0.15)', borderRadius:10, padding:'12px 14px', cursor:'pointer', textAlign:'left', transition:'all 0.15s' }}>
-                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                              <span style={{ fontWeight:600, fontSize:13, color: sel ? '#f0e8ff' : '#c0a0d8' }}>{item}</span>
-                              {sel && <span style={{ color:'#e040fb' }}>✓</span>}
-                            </div>
-                            <div style={{ fontSize:14, fontWeight:700, color: sel ? '#e040fb' : '#8060a0', marginTop:3 }}>{fmt(price)}</div>
-                          </button>
-                        );
+                {/* Customs */}
+                {activeSection==='customs' && (
+                  <div style={card}>
+                    <div style={{fontSize:12,color:'#8060a0',marginBottom:16}}>Prix fixe — toutes catégories</div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(175px,1fr))',gap:10}}>
+                      {Object.entries(CUSTOM_PRICES).map(([item,price])=>{
+                        const sel=selCustoms.has(item);
+                        return (<button key={item} onClick={()=>toggleCustom(item)} style={{background:sel?'linear-gradient(145deg,#1e0a30,#280d40)':'#120c22',border:sel?'2px solid #e040fb':'1px solid rgba(224,64,251,0.15)',borderRadius:10,padding:'12px 14px',cursor:'pointer',textAlign:'left'}}>
+                          <div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontWeight:600,fontSize:13,color:sel?'#f0e8ff':'#c0a0d8'}}>{item}</span>{sel&&<span style={{color:'#e040fb'}}>✓</span>}</div>
+                          <div style={{fontSize:14,fontWeight:700,color:sel?'#e040fb':'#8060a0',marginTop:3}}>{fmt(price)}</div>
+                        </button>);
                       })}
                     </div>
                   </div>
                 )}
-
-                {/* ── PEINTURES ── */}
-                {activeSection === 'paints' && (
-                  <div style={{ background:'linear-gradient(145deg,#16102a,#1e1435)', border:'1px solid rgba(224,64,251,0.18)', borderRadius:16, padding:'22px 26px' }}>
-                    {Object.entries(PAINT_GROUPS).map(([groupName, items]) => (
-                      <div key={groupName} style={{ marginBottom:22 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:'#c084fc', marginBottom:10 }}>{groupName}</div>
-                        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:10 }}>
-                          {Object.entries(items).map(([item, price]) => {
-                            const sel = selPaints.has(item);
-                            return (
-                              <button key={item} onClick={() => togglePaint(item)}
-                                style={{ background: sel ? 'linear-gradient(145deg,#1e0a30,#280d40)' : '#120c22', border: sel ? '2px solid #e040fb' : '1px solid rgba(224,64,251,0.15)', borderRadius:10, padding:'12px 14px', cursor:'pointer', textAlign:'left', transition:'all 0.15s' }}>
-                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                                  <span style={{ fontWeight:600, fontSize:13, color: sel ? '#f0e8ff' : '#c0a0d8' }}>{item}</span>
-                                  {sel && <span style={{ color:'#e040fb' }}>✓</span>}
-                                </div>
-                                <div style={{ fontSize:14, fontWeight:700, color: sel ? '#e040fb' : '#8060a0', marginTop:3 }}>{fmt(price)}</div>
-                              </button>
-                            );
+                {/* Peintures */}
+                {activeSection==='paints' && (
+                  <div style={card}>
+                    {Object.entries(PAINT_GROUPS).map(([grp,items])=>(
+                      <div key={grp} style={{marginBottom:22}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'#c084fc',marginBottom:10}}>{grp}</div>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:10}}>
+                          {Object.entries(items).map(([item,price])=>{
+                            const sel=selPaints.has(item);
+                            return (<button key={item} onClick={()=>togglePaint(item)} style={{background:sel?'linear-gradient(145deg,#1e0a30,#280d40)':'#120c22',border:sel?'2px solid #e040fb':'1px solid rgba(224,64,251,0.15)',borderRadius:10,padding:'12px 14px',cursor:'pointer',textAlign:'left'}}>
+                              <div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontWeight:600,fontSize:13,color:sel?'#f0e8ff':'#c0a0d8'}}>{item}</span>{sel&&<span style={{color:'#e040fb'}}>✓</span>}</div>
+                              <div style={{fontSize:14,fontWeight:700,color:sel?'#e040fb':'#8060a0',marginTop:3}}>{fmt(price)}</div>
+                            </button>);
                           })}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-
-                {/* Notes */}
-                <div style={{ marginTop:16 }}>
-                  <label style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, marginBottom:5, display:'block' }}>Notes (optionnel)</label>
-                  <textarea value={devisNotes} onChange={e => setDevisNotes(e.target.value)} rows={3}
-                    style={{ width:'100%', background:'#0a061a', border:'1.5px solid rgba(224,64,251,0.25)', borderRadius:9, padding:'10px 14px', fontSize:14, color:'#f0e8ff', resize:'vertical', boxSizing:'border-box' }} placeholder="Remarques, demandes spéciales…" />
+                <div style={{marginTop:16}}>
+                  <label style={labelS}>Notes (optionnel)</label>
+                  <textarea value={devisNotes} onChange={e=>setDevisNotes(e.target.value)} rows={3} style={{...inputS,resize:'vertical'}} placeholder="Remarques, délai, demandes…"/>
                 </div>
               </div>
 
-              {/* ── Colonne droite : résumé devis (sticky) ── */}
-              <div style={{ flex:'0 0 320px', minWidth:280, position:'sticky', top:80 }}>
-                <div style={{ background:'linear-gradient(145deg,#100820,#180c30)', border:'2px solid rgba(251,191,36,0.3)', borderRadius:18, padding:'24px', boxShadow:'0 8px 40px rgba(0,0,0,0.6)' }}>
-                  <div style={{ fontSize:13, fontWeight:800, color:'#fbbf24', textTransform:'uppercase', letterSpacing:1, marginBottom:20 }}>📄 Récapitulatif</div>
-
-                  {/* Client */}
-                  {(client.firstName || client.lastName) && (
-                    <div style={{ marginBottom:16, padding:'12px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10 }}>
-                      <div style={{ fontSize:11, color:'#6a4890', fontWeight:700, textTransform:'uppercase', letterSpacing:0.6, marginBottom:4 }}>Client</div>
-                      <div style={{ fontWeight:700, fontSize:15, color:'#f0e8ff' }}>{client.firstName} {client.lastName}</div>
-                      {client.model && <div style={{ fontSize:13, color:'#8060a0', marginTop:2 }}>{client.model} · {client.category}</div>}
+              {/* Récap sticky */}
+              <div style={{flex:'0 0 320px',minWidth:280,position:'sticky',top:80}}>
+                <div style={{background:'linear-gradient(145deg,#100820,#180c30)',border:'2px solid rgba(251,191,36,0.3)',borderRadius:18,padding:'24px',boxShadow:'0 8px 40px rgba(0,0,0,0.6)'}}>
+                  <div style={{fontSize:13,fontWeight:800,color:'#fbbf24',textTransform:'uppercase',letterSpacing:1,marginBottom:20}}>📄 Récapitulatif</div>
+                  {(client.firstName||client.lastName) && (
+                    <div style={{marginBottom:16,padding:'12px 14px',background:'rgba(255,255,255,0.04)',borderRadius:10}}>
+                      <div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Client</div>
+                      <div style={{fontWeight:700,fontSize:15,color:'#f0e8ff'}}>{client.firstName} {client.lastName}</div>
+                      {client.model&&<div style={{fontSize:13,color:'#8060a0',marginTop:2}}>{client.model} · {client.category}</div>}
                     </div>
                   )}
-
-                  {/* Lignes */}
-                  <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:16 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', fontSize:14, color:'#c0a0d8' }}>
-                      <span>🔧 Performances <span style={{ color:'#6a4890' }}>({selPerfs.size})</span></span>
-                      <strong style={{ color: perfsTotal > 0 ? '#f0e8ff' : '#3a2060' }}>{fmt(perfsTotal)}</strong>
-                    </div>
-                    <div style={{ display:'flex', justifyContent:'space-between', fontSize:14, color:'#c0a0d8' }}>
-                      <span>🎨 Customs <span style={{ color:'#6a4890' }}>({selCustoms.size})</span></span>
-                      <strong style={{ color: customsTotal > 0 ? '#f0e8ff' : '#3a2060' }}>{fmt(customsTotal)}</strong>
-                    </div>
-                    <div style={{ display:'flex', justifyContent:'space-between', fontSize:14, color:'#c0a0d8' }}>
-                      <span>💅 Peintures <span style={{ color:'#6a4890' }}>({selPaints.size})</span></span>
-                      <strong style={{ color: paintsTotal > 0 ? '#f0e8ff' : '#3a2060' }}>{fmt(paintsTotal)}</strong>
-                    </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:16}}>
+                    {[['🔧 Performances',selPerfs.size,perfsTotal],['🎨 Customs',selCustoms.size,customsTotal],['💅 Peintures',selPaints.size,paintsTotal]].map(([lbl,cnt,tot])=>(
+                      <div key={lbl} style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'#c0a0d8'}}>
+                        <span>{lbl} <span style={{color:'#6a4890'}}>({cnt})</span></span>
+                        <strong style={{color:tot>0?'#f0e8ff':'#3a2060'}}>{fmt(tot)}</strong>
+                      </div>
+                    ))}
                   </div>
-
-                  <div style={{ borderTop:'2px solid rgba(251,191,36,0.2)', paddingTop:16, marginBottom:20 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <span style={{ fontSize:15, color:'#d0b8f8', fontWeight:600 }}>TOTAL DEVIS</span>
-                      <span style={{ fontSize:30, fontWeight:900, color:'#fbbf24', letterSpacing:-1 }}>{fmt(grandTotal)}</span>
-                    </div>
+                  <div style={{borderTop:'2px solid rgba(251,191,36,0.2)',paddingTop:16,marginBottom:20,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontSize:15,color:'#d0b8f8',fontWeight:600}}>TOTAL</span>
+                    <span style={{fontSize:30,fontWeight:900,color:'#fbbf24',letterSpacing:-1}}>{fmt(grandTotal)}</span>
                   </div>
-
-                  {/* Détail des sélections */}
-                  {selPerfs.size > 0 && (
-                    <div style={{ marginBottom:12 }}>
-                      <div style={{ fontSize:11, color:'#6a4890', fontWeight:700, textTransform:'uppercase', marginBottom:6 }}>Performances sélectionnées</div>
-                      {[...selPerfs].map(p => (
-                        <div key={p} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#a080c8', padding:'3px 0' }}>
-                          <span>{p}</span><span>{fmt(PERF_PRICES[p]?.[catIdx]||0)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {selCustoms.size > 0 && (
-                    <div style={{ marginBottom:12 }}>
-                      <div style={{ fontSize:11, color:'#6a4890', fontWeight:700, textTransform:'uppercase', marginBottom:6 }}>Customs sélectionnées</div>
-                      {[...selCustoms].map(c => (
-                        <div key={c} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#a080c8', padding:'3px 0' }}>
-                          <span>{c}</span><span>{fmt(CUSTOM_PRICES[c]||0)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {selPaints.size > 0 && (
-                    <div style={{ marginBottom:12 }}>
-                      <div style={{ fontSize:11, color:'#6a4890', fontWeight:700, textTransform:'uppercase', marginBottom:6 }}>Peintures sélectionnées</div>
-                      {[...selPaints].map(p => {
-                        let price = 0;
-                        for (const grp of Object.values(PAINT_GROUPS)) { if (grp[p]) { price = grp[p]; break; } }
-                        return (
-                          <div key={p} style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#a080c8', padding:'3px 0' }}>
-                            <span>{p}</span><span>{fmt(price)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <button onClick={submitDevis} disabled={loading || grandTotal === 0}
-                    style={{ width:'100%', padding:'14px', background: grandTotal === 0 ? '#1a0c2e' : 'linear-gradient(135deg,#d97706,#fbbf24)', color: grandTotal === 0 ? '#3a2060' : '#1a0c00', border:'none', borderRadius:12, cursor: grandTotal === 0 ? 'not-allowed' : 'pointer', fontSize:15, fontWeight:900, boxShadow: grandTotal > 0 ? '0 4px 20px rgba(251,191,36,0.35)' : 'none', marginBottom:10 }}>
-                    {loading ? 'Enregistrement…' : '✅ Valider le devis'}
+                  {[...selPerfs].length>0&&(<div style={{marginBottom:10}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Performances</div>{[...selPerfs].map(p=><div key={p} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#a080c8',padding:'2px 0'}}><span>{p}</span><span>{fmt(PERF_PRICES[p]?.[catIdx]||0)}</span></div>)}</div>)}
+                  {[...selCustoms].length>0&&(<div style={{marginBottom:10}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Customs</div>{[...selCustoms].map(c=><div key={c} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#a080c8',padding:'2px 0'}}><span>{c}</span><span>{fmt(CUSTOM_PRICES[c]||0)}</span></div>)}</div>)}
+                  {[...selPaints].length>0&&(<div style={{marginBottom:10}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Peintures</div>{[...selPaints].map(p=>{let pr=0;for(const g of Object.values(PAINT_GROUPS)){if(g[p]){pr=g[p];break;}}return<div key={p} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#a080c8',padding:'2px 0'}}><span>{p}</span><span>{fmt(pr)}</span></div>;})}</div>)}
+                  <button onClick={submitDevis} disabled={loading||grandTotal===0} style={{width:'100%',padding:'14px',background:grandTotal===0?'#1a0c2e':'linear-gradient(135deg,#d97706,#fbbf24)',color:grandTotal===0?'#3a2060':'#1a0c00',border:'none',borderRadius:12,cursor:grandTotal===0?'not-allowed':'pointer',fontSize:15,fontWeight:900,marginBottom:10,boxShadow:grandTotal>0?'0 4px 20px rgba(251,191,36,0.35)':'none'}}>
+                    {loading?'Enregistrement…':'✅ Valider le devis'}
                   </button>
-                  <button onClick={resetDevis} style={{ width:'100%', padding:'10px', background:'none', color:'#5a4080', border:'1px solid rgba(224,64,251,0.18)', borderRadius:10, cursor:'pointer', fontSize:13 }}>
-                    🗑️ Réinitialiser
-                  </button>
+                  <button onClick={resetDevis} style={{width:'100%',padding:'10px',background:'none',color:'#5a4080',border:'1px solid rgba(224,64,251,0.18)',borderRadius:10,cursor:'pointer',fontSize:13}}>🗑️ Réinitialiser</button>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ══ ONGLET : REGISTRE ══ */}
-        {tab === 'registre' && (
+        {/* ══ REGISTRE ══ */}
+        {tab==='registre' && (
           <div>
-            <h2 style={{ fontSize:24, fontWeight:700, color:'#f0e8ff', marginBottom:22 }}>Registre des clients</h2>
-            {quotes.length === 0 ? (
-              <div style={{ color:'#5a4080', textAlign:'center', padding:48, background:'#120c22', borderRadius:16, border:'1px dashed rgba(224,64,251,0.18)' }}>
-                Aucun devis enregistré pour le moment.
-              </div>
+            <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',marginBottom:22}}>Registre des clients</h2>
+            {quotes.length===0 ? (
+              <div style={{color:'#5a4080',textAlign:'center',padding:48,background:'#120c22',borderRadius:16,border:'1px dashed rgba(224,64,251,0.18)'}}>Aucun devis enregistré.</div>
             ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                {quotes.map((q, i) => (
-                  <div key={q.id} style={{ background:'linear-gradient(145deg,#16102a,#1e1435)', border:'1px solid rgba(224,64,251,0.18)', borderRadius:14, overflow:'hidden' }}>
-                    <button onClick={() => setExpandedQuote(expandedQuote === q.id ? null : q.id)}
-                      style={{ width:'100%', background:'none', border:'none', padding:'16px 22px', cursor:'pointer', display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
-                      <span style={{ background:'rgba(251,191,36,0.12)', color:'#fbbf24', borderRadius:8, padding:'4px 10px', fontSize:13, fontWeight:700 }}>#{i+1}</span>
-                      <span style={{ fontWeight:700, fontSize:15, color:'#f0e8ff', flex:1, textAlign:'left' }}>{q.client_first_name} {q.client_last_name}</span>
-                      <span style={{ fontSize:13, color:'#8060a0' }}>{q.vehicle_model} · <strong style={{ color:'#c084fc' }}>{q.vehicle_category}</strong></span>
-                      <span style={{ fontSize:20, fontWeight:800, color:'#fbbf24' }}>{fmt(q.grand_total)}</span>
-                      <span style={{ fontSize:12, color:'#5a4080' }}>{fmtDate(q.created_at)}</span>
-                      <span style={{ color:'#5a4080', fontSize:14 }}>{expandedQuote === q.id ? '▲' : '▼'}</span>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {quotes.map((q,i)=>(
+                  <div key={q.id} style={{background:'linear-gradient(145deg,#16102a,#1e1435)',border:'1px solid rgba(224,64,251,0.18)',borderRadius:14,overflow:'hidden'}}>
+                    <button onClick={()=>setExpandedQuote(expandedQuote===q.id?null:q.id)} style={{width:'100%',background:'none',border:'none',padding:'16px 22px',cursor:'pointer',display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+                      <span style={{background:'rgba(251,191,36,0.12)',color:'#fbbf24',borderRadius:8,padding:'4px 10px',fontSize:13,fontWeight:700}}>#{i+1}</span>
+                      <span style={{fontWeight:700,fontSize:15,color:'#f0e8ff',flex:1,textAlign:'left'}}>{q.client_first_name} {q.client_last_name}</span>
+                      <span style={{fontSize:13,color:'#8060a0'}}>{q.vehicle_model} · <strong style={{color:'#c084fc'}}>{q.vehicle_category}</strong></span>
+                      <span style={{fontSize:20,fontWeight:800,color:'#fbbf24'}}>{fmt(q.grand_total)}</span>
+                      <span style={{fontSize:12,color:'#5a4080'}}>{fmtD(q.created_at)}</span>
+                      <span style={{color:'#5a4080',fontSize:14}}>{expandedQuote===q.id?'▲':'▼'}</span>
                     </button>
-
-                    {expandedQuote === q.id && (
-                      <div style={{ padding:'0 22px 20px', borderTop:'1px solid rgba(224,64,251,0.1)' }}>
-                        <div style={{ display:'flex', gap:24, flexWrap:'wrap', marginTop:16 }}>
-                          {q.selected_performances?.length > 0 && (
-                            <div style={{ flex:1, minWidth:200 }}>
-                              <div style={{ fontSize:11, color:'#6a4890', fontWeight:700, textTransform:'uppercase', marginBottom:8 }}>🔧 Performances — {fmt(q.perfs_total)}</div>
-                              {q.selected_performances.map(p => (
-                                <div key={p.type} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#a080c8', padding:'3px 0' }}>
-                                  <span>{p.type}</span><span>{fmt(p.price)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {q.selected_customs?.length > 0 && (
-                            <div style={{ flex:1, minWidth:200 }}>
-                              <div style={{ fontSize:11, color:'#6a4890', fontWeight:700, textTransform:'uppercase', marginBottom:8 }}>🎨 Customs — {fmt(q.customs_total)}</div>
-                              {q.selected_customs.map(c => (
-                                <div key={c.type} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#a080c8', padding:'3px 0' }}>
-                                  <span>{c.type}</span><span>{fmt(c.price)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {q.selected_paints?.length > 0 && (
-                            <div style={{ flex:1, minWidth:200 }}>
-                              <div style={{ fontSize:11, color:'#6a4890', fontWeight:700, textTransform:'uppercase', marginBottom:8 }}>💅 Peintures — {fmt(q.paints_total)}</div>
-                              {q.selected_paints.map(p => (
-                                <div key={p.type} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#a080c8', padding:'3px 0' }}>
-                                  <span>{p.type}</span><span>{fmt(p.price)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                    {expandedQuote===q.id && (
+                      <div style={{padding:'0 22px 20px',borderTop:'1px solid rgba(224,64,251,0.1)'}}>
+                        <div style={{display:'flex',gap:20,flexWrap:'wrap',marginTop:16}}>
+                          {q.selected_performances?.length>0&&(<div style={{flex:1,minWidth:180}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:6}}>🔧 Perfs — {fmt(q.perfs_total)}</div>{q.selected_performances.map(p=><div key={p.type} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#a080c8',padding:'2px 0'}}><span>{p.type}</span><span>{fmt(p.price)}</span></div>)}</div>)}
+                          {q.selected_customs?.length>0&&(<div style={{flex:1,minWidth:180}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:6}}>🎨 Customs — {fmt(q.customs_total)}</div>{q.selected_customs.map(c=><div key={c.type} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#a080c8',padding:'2px 0'}}><span>{c.type}</span><span>{fmt(c.price)}</span></div>)}</div>)}
+                          {q.selected_paints?.length>0&&(<div style={{flex:1,minWidth:180}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:6}}>💅 Peintures — {fmt(q.paints_total)}</div>{q.selected_paints.map(p=><div key={p.type} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#a080c8',padding:'2px 0'}}><span>{p.type}</span><span>{fmt(p.price)}</span></div>)}</div>)}
                         </div>
-                        {q.notes && (
-                          <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(255,255,255,0.04)', borderRadius:8, fontSize:13, color:'#8060a0' }}>
-                            📝 {q.notes}
-                          </div>
-                        )}
-                        <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid rgba(224,64,251,0.1)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                          <span style={{ fontSize:12, color:'#5a4080' }}>Par : {q.employee_name || 'Inconnu'}</span>
-                          <span style={{ fontSize:18, fontWeight:800, color:'#fbbf24' }}>Total : {fmt(q.grand_total)}</span>
+                        {q.notes&&<div style={{marginTop:12,padding:'10px 14px',background:'rgba(255,255,255,0.04)',borderRadius:8,fontSize:13,color:'#8060a0'}}>📝 {q.notes}</div>}
+                        <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid rgba(224,64,251,0.1)',display:'flex',justifyContent:'space-between'}}>
+                          <span style={{fontSize:12,color:'#5a4080'}}>Par : {q.employee_name||'—'}</span>
+                          <span style={{fontSize:18,fontWeight:800,color:'#fbbf24'}}>Total : {fmt(q.grand_total)}</span>
                         </div>
                       </div>
                     )}
@@ -510,17 +468,151 @@ export default function GarageDashboard() {
           </div>
         )}
 
-        {/* ══ ONGLET : MON COMPTE ══ */}
-        {tab === 'compte' && (
-          <div style={{ maxWidth:480 }}>
-            <h2 style={{ fontSize:24, fontWeight:700, color:'#f0e8ff', marginBottom:22 }}>Mon Compte</h2>
-            <div style={{ background:'linear-gradient(145deg,#16102a,#1e1435)', borderRadius:14, padding:'20px 24px', border:'1px solid rgba(224,64,251,0.18)' }}>
-              <div style={{ fontSize:11, color:'#8060a0', marginBottom:4, textTransform:'uppercase', letterSpacing:0.6, fontWeight:700 }}>Nom affiché</div>
-              <div style={{ fontSize:18, fontWeight:700, color:'#f0e8ff', marginBottom:18 }}>{session.user.name}</div>
-              <div style={{ fontSize:11, color:'#8060a0', marginBottom:4, textTransform:'uppercase', letterSpacing:0.6, fontWeight:700 }}>Identifiant</div>
-              <div style={{ fontSize:16, fontWeight:600, color:'#e040fb', marginBottom:18 }}>@{session.user.username}</div>
-              <div style={{ fontSize:11, color:'#8060a0', marginBottom:4, textTransform:'uppercase', letterSpacing:0.6, fontWeight:700 }}>Entreprise</div>
-              <div style={{ fontSize:15, fontWeight:600, color:'#d0b8f8' }}>{session.user.companyName}</div>
+        {/* ══ DÉPENSES ══ */}
+        {tab==='depenses' && (
+          <div>
+            <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',marginBottom:22}}>Dépenses & Achats</h2>
+            {/* Formulaire */}
+            <div style={{...card,marginBottom:24}}>
+              <div style={{fontSize:13,fontWeight:700,color:'#c084fc',marginBottom:16}}>➕ Nouvelle dépense</div>
+              <form onSubmit={submitExpense}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:14,marginBottom:14}}>
+                  <div>
+                    <label style={labelS}>Description</label>
+                    <input value={newExp.description} onChange={e=>setNewExp(n=>({...n,description:e.target.value}))} style={inputS} placeholder="Ex: Pièces moteur Sultan"/>
+                  </div>
+                  <div>
+                    <label style={labelS}>Montant ($)</label>
+                    <input type="number" step="0.01" min="0" value={newExp.amount} onChange={e=>setNewExp(n=>({...n,amount:e.target.value}))} style={inputS} placeholder="0.00"/>
+                  </div>
+                  <div>
+                    <label style={labelS}>Catégorie</label>
+                    <select value={newExp.category} onChange={e=>setNewExp(n=>({...n,category:e.target.value}))} style={inputS}>
+                      {EXPENSE_CATS.map(c=><option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelS}>Date</label>
+                    <input type="date" value={newExp.expense_date} onChange={e=>setNewExp(n=>({...n,expense_date:e.target.value}))} style={inputS}/>
+                  </div>
+                </div>
+                <button type="submit" style={btnPrimary}>+ Ajouter la dépense</button>
+              </form>
+            </div>
+            {/* Liste */}
+            {expenses.length===0 ? (
+              <div style={{color:'#5a4080',textAlign:'center',padding:48,background:'#120c22',borderRadius:16,border:'1px dashed rgba(224,64,251,0.18)'}}>Aucune dépense enregistrée.</div>
+            ) : (
+              <div style={{overflowX:'auto',borderRadius:14}}>
+                <table style={{width:'100%',borderCollapse:'collapse',background:'#120c22',borderRadius:14,overflow:'hidden'}}>
+                  <thead>
+                    <tr>
+                      {['Date','Description','Catégorie','Montant','Par',''].map(h=>(
+                        <th key={h} style={{background:'#0a061a',padding:'13px 16px',textAlign:'left',fontSize:12,fontWeight:700,color:'#8060a0',textTransform:'uppercase',letterSpacing:0.8,borderBottom:'1px solid rgba(224,64,251,0.18)'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenses.map(ex=>(
+                      <tr key={ex.id} style={{borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
+                        <td style={{padding:'13px 16px',fontSize:14,color:'#5a4080'}}>{fmtD(ex.expense_date)}</td>
+                        <td style={{padding:'13px 16px',fontSize:14,color:'#f0e8ff',fontWeight:600}}>{ex.description}</td>
+                        <td style={{padding:'13px 16px'}}><span style={{background:'rgba(224,64,251,0.12)',color:'#c084fc',padding:'3px 10px',borderRadius:20,fontSize:12,fontWeight:600}}>{ex.category}</span></td>
+                        <td style={{padding:'13px 16px',fontSize:15,fontWeight:700,color:'#f87171'}}>− {fmt(ex.amount)}</td>
+                        <td style={{padding:'13px 16px',fontSize:13,color:'#5a4080'}}>{ex.employee_name||'—'}</td>
+                        <td style={{padding:'13px 16px'}}>
+                          <button onClick={()=>deleteExpense(ex.id)} style={{background:'rgba(220,38,38,0.1)',border:'1px solid rgba(220,38,38,0.25)',color:'#f87171',borderRadius:7,padding:'5px 12px',cursor:'pointer',fontSize:12}}>Supprimer</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ EMPLOYÉS ══ */}
+        {tab==='employes' && (
+          <div>
+            <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',marginBottom:22}}>Employés & Salaires</h2>
+            {/* Bannière salaire */}
+            {salaryInfo && (
+              <div style={{background:'linear-gradient(145deg,#1a1408,#221c08)',border:'2px solid rgba(251,191,36,0.3)',borderRadius:16,padding:'20px 24px',marginBottom:24}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16}}>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:700,color:'#92400e',textTransform:'uppercase',letterSpacing:1,marginBottom:4}}>💰 Salaires à distribuer</div>
+                    <div style={{fontSize:32,fontWeight:900,color:'#fbbf24'}}>{fmt(salaryInfo.totalToPay)}</div>
+                    <div style={{fontSize:12,color:'#78350f',marginTop:4}}>
+                      Depuis : {lastPaid && new Date(lastPaid).getFullYear()>1970 ? fmtD(lastPaid) : 'le début'}
+                    </div>
+                  </div>
+                  {salaryInfo.totalToPay>0 ? (
+                    <button onClick={handlePaySalaries} disabled={payingNow} style={{padding:'12px 28px',background:payingNow?'#5a4080':'linear-gradient(135deg,#d97706,#fbbf24)',color:'#1a0c00',border:'none',borderRadius:10,cursor:payingNow?'not-allowed':'pointer',fontSize:14,fontWeight:900,boxShadow:'0 4px 20px rgba(251,191,36,0.35)'}}>
+                      {payingNow?'…':'💸 Payer ' + fmt(salaryInfo.totalToPay)}
+                    </button>
+                  ) : (
+                    <div style={{background:'rgba(74,222,128,0.1)',color:'#4ade80',borderRadius:10,padding:'10px 20px',fontWeight:700,fontSize:14}}>✅ Salaires à jour</div>
+                  )}
+                </div>
+                {salaryInfo.history?.length>0 && (
+                  <div style={{marginTop:16,paddingTop:16,borderTop:'1px solid rgba(251,191,36,0.15)'}}>
+                    <div style={{fontSize:11,color:'#78350f',fontWeight:700,textTransform:'uppercase',marginBottom:8}}>Historique des paiements</div>
+                    <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                      {salaryInfo.history.map(h=>(
+                        <div key={h.id} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#a08020'}}>
+                          <span>{fmtD(h.paid_at)}</span><span style={{fontWeight:700,color:'#fbbf24'}}>{fmt(h.total_amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Cartes employés */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:16}}>
+              {employees.map(emp=>(
+                <div key={emp.id} style={{...card}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:16,color:'#f0e8ff'}}>{emp.name}</div>
+                      <span style={{background:'rgba(224,64,251,0.12)',color:'#e040fb',padding:'2px 10px',borderRadius:20,fontSize:12,fontWeight:600}}>{emp.role==='patron'?'Patron':'Employé'}</span>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase'}}>Commission</div>
+                      <div style={{fontSize:22,fontWeight:800,color:'#c084fc'}}>{emp.salary_percent||0}%</div>
+                    </div>
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'#a080c8'}}>
+                      <span>CA période <span style={{fontSize:11,color:'#5a4080'}}>({emp.period_count} devis)</span></span>
+                      <strong style={{color:'#f0e8ff'}}>{fmt(emp.period_revenue)}</strong>
+                    </div>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'#a080c8'}}>
+                      <span>💰 Salaire période</span>
+                      <strong style={{color:'#4ade80',fontSize:16}}>{fmt(emp.period_salary)}</strong>
+                    </div>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#6a4890'}}>
+                      <span>CA mois</span><span>{fmt(emp.month_revenue)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ══ MON COMPTE ══ */}
+        {tab==='compte' && (
+          <div style={{maxWidth:480}}>
+            <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',marginBottom:22}}>Mon Compte</h2>
+            <div style={{...card}}>
+              <div style={{fontSize:11,color:'#8060a0',marginBottom:4,textTransform:'uppercase',letterSpacing:0.6,fontWeight:700}}>Nom</div>
+              <div style={{fontSize:18,fontWeight:700,color:'#f0e8ff',marginBottom:18}}>{session.user.name}</div>
+              <div style={{fontSize:11,color:'#8060a0',marginBottom:4,textTransform:'uppercase',letterSpacing:0.6,fontWeight:700}}>Identifiant</div>
+              <div style={{fontSize:16,fontWeight:600,color:'#e040fb',marginBottom:18}}>@{session.user.username}</div>
+              <div style={{fontSize:11,color:'#8060a0',marginBottom:4,textTransform:'uppercase',letterSpacing:0.6,fontWeight:700}}>Entreprise</div>
+              <div style={{fontSize:15,fontWeight:600,color:'#d0b8f8'}}>{session.user.companyName}</div>
             </div>
           </div>
         )}
