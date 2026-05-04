@@ -846,19 +846,19 @@ export default function PatronDashboard() {
                           {cat}
                           <span style={{ flex: 6, height: 1, background: 'rgba(192,132,252,0.2)', display: 'inline-block' }} />
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: 16 }}>
                           {products.filter(p => (p.category || 'Autre') === cat).map((p) => {
                             const inCart = cart.find((i) => i.product_id === p.id);
                             return (
                               <button key={p.id} type="button" onClick={() => addToCart(p)}
-                                style={{ position: 'relative', background: inCart ? 'linear-gradient(145deg,#1e0a30,#280d40)' : 'linear-gradient(145deg,#16102a,#1e1435)', border: `2px solid ${inCart ? '#e040fb' : 'rgba(224,64,251,0.15)'}`, borderRadius: 12, padding: '12px 10px', cursor: 'pointer', textAlign: 'center', boxShadow: inCart ? '0 4px 20px rgba(224,64,251,0.25)' : '0 4px 16px rgba(0,0,0,0.4)' }}>
-                                {inCart && <div style={{ position: 'absolute', top: -8, right: -8, background: 'linear-gradient(135deg,#b020d0,#f060ff)', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{inCart.quantity}</div>}
+                                style={{ position: 'relative', background: inCart ? 'linear-gradient(145deg,#1e0a30,#280d40)' : 'linear-gradient(145deg,#16102a,#1e1435)', border: `2px solid ${inCart ? '#e040fb' : 'rgba(224,64,251,0.15)'}`, borderRadius: 16, padding: '20px 14px', cursor: 'pointer', textAlign: 'center', boxShadow: inCart ? '0 4px 20px rgba(224,64,251,0.25)' : '0 4px 16px rgba(0,0,0,0.4)' }}>
+                                {inCart && <div style={{ position: 'absolute', top: -8, right: -8, background: 'linear-gradient(135deg,#b020d0,#f060ff)', color: '#fff', borderRadius: '50%', width: 30, height: 30, fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{inCart.quantity}</div>}
                                 {p.image_url
-                                  ? <img src={p.image_url} alt={p.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 8, display: 'block', margin: '0 auto 8px' }} onError={e => e.target.style.display='none'} />
-                                  : <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
+                                  ? <img src={p.image_url} alt={p.name} style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block', margin: '0 auto 12px' }} onError={e => e.target.style.display='none'} />
+                                  : <div style={{ fontSize: 48, marginBottom: 12 }}>📦</div>
                                 }
-                                <div style={{ fontWeight: 700, fontSize: 13, color: '#f0e8ff', marginBottom: 3 }}>{p.name}</div>
-                                <div style={{ fontSize: 15, fontWeight: 700, color: '#e040fb', marginBottom: 4 }}>{fmt(p.price)}</div>
+                                <div style={{ fontWeight: 700, fontSize: 17, color: '#f0e8ff', marginBottom: 5 }}>{p.name}</div>
+                                <div style={{ fontSize: 20, fontWeight: 700, color: '#e040fb', marginBottom: 6 }}>{fmt(p.price)}</div>
                                 {p.recipe_count > 0 && (
                                   <div style={{ fontSize: 10, color: '#4ade80', fontWeight: 600 }}>🧪 -{p.recipe_count} mat.</div>
                                 )}

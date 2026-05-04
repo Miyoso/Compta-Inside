@@ -191,8 +191,8 @@ export default function EmployeeDashboard() {
                               >
                                 {inCart && <div style={S.cartBadge}>× {inCart.quantity}</div>}
                                 {p.image_url
-                                  ? <img src={p.image_url} alt={p.name} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, margin: '0 auto 8px', display: 'block' }} onError={e => e.target.style.display='none'} />
-                                  : <div style={{ fontSize: 34, marginBottom: 8 }}>📦</div>
+                                  ? <img src={p.image_url} alt={p.name} style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 10, margin: '0 auto 12px', display: 'block' }} onError={e => e.target.style.display='none'} />
+                                  : <div style={{ fontSize: 50, marginBottom: 12 }}>📦</div>
                                 }
                                 <div style={S.productName}>{p.name}</div>
                                 <div style={S.productPrice}>{fmt(p.price)}</div>
@@ -447,14 +447,14 @@ const S = {
   cartEmpty: { color: '#5a4080', fontSize: 15, textAlign: 'center', lineHeight: 1.6, padding: '16px 0' },
 
   // Produits
-  productGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 },
-  productCard: { position: 'relative', background: 'linear-gradient(145deg, #16102a, #1e1435)', border: '1px solid rgba(224,64,251,0.15)', borderRadius: 12, padding: '14px 10px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', boxShadow: '0 4px 16px rgba(0,0,0,0.4)' },
+  productGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: 16 },
+  productCard: { position: 'relative', background: 'linear-gradient(145deg, #16102a, #1e1435)', border: '1px solid rgba(224,64,251,0.15)', borderRadius: 16, padding: '20px 14px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', boxShadow: '0 4px 16px rgba(0,0,0,0.4)' },
   productCardInCart: { background: 'linear-gradient(145deg, #1e0a30, #280d40)', border: '2px solid #e040fb', boxShadow: '0 4px 20px rgba(224,64,251,0.25)' },
   productCardDisabled: { opacity: 0.45, cursor: 'not-allowed' },
-  cartBadge:   { position: 'absolute', top: -8, right: -8, background: 'linear-gradient(135deg, #b020d0, #f060ff)', color: '#fff', borderRadius: '50%', width: 22, height: 22, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  productName: { fontWeight: 700, fontSize: 14, color: '#f0e8ff', marginBottom: 3 },
+  cartBadge:   { position: 'absolute', top: -10, right: -10, background: 'linear-gradient(135deg, #b020d0, #f060ff)', color: '#fff', borderRadius: '50%', width: 30, height: 30, fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  productName: { fontWeight: 700, fontSize: 17, color: '#f0e8ff', marginBottom: 5 },
   productCat:  { fontSize: 10, color: '#5a4080', marginBottom: 6 },
-  productPrice:{ fontSize: 16, fontWeight: 700, color: '#e040fb' },
+  productPrice:{ fontSize: 20, fontWeight: 700, color: '#e040fb' },
   productStock:{ fontSize: 10, marginTop: 4, fontWeight: 600 },
 
   // Panier items
