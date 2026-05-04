@@ -508,7 +508,9 @@ export default function PatronDashboard() {
           </div>
           <div style={S.navRight}>
             <span style={S.navUser}>👤 {session.user.name}</span>
-            <a href='/garage' style={{ padding:'6px 14px', background:'rgba(251,191,36,0.12)', border:'1px solid rgba(251,191,36,0.3)', borderRadius:8, color:'#fbbf24', fontSize:13, fontWeight:700, textDecoration:'none', cursor:'pointer' }}>🔧 Piers 76</a>
+            {session.user.companyType === 'garage' && (
+              <a href='/garage' style={{ padding:'6px 14px', background:'rgba(251,191,36,0.12)', border:'1px solid rgba(251,191,36,0.3)', borderRadius:8, color:'#fbbf24', fontSize:13, fontWeight:700, textDecoration:'none' }}>🔧 Piers 76</a>
+            )}
             <button onClick={() => signOut({ callbackUrl: '/' })} style={S.navBtn}>Déconnexion</button>
           </div>
         </nav>

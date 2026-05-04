@@ -17,7 +17,7 @@ export default NextAuth({
         // Recherche par username (insensible à la casse)
         const rows = await sql`
           SELECT u.id, u.username, u.email, u.name, u.password_hash, u.role, u.status,
-                 u.company_id, c.name AS company_name
+                 u.company_id, c.name AS company_name, COALESCE(c.company_type, 'cafe') AS company_type
           FROM users u
           LEFT JOIN companies c ON c.id = u.company_id
           WHERE LOWER(u.username) = LOWER(${credentials.username})
@@ -50,6 +50,7 @@ export default NextAuth({
           role:        user.role,
           companyId:   user.company_id,
           companyName: user.company_name,
+          companyType: user.company_type || 'cafe',
         };
       },
     }),
@@ -68,6 +69,7 @@ export default NextAuth({
         token.role        = user.role;
         token.companyId   = user.companyId;
         token.companyName = user.companyName;
+        token.companyType = user.companyType;
       }
       return token;
     },
@@ -78,6 +80,7 @@ export default NextAuth({
         session.user.role        = token.role;
         session.user.companyId   = token.companyId;
         session.user.companyName = token.companyName;
+        session.user.companyType = token.companyType;
       }
       return session;
     },
