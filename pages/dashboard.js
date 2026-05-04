@@ -170,7 +170,7 @@ export default function EmployeeDashboard() {
                 {products.length === 0 ? (
                   <p style={S.empty}>Aucun produit disponible. Contacte ton patron.</p>
                 ) : (
-                  {(() => {
+                  (() => {
                     const cats = [...new Set(products.map(p => p.category || 'Autre'))];
                     return cats.map(cat => (
                       <div key={cat} style={{ marginBottom: 22 }}>
@@ -205,7 +205,7 @@ export default function EmployeeDashboard() {
                         </div>
                       </div>
                     ));
-                  })()}
+                  })()
                 )}
               </div>
 
