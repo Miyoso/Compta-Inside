@@ -31,16 +31,28 @@ const GARAGE_PERF_GROUPS = {
   '🛑 Freins':['Freins 1','Freins 2','Freins 3','Freins 4'],
   '🔩 Suspensions':['Suspensions 1','Suspensions 2','Suspensions 3'],
 };
-const GARAGE_CUSTOM_PRICES = {
-  'Aileron':1500,'Bas de caisse':1200,'Pare-choc AV':1500,'Pare-choc AR':1500,
-  'Échappement':800,'Arceaux de sécurité':800,'Grille':800,'Capot':1000,
-  'Aile gauche':700,'Aile droite':700,'Toit':850,'Contour de plaque':400,
-  'Calandre':400,'Néon intérieur':400,'Coffre':400,'Hydraulique':400,
-  'Bloc moteur':400,'Filtre à air':400,'Accessoires':400,'Caches-roues':400,
-  'Antennes':400,'Ailes':750,'Réservoir':400,'Fenêtre':400,'Rétroviseur':400,
-  'Light bar':400,'Klaxon':150,'Phares':650,'Roues':900,'Vitres':900,
-  'Intérieur':450,'Plaques':450,'Extra':1000,
+const GARAGE_CUSTOM_GROUPS = {
+  '🚗 Carrosserie': {
+    'Aileron':1500,'Bas de caisse':1200,'Pare-choc AV':1500,'Pare-choc AR':1500,
+    'Capot':1000,'Aile gauche':700,'Aile droite':700,'Toit':850,'Ailes':750,
+    'Contour de plaque':400,'Calandre':400,'Coffre':400,'Rétroviseur':400,
+    'Light bar':400,'Phares':650,'Roues':900,'Vitres':900,'Fenêtre':400,
+    'Arceaux de sécurité':800,
+  },
+  '⚙️ Mécanique': {
+    'Échappement':800,'Grille':800,'Bloc moteur':400,'Filtre à air':400,
+    'Hydraulique':400,'Klaxon':150,
+  },
+  '🎭 Intérieur & Options': {
+    'Néon intérieur':400,'Intérieur':450,'Plaques':450,'Caches-roues':400,
+    'Antennes':400,'Accessoires':400,'Réservoir':400,'Extra':1000,
+  },
+  '🛠️ Services': {
+    'Répa moteur':150,'Répa Carrosserie':100,'Nettoyage':50,
+  },
 };
+// Prix plat dérivé des groupes (pour les calculs)
+const GARAGE_CUSTOM_PRICES = Object.assign({}, ...Object.values(GARAGE_CUSTOM_GROUPS));
 const GARAGE_PAINT_GROUPS = {
   '🎨 Peinture principale':{'Principale - Normale':500,'Principale - Métallique':750,'Principale - Pearl':750,'Principale - Matte':850,'Principale - Metal':850,'Principale - Chrome':1200},
   '🖌️ Peinture secondaire':{'Secondaire - Normale':500,'Secondaire - Métallique':750,'Secondaire - Pearl':750,'Secondaire - Matte':850,'Secondaire - Metal':850,'Secondaire - Chrome':1200},
@@ -1908,18 +1920,25 @@ export default function PatronDashboard() {
 
                   {/* ─ Customs ─ */}
                   {devisSection === 'customs' && (
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                      {Object.entries(GARAGE_CUSTOM_PRICES).map(([item, price])=>{
-                        const sel = devisSelCustoms.has(item);
-                        return (
-                          <button key={item} onClick={()=>toggleDevisCustom(item)}
-                            style={{ padding:'6px 12px', borderRadius:20, border:`1px solid ${sel?'#e040fb':'rgba(120,60,180,0.3)'}`,
-                              background: sel ? 'rgba(224,64,251,0.18)' : 'rgba(30,20,53,0.8)',
-                              color: sel ? '#e040fb' : '#b090d0', cursor:'pointer', fontSize:12, fontWeight:sel?700:400 }}>
-                            {item} — {price.toLocaleString('fr-FR')}$
-                          </button>
-                        );
-                      })}
+                    <div>
+                      {Object.entries(GARAGE_CUSTOM_GROUPS).map(([grpLabel, items])=>(
+                        <div key={grpLabel} style={{ marginBottom:16 }}>
+                          <div style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.8, marginBottom:8 }}>{grpLabel}</div>
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                            {Object.entries(items).map(([item, price])=>{
+                              const sel = devisSelCustoms.has(item);
+                              return (
+                                <button key={item} onClick={()=>toggleDevisCustom(item)}
+                                  style={{ padding:'6px 12px', borderRadius:20, border:`1px solid ${sel?'#e040fb':'rgba(120,60,180,0.3)'}`,
+                                    background: sel ? 'rgba(224,64,251,0.18)' : 'rgba(30,20,53,0.8)',
+                                    color: sel ? '#e040fb' : '#b090d0', cursor:'pointer', fontSize:12, fontWeight:sel?700:400 }}>
+                                  {item} — {price.toLocaleString('fr-FR')}$
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
 
