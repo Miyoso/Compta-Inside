@@ -33,11 +33,11 @@ export default async function handler(req, res) {
     // Ventes garage (grand_total des devis) depuis la date de référence
     let garageRevenue = 0;
     if (isGarage) {
-      const [gr] = await sql\`
+      const [gr] = await sql`
         SELECT COALESCE(SUM(grand_total), 0)::float AS total
         FROM garage_quotes
-        WHERE company_id = \${companyId} AND created_at >= \${refDate}
-      \`;
+        WHERE company_id = ${companyId} AND created_at >= ${refDate}
+      `;
       garageRevenue = gr.total;
     }
 
