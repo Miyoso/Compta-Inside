@@ -53,8 +53,9 @@ export default async function handler(req, res) {
       RETURNING *
     `;
 
-    // Déduire le coût des pièces du solde bancaire automatiquement
-    if (parts > 0) {
+    // Déduire uniquement le coût pièces (le chiffre d'affaires grand_total est déjà
+    // comptabilisé côté balance.js via la requête garageRevenue sur garage_quotes)
+    if (parts !== 0) {
       await sql`
         UPDATE companies
         SET account_balance = COALESCE(account_balance, 0) - ${parts}
@@ -73,9 +74,9 @@ export default async function handler(req, res) {
     if (!['patron', 'admin'].includes(token.role))
       return res.status(403).json({ error: 'Accès refusé' });
 
-    // Récupérer parts_total pour rembourser le solde
+    // Récupérer grand_total + parts_total pour annuler le mouvement complet
     const [existing] = await sql`
-      SELECT parts_total::float FROM garage_quotes
+      SELECT grand_total::float, parts_total::float FROM garage_quotes
       WHERE id = ${parseInt(id)} AND company_id = ${companyId}
     `;
 
@@ -86,13 +87,17 @@ export default async function handler(req, res) {
     `;
     if (!deleted) return res.status(404).json({ error: 'Devis introuvable' });
 
-    // Rembourser les pièces au solde si suppression
-    if (existing?.parts_total > 0) {
-      await sql`
-        UPDATE companies
-        SET account_balance = COALESCE(account_balance, 0) + ${existing.parts_total}
-        WHERE id = ${companyId}
-      `;
+    // Annuler uniquement la déduction pièces (le grand_total est géré par balance.js
+    // via la requête garageRevenue — supprimer le devis suffit à l'exclure)
+    if (existing) {
+      const parts = existing.parts_total || 0;
+      if (parts !== 0) {
+        await sql`
+          UPDATE companies
+          SET account_balance = COALESCE(account_balance, 0) + ${parts}
+          WHERE id = ${companyId}
+        `;
+      }
     }
 
     return res.status(200).json({ ok: true });
