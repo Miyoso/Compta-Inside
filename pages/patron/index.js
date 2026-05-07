@@ -842,39 +842,101 @@ export default function PatronDashboard() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#a080c8' }}>
                               <span>Solde de référence</span><strong style={{ color: '#f0e8ff' }}>{fmt(balance.refBalance)}</strong>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
-                              <span>+ Ventes encaissées</span><strong>+ {fmt(balance.salesSince)}</strong>
-                            </div>
+                            {balance.garageRevenue > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
+                                <span>+ Devis garage</span><strong>+ {fmt(balance.garageRevenue)}</strong>
+                              </div>
+                            )}
+                            {balance.salesSince > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
+                                <span>+ Ventes encaissées</span><strong>+ {fmt(balance.salesSince)}</strong>
+                              </div>
+                            )}
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#f87171' }}>
                               <span>− Achats réglés</span><strong>− {fmt(balance.purchasesSince)}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#c084fc' }}>
+                              <span>− Salaires payés</span><strong>− {fmt(balance.salariesPaid)}</strong>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, borderTop: `1px solid ${accentBorder}`, paddingTop: 8, marginTop: 4 }}>
                               <span style={{ color: '#c0a0d8' }}> = Solde actuel</span><strong style={{ color: accent }}>{fmt(bal)}</strong>
                             </div>
                           </div>
 
-                          {/* Sparkline 8 semaines */}
-                          <div style={{ flex: '1 1 180px' }}>
-                            <div style={{ fontSize: 11, color: '#6a4890', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Flux net · 8 sem.</div>
-                            <svg viewBox={`0 0 ${W} ${H + 18}`} style={{ width: '100%', maxWidth: W, height: 'auto', overflow: 'visible' }}>
-                              {weeks.map((w, i) => {
-                                const barH = Math.max(3, Math.round((Math.abs(w.delta) / maxAbs) * (H - pad * 2)));
-                                const x = pad + i * (bw + 2);
-                                const col = w.delta >= 0 ? '#16a34a' : '#dc2626';
-                                const barY = w.delta >= 0 ? H - pad - barH : H - pad;
-                                const d = new Date(w.week_start);
-                                return (
-                                  <g key={i}>
-                                    <rect x={x} y={barY} width={bw} height={barH} rx={2} fill={col} opacity={0.8} />
-                                    <text x={x + bw / 2} y={H + 14} textAnchor="middle" fontSize="8" fill="#5a4080">{d.getDate()}/{d.getMonth()+1}</text>
-                                  </g>
-                                );
-                              })}
-                              <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-                            </svg>
-                          </div>
-
                         </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── Graphique CA vs Salaires · 8 semaines ──────────── */}
+                  {balance && balance.weeklyHistory && balance.weeklyHistory.some(w => w.sales > 0 || w.salaries > 0) && (() => {
+                    const weeks = balance.weeklyHistory;
+                    const maxVal = Math.max(1, ...weeks.map(w => Math.max(w.sales, w.salaries)));
+                    const CW = 560, CH = 130, padL = 48, padB = 22, padT = 8, padR = 10;
+                    const plotW = CW - padL - padR;
+                    const plotH = CH - padB - padT;
+                    const n = weeks.length;
+                    const groupW = plotW / n;
+                    const bw = Math.max(4, Math.floor(groupW * 0.3));
+                    const gap = Math.floor(groupW * 0.06);
+                    const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({ pct: r, val: Math.round(maxVal * r) }));
+                    return (
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px 12px', marginBottom: 24 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#6a4890', textTransform: 'uppercase', letterSpacing: 0.7 }}>CA vs Salaires · 8 semaines</span>
+                          <div style={{ display: 'flex', gap: 16, fontSize: 11, color: '#7a6090' }}>
+                            <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#4ade80', marginRight: 5, verticalAlign: 'middle' }} />CA</span>
+                            <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#a78bfa', marginRight: 5, verticalAlign: 'middle' }} />Salaires</span>
+                          </div>
+                        </div>
+                        <svg viewBox={`0 0 ${CW} ${CH}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
+                          {/* Grille horizontale + labels Y */}
+                          {yTicks.map(({ pct, val }) => {
+                            const y = padT + plotH - pct * plotH;
+                            return (
+                              <g key={pct}>
+                                <line x1={padL} y1={y} x2={CW - padR} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                                <text x={padL - 5} y={y + 3.5} textAnchor="end" fontSize="8" fill="#4a3060">{val > 999 ? (val/1000).toFixed(1)+'k' : val}</text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Barres groupées */}
+                          {weeks.map((w, i) => {
+                            const cx = padL + i * groupW + groupW / 2;
+                            const salesH = Math.max(2, Math.round((w.sales / maxVal) * plotH));
+                            const salH   = Math.max(2, Math.round((w.salaries / maxVal) * plotH));
+                            const salesX = cx - bw - gap / 2;
+                            const salX   = cx + gap / 2;
+                            const d = new Date(w.week_start);
+                            const label = `${d.getDate()}/${d.getMonth()+1}`;
+                            return (
+                              <g key={i}>
+                                {/* CA bar */}
+                                <rect x={salesX} y={padT + plotH - salesH} width={bw} height={salesH} rx={2} fill="#4ade80" opacity={0.85} />
+                                {/* Salaires bar */}
+                                <rect x={salX} y={padT + plotH - salH} width={bw} height={salH} rx={2} fill="#a78bfa" opacity={0.85} />
+                                {/* Label valeur CA si visible */}
+                                {salesH > 14 && (
+                                  <text x={salesX + bw/2} y={padT + plotH - salesH - 3} textAnchor="middle" fontSize="7" fill="#4ade80">
+                                    {w.sales > 999 ? (w.sales/1000).toFixed(1)+'k' : Math.round(w.sales)}
+                                  </text>
+                                )}
+                                {/* Label valeur salaire si visible */}
+                                {salH > 14 && (
+                                  <text x={salX + bw/2} y={padT + plotH - salH - 3} textAnchor="middle" fontSize="7" fill="#a78bfa">
+                                    {w.salaries > 999 ? (w.salaries/1000).toFixed(1)+'k' : Math.round(w.salaries)}
+                                  </text>
+                                )}
+                                {/* Axe X label */}
+                                <text x={cx} y={CH - 4} textAnchor="middle" fontSize="8" fill="#4a3060">{label}</text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Axe X */}
+                          <line x1={padL} y1={padT + plotH} x2={CW - padR} y2={padT + plotH} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                        </svg>
                       </div>
                     );
                   })()}
