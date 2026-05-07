@@ -13,9 +13,11 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const { scope } = req.query;
 
+    // ── 1. Factures classiques (nouveau système) ──────────────
     const invoices = isPatron
       ? await sql`
-          SELECT i.id, i.created_at, i.total_amount::float, u.name AS employee_name
+          SELECT i.id, i.created_at, i.total_amount::float, u.name AS employee_name,
+                 'invoice' AS source
           FROM invoices i
           JOIN users u ON u.id = i.employee_id
           WHERE i.company_id = ${companyId}
@@ -23,14 +25,15 @@ export default async function handler(req, res) {
           ORDER BY i.created_at DESC LIMIT 100
         `
       : await sql`
-          SELECT i.id, i.created_at, i.total_amount::float
+          SELECT i.id, i.created_at, i.total_amount::float,
+                 'invoice' AS source
           FROM invoices i
           WHERE i.company_id = ${companyId} AND i.employee_id = ${userId}
           ${scope === 'week' ? sql`AND i.created_at >= DATE_TRUNC('week', NOW())` : sql``}
           ORDER BY i.created_at DESC LIMIT 100
         `;
 
-    const result = await Promise.all(
+    const invoiceResults = await Promise.all(
       invoices.map(async (inv) => {
         const items = await sql`
           SELECT p.name AS product_name, s.quantity, s.unit_price::float, s.total_amount::float
@@ -42,7 +45,56 @@ export default async function handler(req, res) {
         return { ...inv, items };
       })
     );
-    return res.status(200).json(result);
+
+    // ── 2. Ventes directes sans facture (ancien système) ──────
+    const bareSales = isPatron
+      ? await sql`
+          SELECT s.id, s.sale_date AS created_at, s.total_amount::float,
+                 u.name AS employee_name, p.name AS product_name,
+                 s.quantity, s.unit_price::float,
+                 'sale' AS source
+          FROM sales s
+          JOIN users u ON u.id = s.employee_id
+          JOIN products p ON p.id = s.product_id
+          WHERE s.company_id = ${companyId}
+            AND s.invoice_id IS NULL
+          ${scope === 'week' ? sql`AND s.sale_date >= DATE_TRUNC('week', NOW())` : sql``}
+          ORDER BY s.sale_date DESC LIMIT 100
+        `
+      : await sql`
+          SELECT s.id, s.sale_date AS created_at, s.total_amount::float,
+                 p.name AS product_name, s.quantity, s.unit_price::float,
+                 'sale' AS source
+          FROM sales s
+          JOIN products p ON p.id = s.product_id
+          WHERE s.company_id = ${companyId}
+            AND s.employee_id = ${userId}
+            AND s.invoice_id IS NULL
+          ${scope === 'week' ? sql`AND s.sale_date >= DATE_TRUNC('week', NOW())` : sql``}
+          ORDER BY s.sale_date DESC LIMIT 100
+        `;
+
+    // Regrouper les ventes directes en pseudo-factures par vente unique
+    const bareResults = bareSales.map(s => ({
+      id:            `sale-${s.id}`,
+      created_at:    s.created_at,
+      total_amount:  s.total_amount,
+      employee_name: s.employee_name,
+      source:        'sale',
+      items: [{
+        product_name: s.product_name,
+        quantity:     s.quantity,
+        unit_price:   s.unit_price,
+        total_amount: s.total_amount,
+      }],
+    }));
+
+    // ── 3. Fusionner et trier par date décroissante ────────────
+    const combined = [...invoiceResults, ...bareResults]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 150);
+
+    return res.status(200).json(combined);
   }
 
   // ── POST : créer une facture ──────────────────────────────

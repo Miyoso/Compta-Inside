@@ -24,15 +24,22 @@ export default async function handler(req, res) {
     let total = 0;
 
     if (isGarage) {
-      // Garage : salaire = grand_total × salary_percent (pas de coût matières)
-      const [totalRow] = await sql`
+      // Garage : devis + ventes directes
+      const [totalDevis] = await sql`
         SELECT COALESCE(SUM(GREATEST(0, gq.grand_total - COALESCE(gq.parts_total,0)) * u.salary_percent / 100), 0)::float AS total
         FROM garage_quotes gq
         JOIN users u ON u.id = gq.employee_id
         WHERE gq.company_id = ${companyId}
           AND gq.created_at > ${lastPaid}
       `;
-      total = totalRow.total;
+      const [totalSales] = await sql`
+        SELECT COALESCE(SUM(s.total_amount * u.salary_percent / 100), 0)::float AS total
+        FROM sales s
+        JOIN users u ON u.id = s.employee_id
+        WHERE s.company_id = ${companyId}
+          AND s.sale_date > ${lastPaid}
+      `;
+      total = (totalDevis.total || 0) + (totalSales.total || 0);
     } else {
       // Café : salaire = marge × salary_percent
       const [totalRow] = await sql`
