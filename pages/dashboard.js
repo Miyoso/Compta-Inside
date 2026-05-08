@@ -154,35 +154,35 @@ export default function EmployeeDashboard() {
         )}
 
         {/* Nav */}
-        <nav style={S.nav}>
-          <div style={S.navLeft}>
-            <span style={S.navLogo}>{isGarage ? '🔧' : '📊'} Compta-Inside</span>
-            <span style={S.navCompany}>{session.user.companyName}</span>
+        <nav className="ci-nav">
+          <div className="ci-nav-left">
+            <span className="ci-nav-logo">{isGarage ? '🔧' : '📊'} Compta-Inside</span>
+            <span className="ci-nav-company">{session.user.companyName}</span>
           </div>
-          <div style={S.navRight}>
-            <span style={S.navUser}>👤 {session.user.name}</span>
-            <button onClick={() => signOut({ callbackUrl: '/' })} style={S.navBtn}>Déconnexion</button>
+          <div className="ci-nav-right">
+            <span className="ci-nav-user">👤 {session.user.name}</span>
+            <button onClick={() => signOut({ callbackUrl: '/' })} className="ci-nav-btn">Déconnexion</button>
           </div>
         </nav>
 
         {/* Onglets */}
-        <div style={S.tabBar}>
+        <div className="ci-tabs">
           {isGarage ? (
             <>
-              <button style={tab==='devis'  ?{...S.tabBtn,...S.tabActive}:S.tabBtn} onClick={()=>setTab('devis')}>🔧 Mes devis</button>
-              <button style={tab==='salaire'?{...S.tabBtn,...S.tabActive}:S.tabBtn} onClick={()=>setTab('salaire')}>💵 Mon salaire</button>
-              <button style={tab==='compte' ?{...S.tabBtn,...S.tabActive}:S.tabBtn} onClick={()=>setTab('compte')}>⚙️ Mon compte</button>
+              <button className={`ci-tab-btn${tab==='devis'  ?' active':''}`} onClick={()=>setTab('devis')}>🔧 Mes devis</button>
+              <button className={`ci-tab-btn${tab==='salaire'?' active':''}`} onClick={()=>setTab('salaire')}>💵 Mon salaire</button>
+              <button className={`ci-tab-btn${tab==='compte' ?' active':''}`} onClick={()=>setTab('compte')}>⚙️ Mon compte</button>
             </>
           ) : (
             <>
-              <button style={tab === 'ventes'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('ventes')}>🛒 Mes ventes</button>
-              <button style={tab === 'salaire' ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('salaire')}>💵 Mon salaire</button>
-              <button style={tab === 'compte'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('compte')}>⚙️ Mon compte</button>
+              <button className={`ci-tab-btn${tab==='ventes' ?' active':''}`} onClick={()=>setTab('ventes')}>🛒 Mes ventes</button>
+              <button className={`ci-tab-btn${tab==='salaire'?' active':''}`} onClick={()=>setTab('salaire')}>💵 Mon salaire</button>
+              <button className={`ci-tab-btn${tab==='compte' ?' active':''}`} onClick={()=>setTab('compte')}>⚙️ Mon compte</button>
             </>
           )}
         </div>
 
-        <main style={S.main}>
+        <main className="ci-page">
 
           {/* ══ ONGLET DEVIS (garage employees) ══ */}
           {isGarage && tab === 'devis' && (
@@ -503,34 +503,23 @@ export default function EmployeeDashboard() {
 // ─── Styles — Thème cosmique (Inside Roleplay)
 // Fond #0d0818 · Surface #16102a · Accent #e040fb · Or #f0a820 · Texte #f0e8ff
 const S = {
-  page:        { minHeight: '100vh', background: '#0d0818', fontFamily: "'Segoe UI', system-ui, Arial, sans-serif" },
-  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d0818' },
+  page:        { minHeight: '100vh', background: '#080614', fontFamily: "'Inter','Segoe UI',system-ui,sans-serif" },
+  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080614' },
   spinner:     { width: 44, height: 44, border: '4px solid #2a1050', borderTop: '4px solid #e040fb', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
   toast:       { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 22px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 15, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', maxWidth: 380 },
 
-  nav:     { background: 'linear-gradient(90deg, #08040f 0%, #110830 50%, #08040f 100%)', borderBottom: '1px solid rgba(224,64,251,0.2)', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, boxShadow: '0 4px 24px rgba(0,0,0,0.7)' },
-  navLeft: { display: 'flex', alignItems: 'center', gap: 16 },
-  navLogo: { fontWeight: 800, fontSize: 22, color: '#f0e8ff', letterSpacing: 0.3 },
-  navCompany: { background: 'linear-gradient(135deg, #b020d0, #f060ff)', color: '#fff', padding: '4px 14px', borderRadius: 20, fontSize: 13, fontWeight: 800, letterSpacing: 0.4, boxShadow: '0 0 14px rgba(224,64,251,0.4)' },
-  navRight: { display: 'flex', alignItems: 'center', gap: 14 },
-  navUser:  { color: '#8060a0', fontSize: 13 },
-  navBtn:   { padding: '7px 16px', background: 'rgba(224,64,251,0.08)', border: '1px solid rgba(224,64,251,0.22)', borderRadius: 9, cursor: 'pointer', fontSize: 14, color: '#c090e0', fontWeight: 500 },
-
-  tabBar:   { background: '#0f0820', borderBottom: '1px solid rgba(224,64,251,0.12)', display: 'flex', padding: '0 28px', overflowX: 'auto' },
-  tabBtn:   { padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 500, color: '#5a4080', whiteSpace: 'nowrap', borderBottom: '2px solid transparent', transition: 'color 0.2s' },
-  tabActive: { color: '#f060ff', borderBottom: '2px solid #e040fb', fontWeight: 700, textShadow: '0 0 20px rgba(224,64,251,0.5)' },
-
-  main:     { maxWidth: 1600, margin: '0 auto', padding: '24px 48px' },
+  nav: {}, navLeft: {}, navLogo: {}, navCompany: {}, navRight: {}, navUser: {}, navBtn: {},
+  tabBar: {}, tabBtn: {}, tabActive: {}, main: {},
   title:    { fontSize: 24, fontWeight: 700, color: '#f0e8ff', marginBottom: 8 },
   hint:     { fontSize: 15, color: '#5a4080', marginBottom: 20 },
   subTitle: { fontSize: 16, fontWeight: 600, color: '#d0b8f8', marginBottom: 12 },
-  empty:    { color: '#5a4080', textAlign: 'center', padding: 32, background: '#120c22', borderRadius: 12, border: '1px dashed rgba(224,64,251,0.18)' },
+  empty:    { color: '#5a4080', textAlign: 'center', padding: '40px 24px', background: 'rgba(255,255,255,0.015)', borderRadius: 12, border: '1px dashed rgba(224,64,251,0.12)', fontSize: 15 },
   weekTotal: { marginBottom: 12, fontSize: 16, color: '#d0b8f8', fontWeight: 500 },
 
   // Layout split catalogue / panier
-  splitLayout: { display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' },
+  splitLayout: { display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap', minWidth: 0 },
   catalog: { flex: 3, minWidth: 280 },
-  cartPanel: { flex: 1, minWidth: 260, background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', padding: 20, position: 'sticky', top: 20, border: '1px solid rgba(224,64,251,0.18)' },
+  cartPanel: { flex: '0 0 300px', minWidth: 260, background: 'linear-gradient(145deg, #16102a, #1e1435)', borderRadius: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.5)', padding: 20, position: 'sticky', top: 90, border: '1px solid rgba(224,64,251,0.18)' },
   cartTitle: { fontSize: 17, fontWeight: 700, color: '#f0e8ff', marginBottom: 16 },
   cartEmpty: { color: '#5a4080', fontSize: 15, textAlign: 'center', lineHeight: 1.6, padding: '16px 0' },
 

@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -169,39 +170,45 @@ export default function GarageDashboard() {
   ];
 
   // ── Styles communs ────────────────────────────────────────────────
-  const card = {background:'linear-gradient(145deg,#16102a,#1e1435)',border:'1px solid rgba(224,64,251,0.18)',borderRadius:16,padding:'22px 26px'};
-  const inputS = {width:'100%',background:'#0a061a',border:'1.5px solid rgba(224,64,251,0.25)',borderRadius:9,padding:'10px 14px',fontSize:14,color:'#f0e8ff',boxSizing:'border-box'};
+  const card = {background:'linear-gradient(145deg,#16102a,#1e1435)',border:'1px solid rgba(224,64,251,0.15)',borderRadius:16,padding:'20px 22px',boxShadow:'0 4px 20px rgba(0,0,0,0.4)',transition:'border-color 0.2s'};
+  const inputS = {width:'100%',background:'rgba(0,0,0,0.35)',border:'1.5px solid rgba(224,64,251,0.2)',borderRadius:9,padding:'10px 14px',fontSize:14,color:'#f0e8ff',boxSizing:'border-box',transition:'border-color 0.15s'};
   const labelS = {fontSize:12,color:'#8060a0',fontWeight:700,textTransform:'uppercase',letterSpacing:0.6,marginBottom:5,display:'block'};
-  const btnPrimary = {background:'linear-gradient(135deg,#7c3aed,#9f67fa)',color:'#fff',border:'none',borderRadius:10,padding:'11px 22px',fontWeight:700,fontSize:14,cursor:'pointer',boxShadow:'0 4px 16px rgba(124,58,237,0.3)'};
+  const btnPrimary = {background:'linear-gradient(135deg,#7c3aed,#9f67fa)',color:'#fff',border:'none',borderRadius:10,padding:'11px 22px',fontWeight:700,fontSize:14,cursor:'pointer',boxShadow:'0 4px 16px rgba(124,58,237,0.35)',transition:'all 0.15s'};
 
   return (
-    <div style={{background:'#0a061a',minHeight:'100vh',fontFamily:"'Inter','Segoe UI',system-ui,sans-serif",color:'#f0e8ff'}}>
+    <>
+    <Head>
+      <title>Garage — Piers 76</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </Head>
+    <div style={{background:'#080614',minHeight:'100vh',fontFamily:"'Inter','Segoe UI',system-ui,sans-serif",color:'#f0e8ff'}}>
 
       {toast && <div style={{position:'fixed',top:20,right:20,zIndex:9999,padding:'13px 22px',borderRadius:12,color:'#fff',fontWeight:600,fontSize:15,boxShadow:'0 8px 32px rgba(0,0,0,0.6)',background:toast.ok?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#b91c1c,#dc2626)'}}>{toast.msg}</div>}
 
       {/* Navbar */}
-      <nav style={{background:'rgba(10,6,26,0.95)',borderBottom:'1px solid rgba(251,191,36,0.15)',padding:'0 48px',display:'flex',alignItems:'center',justifyContent:'space-between',height:58,position:'sticky',top:0,zIndex:100,backdropFilter:'blur(12px)'}}>
-        <div style={{display:'flex',alignItems:'center',gap:14}}>
-          <span style={{fontSize:22,fontWeight:800,color:'#f0e8ff'}}>🔧 Piers 76</span>
-          <span style={{background:'rgba(251,191,36,0.15)',color:'#fbbf24',border:'1px solid rgba(251,191,36,0.3)',borderRadius:20,padding:'3px 12px',fontSize:12,fontWeight:700}}>GARAGE</span>
+      <nav className="ci-nav">
+        <div className="ci-nav-left">
+          <span className="ci-nav-logo">🔧 Piers 76</span>
+          <span className="ci-nav-badge">GARAGE</span>
         </div>
-        <div style={{display:'flex',alignItems:'center',gap:16}}>
-          <span style={{color:'#8060a0',fontSize:14}}>{session.user.name}</span>
-          <a href='/patron' style={{padding:'6px 14px',background:'rgba(224,64,251,0.1)',border:'1px solid rgba(224,64,251,0.25)',borderRadius:8,color:'#c084fc',fontSize:13,fontWeight:700,textDecoration:'none'}}>📊 Café</a>
-          <button onClick={()=>signOut({callbackUrl:'/'})} style={{padding:'6px 16px',background:'rgba(224,64,251,0.08)',border:'1px solid rgba(224,64,251,0.2)',borderRadius:8,color:'#c090e0',cursor:'pointer',fontSize:13}}>Déconnexion</button>
+        <div className="ci-nav-right">
+          <span className="ci-nav-user">{session.user.name}</span>
+          <a href='/patron' className="ci-nav-link">📊 Café</a>
+          <button onClick={()=>signOut({callbackUrl:'/'})} className="ci-nav-btn">Déconnexion</button>
         </div>
       </nav>
 
       {/* Tab bar */}
-      <div style={{background:'#0f0820',borderBottom:'1px solid rgba(224,64,251,0.12)',display:'flex',padding:'0 48px',overflowX:'auto'}}>
+      <div className="ci-tabs">
         {TABS.map(t=>(
-          <button key={t.key} onClick={()=>setTab(t.key)} style={{padding:'14px 20px',background:'none',border:'none',cursor:'pointer',fontSize:14,fontWeight:500,color:tab===t.key?'#f0e8ff':'#5a4080',borderBottom:tab===t.key?'2.5px solid #fbbf24':'2.5px solid transparent',whiteSpace:'nowrap',transition:'all 0.15s'}}>
+          <button key={t.key} onClick={()=>setTab(t.key)} className={`ci-tab-btn${tab===t.key?' active':''}`}
+            style={tab===t.key?{borderBottomColor:'#fbbf24',color:'#fbbf24'}:{}}>
             {t.label}
           </button>
         ))}
       </div>
 
-      <div style={{maxWidth:1600,margin:'0 auto',padding:'24px 48px'}}>
+      <div className="ci-page">
 
         {/* ══ VUE D'ENSEMBLE ══ */}
         {tab==='overview' && (
@@ -635,11 +642,12 @@ export default function GarageDashboard() {
               <div style={{fontSize:11,color:'#8060a0',marginBottom:4,textTransform:'uppercase',letterSpacing:0.6,fontWeight:700}}>Identifiant</div>
               <div style={{fontSize:16,fontWeight:600,color:'#e040fb',marginBottom:18}}>@{session.user.username}</div>
               <div style={{fontSize:11,color:'#8060a0',marginBottom:4,textTransform:'uppercase',letterSpacing:0.6,fontWeight:700}}>Entreprise</div>
-              <div style={{fontSize:15,fontWeight:600,color:'#d0b8f8'}}>{session.user.companyName}</div>
+                   <div style={{fontSize:15,fontWeight:600,color:'#d0b8f8'}}>{session.user.companyName}</div>
             </div>
           </div>
         )}
       </div>
     </div>
+    </>
   );
 }

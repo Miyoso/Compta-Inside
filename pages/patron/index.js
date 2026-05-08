@@ -689,7 +689,10 @@ export default function PatronDashboard() {
 
   return (
     <>
-      <Head><title>Dashboard Patron — {session.user.companyName}</title></Head>
+      <Head>
+        <title>Dashboard Patron — {session.user.companyName}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <div style={S.page}>
 
         {/* Toast notification */}
@@ -700,71 +703,65 @@ export default function PatronDashboard() {
         )}
 
         {/* Barre de navigation */}
-        <nav style={S.nav}>
-          <div style={S.navLeft}>
-            <span style={S.navLogo}>
+        <nav className="ci-nav">
+          <div className="ci-nav-left">
+            <span className="ci-nav-logo">
               {session.user.companyType === 'garage' ? '🔧' : session.user.companyType === 'bar' ? '🍺' : '☕'} Compta-Inside
             </span>
-            <span style={S.navCompany}>{session.user.companyName}</span>
+            <span className="ci-nav-company">{session.user.companyName}</span>
           </div>
-          <div style={S.navRight}>
-            <span style={S.navUser}>👤 {session.user.name}</span>
-            {session.user.companyType === 'garage' && (
-              {myCompanies.length > 1 && (
-                <div style={{ position:'relative' }}>
-                  <button onClick={() => setShowCompSwitch(s=>!s)}
-                    style={{ padding:'6px 14px', background:'rgba(96,165,250,0.1)', border:'1px solid rgba(96,165,250,0.3)', borderRadius:8, color:'#60a5fa', fontSize:13, fontWeight:700, cursor:'pointer' }}>
-                    🏢 {myCompanies.find(c=>c.id===(activeCompId||session.user.companyId))?.name || session.user.companyName} ▾
-                  </button>
-                  {showCompSwitch && (
-                    <div style={{ position:'absolute', top:'110%', right:0, background:'#16102a', border:'1px solid rgba(96,165,250,0.25)', borderRadius:10, boxShadow:'0 8px 32px rgba(0,0,0,0.7)', zIndex:1000, minWidth:200, overflow:'hidden' }}>
-                      {myCompanies.map(co => (
-                        <button key={co.id}
-                          onClick={() => {
-                            setActiveCompId(co.id);
-                            if (typeof window !== 'undefined') localStorage.setItem('activeCompId', String(co.id));
-                            setShowCompSwitch(false);
-                            setTab('overview');
-                          }}
-                          style={{ display:'block', width:'100%', padding:'11px 16px', background: (activeCompId||session.user.companyId)===co.id?'rgba(96,165,250,0.12)':'none', border:'none', borderBottom:'1px solid rgba(255,255,255,0.05)', color: (activeCompId||session.user.companyId)===co.id?'#60a5fa':'#c0a0d8', fontSize:13, fontWeight:600, cursor:'pointer', textAlign:'left' }}>
-                          {co.company_type==='garage'?'🔧':co.company_type==='bar'?'🍺':'☕'} {co.name}
-                          {(activeCompId||session.user.companyId)===co.id && ' ✓'}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              <a href='/garage' style={{ padding:'6px 14px', background:'rgba(251,191,36,0.12)', border:'1px solid rgba(251,191,36,0.3)', borderRadius:8, color:'#fbbf24', fontSize:13, fontWeight:700, textDecoration:'none' }}>🔧 Piers 76</a>
+          <div className="ci-nav-right">
+            <span className="ci-nav-user">👤 {session.user.name}</span>
+            {myCompanies.length > 1 && (
+              <div style={{ position:'relative' }}>
+                <button onClick={() => setShowCompSwitch(s=>!s)}
+                  style={{ padding:'6px 14px', background:'rgba(96,165,250,0.1)', border:'1px solid rgba(96,165,250,0.3)', borderRadius:8, color:'#60a5fa', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                  🏢 {myCompanies.find(co=>co.id===(activeCompId||session.user.companyId))?.name || session.user.companyName} ▾
+                </button>
+                {showCompSwitch && (
+                  <div style={{ position:'absolute', top:'110%', right:0, background:'#16102a', border:'1px solid rgba(96,165,250,0.25)', borderRadius:10, boxShadow:'0 8px 32px rgba(0,0,0,0.7)', zIndex:1000, minWidth:200, overflow:'hidden' }}>
+                    {myCompanies.map(co => (
+                      <button key={co.id}
+                        onClick={() => {
+                          setActiveCompId(co.id);
+                          if (typeof window !== 'undefined') localStorage.setItem('activeCompId', String(co.id));
+                          setShowCompSwitch(false);
+                          setTab('overview');
+                        }}
+                        style={{ display:'block', width:'100%', padding:'11px 16px', background:(activeCompId||session.user.companyId)===co.id?'rgba(96,165,250,0.12)':'none', border:'none', borderBottom:'1px solid rgba(255,255,255,0.05)', color:(activeCompId||session.user.companyId)===co.id?'#60a5fa':'#c0a0d8', fontSize:13, fontWeight:600, cursor:'pointer', textAlign:'left' }}>
+                        {co.company_type==='garage'?'🔧':co.company_type==='bar'?'🍺':'☕'} {co.name}
+                        {(activeCompId||session.user.companyId)===co.id && ' ✓'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
-            <button onClick={() => signOut({ callbackUrl: '/' })} style={S.navBtn}>Déconnexion</button>
+            {session.user.companyType === 'garage' && (
+              <a href='/garage' className="ci-nav-link">🔧 Piers 76</a>
+            )}
+            <button onClick={() => signOut({ callbackUrl: '/' })} className="ci-nav-btn">Déconnexion</button>
           </div>
         </nav>
 
-        {/* Layout sidebar + contenu */}
-        <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
-
-        {/* ── Sidebar navigation ── */}
-        <aside style={S.sidebar}>
-          <div style={S.sidebarInner}>
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                style={tab === t.key ? { ...S.sidebarItem, ...S.sidebarItemActive } : S.sidebarItem}
-                onClick={() => setTab(t.key)}
-              >
-                <span style={{ flex: 1, textAlign: 'left' }}>{t.label}</span>
-                {t.badge > 0 && (
-                  <span style={S.sidebarBadge}>{t.badge}</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </aside>
+        {/* ── Tab bar horizontale ── */}
+        <div className="ci-tabs">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              className={`ci-tab-btn${tab === t.key ? ' active' : ''}`}
+              onClick={() => setTab(t.key)}
+            >
+              {t.label}
+              {t.badge > 0 && (
+                <span style={{ marginLeft:6, background:'#dc2626', color:'#fff', borderRadius:20, fontSize:10, fontWeight:700, padding:'1px 6px', verticalAlign:'middle' }}>{t.badge}</span>
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* ── Contenu principal ── */}
-        <div style={{ flex: 1, overflowX: 'hidden' }}>
-        <main style={S.main}>
+        <main className="ci-page">
 
           {/* ══════════════════════════════════════════
               ONGLET : VUE D'ENSEMBLE
@@ -2286,8 +2283,6 @@ export default function PatronDashboard() {
           )}
 
         </main>
-        </div>{/* fin contenu principal */}
-        </div>{/* fin layout sidebar+contenu */}
       </div>
     </>
   );
@@ -2351,66 +2346,12 @@ function SalaryEditor({ current, onSave, onCancel }) {
   );
 }
 
-// ─── Styles — Dark Café Premium ☕ ────────────────────────────
-// Thème cosmique — Inside Roleplay · Fond espace violet, accents rose magenta & or
-// Fond #0d0818 · Surface #16102a · Accent #e040fb · Or #f0a820 · Texte #f0e8ff
+// ─── Styles — Design System v2 ────────────────────────────────
 const S = {
-  page: { minHeight: '100vh', background: '#0d0818', fontFamily: "'Segoe UI', system-ui, Arial, sans-serif" },
-  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d0818' },
+  page: { minHeight: '100vh', background: '#080614', fontFamily: "'Inter','Segoe UI',system-ui,sans-serif" },
+  loadingPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080614' },
   spinner: { width: 44, height: 44, border: '4px solid #2a1050', borderTop: '4px solid #e040fb', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-
   toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 22px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 15, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' },
-
-  // ── Sidebar navigation
-  sidebar: {
-    width: 228,
-    flexShrink: 0,
-    background: 'linear-gradient(180deg, #06030e 0%, #0c0620 100%)',
-    borderRight: '1px solid rgba(224,64,251,0.1)',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  sidebarInner: {
-    padding: '16px 10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 3,
-    position: 'sticky',
-    top: 0,
-  },
-  sidebarItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '11px 14px',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 13.5,
-    fontWeight: 500,
-    color: '#5a4080',
-    borderRadius: 10,
-    textAlign: 'left',
-    width: '100%',
-    transition: 'all 0.15s',
-    fontFamily: "'Segoe UI', system-ui, Arial, sans-serif",
-  },
-  sidebarItemActive: {
-    background: 'linear-gradient(135deg, rgba(176,32,208,0.2), rgba(240,96,255,0.1))',
-    color: '#f060ff',
-    fontWeight: 700,
-    boxShadow: 'inset 3px 0 0 0 #e040fb, inset 0 0 0 1px rgba(224,64,251,0.22)',
-  },
-  sidebarBadge: {
-    background: '#dc2626',
-    color: '#fff',
-    borderRadius: 20,
-    fontSize: 11,
-    fontWeight: 700,
-    padding: '1px 7px',
-    minWidth: 20,
-    textAlign: 'center',
-  },
 
   // ── Barre de recherche
   searchInput: {
@@ -2428,60 +2369,45 @@ const S = {
   },
 
   // ── Navigation cosmique
-  nav: {
-    background: 'linear-gradient(90deg, #08040f 0%, #110830 50%, #08040f 100%)',
-    borderBottom: '1px solid rgba(224,64,251,0.2)',
-    padding: '0 28px',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    height: 64,
-    boxShadow: '0 4px 24px rgba(0,0,0,0.7)',
-  },
-  navLeft: { display: 'flex', alignItems: 'center', gap: 16 },
-  navLogo: { fontWeight: 800, fontSize: 22, color: '#f0e8ff', letterSpacing: 0.3 },
-  navCompany: {
-    background: 'linear-gradient(135deg, #b020d0, #f060ff)',
-    color: '#fff',
-    padding: '4px 14px', borderRadius: 20, fontSize: 13, fontWeight: 800, letterSpacing: 0.4,
-    boxShadow: '0 0 14px rgba(224,64,251,0.4)',
-  },
-  navRight: { display: 'flex', alignItems: 'center', gap: 14 },
-  navUser: { color: '#8060a0', fontSize: 14 },
-  navBtn: {
-    padding: '7px 16px',
-    background: 'rgba(224,64,251,0.08)',
-    border: '1px solid rgba(224,64,251,0.22)',
-    borderRadius: 9, cursor: 'pointer', fontSize: 14, color: '#c090e0', fontWeight: 500,
-  },
+  nav: {},
+  navLeft: {},
+  navRight: {},
+  navLogo: {},
+  navCompany: {},
+  navUser: {},
+  navBtn: {},
 
-  main: { maxWidth: 1400, margin: '0 auto', padding: '28px 40px' },
-  sectionTitle: { fontSize: 24, fontWeight: 700, color: '#f0e8ff', marginBottom: 22, letterSpacing: -0.3 },
-  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22, flexWrap: 'wrap', gap: 10 },
+  main: {},
+  sectionTitle: { fontSize: 22, fontWeight: 700, color: '#f0e8ff', marginBottom: 20, letterSpacing: -0.3 },
+  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 8 },
   subTitle: { fontSize: 12, fontWeight: 700, color: '#8060a0', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },
   loading: { color: '#5a4080', fontStyle: 'italic' },
   empty: {
-    color: '#5a4080', textAlign: 'center', padding: 48,
-    background: '#120c22', borderRadius: 16,
-    border: '1px dashed rgba(224,64,251,0.18)',
+    color: '#5a4080', textAlign: 'center', padding: '48px 24px',
+    background: 'rgba(255,255,255,0.015)', borderRadius: 16,
+    border: '1px dashed rgba(224,64,251,0.12)',
+    fontSize: 15,
   },
 
   // ── KPI cards — surface violet sombre avec halo rose
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 16, marginBottom: 28 },
   kpiCard: {
     background: 'linear-gradient(145deg, #16102a, #1e1435)',
-    borderRadius: 16, padding: '22px 20px',
-    border: '1px solid rgba(224,64,251,0.18)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(224,64,251,0.06)',
+    borderRadius: 16, padding: '20px 18px',
+    border: '1px solid rgba(224,64,251,0.15)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+    transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.2s',
   },
   kpiIcon: { fontSize: 30, marginBottom: 10 },
   kpiLabel: { fontSize: 12, color: '#6a4890', marginBottom: 6, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 },
   kpiValue: { fontSize: 30, fontWeight: 800, color: '#f0e8ff', letterSpacing: -0.5 },
 
   alertBanner: {
-    background: 'linear-gradient(135deg, #1a0a30, #220d3a)',
-    border: '1px solid rgba(224,64,251,0.3)',
-    borderRadius: 12, padding: '13px 18px', marginBottom: 20,
+    background: 'rgba(224,64,251,0.06)',
+    border: '1px solid rgba(224,64,251,0.25)',
+    borderRadius: 12, padding: '12px 18px', marginBottom: 18,
     color: '#e080ff', fontSize: 14, fontWeight: 500,
-    boxShadow: '0 0 20px rgba(224,64,251,0.08)',
+    backdropFilter: 'blur(8px)',
   },
   alertLink: { background: 'none', border: 'none', color: '#f060ff', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline', fontSize: 14 },
 
@@ -2494,16 +2420,17 @@ const S = {
   taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 16, color: '#c0a0d8' },
 
   // ── Tableaux cosmiques
-  tableWrap: { overflowX: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' },
-  table: { width: '100%', borderCollapse: 'collapse', background: '#120c22', borderRadius: 14, overflow: 'hidden' },
+  tableWrap: { overflowX: 'auto', borderRadius: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.4)', border: '1px solid rgba(224,64,251,0.12)' },
+  table: { width: '100%', borderCollapse: 'collapse', background: '#0e0a1e', minWidth: 500 },
   th: {
-    background: '#0a061a', padding: '13px 16px', textAlign: 'left',
-    fontSize: 12, fontWeight: 700, color: '#8060a0',
+    background: 'rgba(0,0,0,0.4)', padding: '11px 14px', textAlign: 'left',
+    fontSize: 11, fontWeight: 700, color: '#7060a0',
     textTransform: 'uppercase', letterSpacing: 0.8,
-    borderBottom: '1px solid rgba(224,64,251,0.18)',
+    borderBottom: '1px solid rgba(224,64,251,0.15)',
+    whiteSpace: 'nowrap',
   },
   tr: { borderBottom: '1px solid rgba(255,255,255,0.04)' },
-  td: { padding: '14px 16px', fontSize: 15, color: '#d0b8f8', verticalAlign: 'middle' },
+  td: { padding: '12px 14px', fontSize: 14, color: '#c0a0d8', verticalAlign: 'middle' },
 
   badge: { padding: '3px 10px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
   chip: { background: 'rgba(224,64,251,0.12)', color: '#e040fb', padding: '3px 10px', borderRadius: 20, fontSize: 13, fontWeight: 500 },
@@ -2511,10 +2438,11 @@ const S = {
   // ── Boutons rose magenta lumineux
   btnPrimary: {
     padding: '9px 20px',
-    background: 'linear-gradient(135deg, #b020d0, #f060ff)',
+    background: 'linear-gradient(135deg, #7c3aed, #9f67fa)',
     color: '#fff', border: 'none', borderRadius: 9,
     cursor: 'pointer', fontSize: 14, fontWeight: 700,
-    boxShadow: '0 4px 18px rgba(224,64,251,0.4)',
+    boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
+    transition: 'all 0.15s',
   },
   btnSecondary: {
     padding: '9px 18px',
@@ -2534,24 +2462,26 @@ const S = {
   // ── Formulaires
   formCard: {
     background: 'linear-gradient(145deg, #16102a, #1e1435)',
-    border: '1px solid rgba(224,64,251,0.18)',
-    borderRadius: 16, padding: '26px', marginBottom: 24,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    border: '1px solid rgba(224,64,251,0.15)',
+    borderRadius: 16, padding: '22px', marginBottom: 20,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
   },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, alignItems: 'start' },
   form: { display: 'flex', flexDirection: 'column', gap: 12 },
   label: { fontSize: 12, fontWeight: 700, color: '#8060a0', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: 0.6 },
   input: {
-    width: '100%', padding: '11px 14px',
-    border: '1.5px solid rgba(224,64,251,0.18)',
-    borderRadius: 9, fontSize: 15, color: '#f0e8ff',
-    background: '#0a061a', boxSizing: 'border-box', outline: 'none',
+    width: '100%', padding: '10px 14px',
+    border: '1.5px solid rgba(224,64,251,0.2)',
+    borderRadius: 9, fontSize: 14, color: '#f0e8ff',
+    background: 'rgba(0,0,0,0.35)', boxSizing: 'border-box', outline: 'none',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
   },
   select: {
-    width: '100%', padding: '11px 14px',
-    border: '1.5px solid rgba(224,64,251,0.18)',
-    borderRadius: 9, fontSize: 15, color: '#f0e8ff',
-    background: '#0a061a', boxSizing: 'border-box',
+    width: '100%', padding: '10px 14px',
+    border: '1.5px solid rgba(224,64,251,0.2)',
+    borderRadius: 9, fontSize: 14, color: '#f0e8ff',
+    background: 'rgba(0,0,0,0.35)', boxSizing: 'border-box',
+    transition: 'border-color 0.15s',
   },
   calcPreview: {
     padding: '11px 15px',
