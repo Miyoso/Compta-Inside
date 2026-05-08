@@ -203,6 +203,12 @@ export default function PatronDashboard() {
   const [expandedQuote,  setExpandedQuote]  = useState(null);
   const [devisLoading,   setDevisLoading]   = useState(false);
 
+  // ── Recherche / filtres ────────────────────────────────────
+  const [invoiceSearch,  setInvoiceSearch]  = useState('');
+  const [productSearch,  setProductSearch]  = useState('');
+  const [purchaseSearch, setPurchaseSearch] = useState('');
+  const [stockSearch,    setStockSearch]    = useState('');
+
   // Redirection si pas patron
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/');
@@ -683,24 +689,29 @@ export default function PatronDashboard() {
           </div>
         </nav>
 
-        {/* Onglets */}
-        <div style={S.tabBar}>
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              style={tab === t.key ? { ...S.tabBtn, ...S.tabBtnActive } : S.tabBtn}
-              onClick={() => setTab(t.key)}
-            >
-              {t.label}
-              {t.badge > 0 && (
-                <span style={{ marginLeft: 6, background: '#dc2626', color: '#fff', borderRadius: '50%', fontSize: 11, fontWeight: 700, padding: '1px 6px', verticalAlign: 'middle' }}>
-                  {t.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Layout sidebar + contenu */}
+        <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
 
+        {/* ── Sidebar navigation ── */}
+        <aside style={S.sidebar}>
+          <div style={S.sidebarInner}>
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                style={tab === t.key ? { ...S.sidebarItem, ...S.sidebarItemActive } : S.sidebarItem}
+                onClick={() => setTab(t.key)}
+              >
+                <span style={{ flex: 1, textAlign: 'left' }}>{t.label}</span>
+                {t.badge > 0 && (
+                  <span style={S.sidebarBadge}>{t.badge}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* ── Contenu principal ── */}
+        <div style={{ flex: 1, overflowX: 'hidden' }}>
         <main style={S.main}>
 
           {/* ══════════════════════════════════════════
@@ -752,6 +763,7 @@ export default function PatronDashboard() {
                     {/* ── 3 métriques hero ─────────────────────────────── */}
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16, marginBottom:20 }}>
 
+<<<<<<< HEAD
                       {/* Solde bancaire */}
                       {bal !== null && (
                         <div style={{ background:'linear-gradient(145deg,#0c0a1e,#13102a)', border:`2px solid ${balPos?'rgba(22,163,74,0.4)':'rgba(220,38,38,0.4)'}`, borderRadius:16, padding:'20px 22px' }}>
@@ -801,9 +813,74 @@ export default function PatronDashboard() {
                           <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#9080b0' }}>
                             <span>Salaires</span><span style={{ color:'#7c3aed' }}>− {fmt(overview.weekSalaries)}</span>
                           </div>
+=======
+                  {/* ── Solde Compte Bancaire ─────────────────────────── */}
+                  {balance && (() => {
+                    const bal      = balance.currentBalance;
+                    const isPos    = bal >= 0;
+                    const accent   = isPos ? '#16a34a' : '#dc2626';
+                    const accentBorder = isPos ? 'rgba(22,163,74,0.35)' : 'rgba(220,38,38,0.35)';
+                    const weeks    = balance.weeklyHistory || [];
+                    const maxAbs   = Math.max(1, ...weeks.map(w => Math.abs(w.delta)));
+                    const W = 400, H = 60, pad = 4;
+                    const bw = weeks.length ? Math.floor((W - pad * 2) / weeks.length) - 2 : 40;
+                    return (
+                      <div style={{ background: 'linear-gradient(135deg,#0a0618 0%,#110820 100%)', border: `2px solid ${accentBorder}`, borderRadius: 18, padding: '22px 26px', marginBottom: 28, boxShadow: `0 8px 40px rgba(0,0,0,0.55)` }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
+
+                          {/* Solde principal */}
+                          <div style={{ flex: '1 1 180px' }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>🏦 Solde Compte Bancaire</div>
+                            <div style={{ fontSize: 40, fontWeight: 900, color: accent, lineHeight: 1, letterSpacing: -1 }}>{fmt(bal)}</div>
+                            <div style={{ fontSize: 12, color: '#6a4890', marginTop: 6 }}>
+                              Réf. {fmt(balance.refBalance)} · màj {new Date(balance.refDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
+                            </div>
+                            {!editingBalance ? (
+                              <button onClick={() => { setEditingBalance(true); setNewBalanceVal(bal.toFixed(2)); }}
+                                style={{ marginTop: 12, padding: '6px 14px', background: 'rgba(224,64,251,0.12)', color: '#c084fc', border: '1px solid rgba(224,64,251,0.3)', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                                ✏️ Recalibrer
+                              </button>
+                            ) : (
+                              <form onSubmit={handleUpdateBalance} style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <input type="number" step="0.01" value={newBalanceVal} onChange={e => setNewBalanceVal(e.target.value)}
+                                  style={{ ...S.input, width: 130, padding: '6px 10px', fontSize: 13 }} placeholder="Solde réel" autoFocus />
+                                <button type="submit" style={{ padding: '6px 14px', background: accent, color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>✓</button>
+                                <button type="button" onClick={() => setEditingBalance(false)} style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.06)', color: '#8060a0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>✕</button>
+                              </form>
+                            )}
+                          </div>
+
+                          {/* Décomposition */}
+                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8, borderLeft: '1px solid rgba(255,255,255,0.06)', paddingLeft: 22 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#a080c8' }}>
+                              <span>Solde de référence</span><strong style={{ color: '#f0e8ff' }}>{fmt(balance.refBalance)}</strong>
+                            </div>
+                            {balance.garageRevenue > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
+                                <span>+ Devis garage</span><strong>+ {fmt(balance.garageRevenue)}</strong>
+                              </div>
+                            )}
+                            {balance.salesSince > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
+                                <span>+ Ventes encaissées</span><strong>+ {fmt(balance.salesSince)}</strong>
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#f87171' }}>
+                              <span>− Achats réglés</span><strong>− {fmt(balance.purchasesSince)}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#c084fc' }}>
+                              <span>− Salaires payés</span><strong>− {fmt(balance.salariesPaid)}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, borderTop: `1px solid ${accentBorder}`, paddingTop: 8, marginTop: 4 }}>
+                              <span style={{ color: '#c0a0d8' }}> = Solde actuel</span><strong style={{ color: accent }}>{fmt(bal)}</strong>
+                            </div>
+                          </div>
+
+>>>>>>> 2658def236dec83c6256559792b51385e228011e
                         </div>
                       </div>
 
+<<<<<<< HEAD
                       {/* IRS */}
                       <div style={{ background:'linear-gradient(145deg,#1a0505,#200a0a)', border:'2px solid rgba(220,38,38,0.4)', borderRadius:16, padding:'20px 22px' }}>
                         <div style={{ fontSize:11, fontWeight:700, color:'#991b1b', textTransform:'uppercase', letterSpacing:1, marginBottom:6 }}>🏛️ Taxe IRS — semaine</div>
@@ -893,6 +970,85 @@ export default function PatronDashboard() {
                     {overview.recentSales.length === 0 ? (
                       <p style={S.empty}>Aucune transaction ce mois-ci.</p>
                     ) : (
+=======
+                  {/* ── Graphique CA vs Salaires · 8 semaines ──────────── */}
+                  {balance && balance.weeklyHistory && balance.weeklyHistory.some(w => w.sales > 0 || w.salaries > 0) && (() => {
+                    const weeks = balance.weeklyHistory;
+                    const maxVal = Math.max(1, ...weeks.map(w => Math.max(w.sales, w.salaries)));
+                    const CW = 560, CH = 130, padL = 48, padB = 22, padT = 8, padR = 10;
+                    const plotW = CW - padL - padR;
+                    const plotH = CH - padB - padT;
+                    const n = weeks.length;
+                    const groupW = plotW / n;
+                    const bw = Math.max(4, Math.floor(groupW * 0.3));
+                    const gap = Math.floor(groupW * 0.06);
+                    const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({ pct: r, val: Math.round(maxVal * r) }));
+                    return (
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px 12px', marginBottom: 24 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#6a4890', textTransform: 'uppercase', letterSpacing: 0.7 }}>CA vs Salaires · 8 semaines</span>
+                          <div style={{ display: 'flex', gap: 16, fontSize: 11, color: '#7a6090' }}>
+                            <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#4ade80', marginRight: 5, verticalAlign: 'middle' }} />CA</span>
+                            <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#a78bfa', marginRight: 5, verticalAlign: 'middle' }} />Salaires</span>
+                          </div>
+                        </div>
+                        <svg viewBox={`0 0 ${CW} ${CH}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
+                          {/* Grille horizontale + labels Y */}
+                          {yTicks.map(({ pct, val }) => {
+                            const y = padT + plotH - pct * plotH;
+                            return (
+                              <g key={pct}>
+                                <line x1={padL} y1={y} x2={CW - padR} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                                <text x={padL - 5} y={y + 3.5} textAnchor="end" fontSize="8" fill="#4a3060">{val > 999 ? (val/1000).toFixed(1)+'k' : val}</text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Barres groupées */}
+                          {weeks.map((w, i) => {
+                            const cx = padL + i * groupW + groupW / 2;
+                            const salesH = Math.max(2, Math.round((w.sales / maxVal) * plotH));
+                            const salH   = Math.max(2, Math.round((w.salaries / maxVal) * plotH));
+                            const salesX = cx - bw - gap / 2;
+                            const salX   = cx + gap / 2;
+                            const d = new Date(w.week_start);
+                            const label = `${d.getDate()}/${d.getMonth()+1}`;
+                            return (
+                              <g key={i}>
+                                {/* CA bar */}
+                                <rect x={salesX} y={padT + plotH - salesH} width={bw} height={salesH} rx={2} fill="#4ade80" opacity={0.85} />
+                                {/* Salaires bar */}
+                                <rect x={salX} y={padT + plotH - salH} width={bw} height={salH} rx={2} fill="#a78bfa" opacity={0.85} />
+                                {/* Label valeur CA si visible */}
+                                {salesH > 14 && (
+                                  <text x={salesX + bw/2} y={padT + plotH - salesH - 3} textAnchor="middle" fontSize="7" fill="#4ade80">
+                                    {w.sales > 999 ? (w.sales/1000).toFixed(1)+'k' : Math.round(w.sales)}
+                                  </text>
+                                )}
+                                {/* Label valeur salaire si visible */}
+                                {salH > 14 && (
+                                  <text x={salX + bw/2} y={padT + plotH - salH - 3} textAnchor="middle" fontSize="7" fill="#a78bfa">
+                                    {w.salaries > 999 ? (w.salaries/1000).toFixed(1)+'k' : Math.round(w.salaries)}
+                                  </text>
+                                )}
+                                {/* Axe X label */}
+                                <text x={cx} y={CH - 4} textAnchor="middle" fontSize="8" fill="#4a3060">{label}</text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Axe X */}
+                          <line x1={padL} y1={padT + plotH} x2={CW - padR} y2={padT + plotH} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                        </svg>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Historique des 4 semaines précédentes */}
+                  {overview.prevWeeks && overview.prevWeeks.some(w => w.sales > 0) && (
+                    <div style={{ marginBottom: 24 }}>
+                      <h3 style={S.subTitle}>Historique — 4 semaines précédentes</h3>
+>>>>>>> 2658def236dec83c6256559792b51385e228011e
                       <div style={S.tableWrap}>
                         <table style={S.table}>
                           <thead>
@@ -1015,12 +1171,25 @@ export default function PatronDashboard() {
               </div>
 
               {/* Historique toutes les factures */}
-              <h3 style={{ ...S.subTitle, marginTop: 36 }}>Historique des factures</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 36, marginBottom: 14, flexWrap: 'wrap' }}>
+                <h3 style={{ ...S.subTitle, margin: 0 }}>Historique des factures</h3>
+                <input
+                  value={invoiceSearch}
+                  onChange={e => setInvoiceSearch(e.target.value)}
+                  placeholder="🔍 Rechercher par employé, #facture…"
+                  style={S.searchInput}
+                />
+                {invoiceSearch && (
+                  <span style={{ fontSize: 13, color: '#8060a0' }}>
+                    {invoices.filter(inv => inv.employee_name?.toLowerCase().includes(invoiceSearch.toLowerCase()) || String(inv.id).includes(invoiceSearch)).length} résultat(s)
+                  </span>
+                )}
+              </div>
               {invoices.length === 0 ? (
                 <p style={S.empty}>Aucune facture enregistrée.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {invoices.map((inv) => (
+                  {invoices.filter(inv => !invoiceSearch || inv.employee_name?.toLowerCase().includes(invoiceSearch.toLowerCase()) || String(inv.id).includes(invoiceSearch)).map((inv) => (
                     <div key={inv.id} style={{ background: 'linear-gradient(145deg,#16102a,#1e1435)', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(224,64,251,0.12)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', cursor: 'pointer' }}
                         onClick={() => setExpandedInv(expandedInv === inv.id ? null : inv.id)}>
@@ -1510,6 +1679,16 @@ export default function PatronDashboard() {
               )}
 
               {/* Liste des produits */}
+              {products.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <input
+                    value={productSearch}
+                    onChange={e => setProductSearch(e.target.value)}
+                    placeholder="🔍 Rechercher un produit ou une catégorie…"
+                    style={S.searchInput}
+                  />
+                </div>
+              )}
               {products.length === 0 ? (
                 <p style={S.empty}>Aucun produit. Ajoutez-en un ci-dessus.</p>
               ) : (
@@ -1527,7 +1706,7 @@ export default function PatronDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((p) => {
+                      {products.filter(p => !productSearch || p.name?.toLowerCase().includes(productSearch.toLowerCase()) || p.category?.toLowerCase().includes(productSearch.toLowerCase())).map((p) => {
                         const cp = costPrices.find(c => c.id === p.id);
                         const marginPct = cp?.margin_pct ?? null;
                         const marginColor = marginPct === null ? '#5a4080'
@@ -1708,6 +1887,16 @@ export default function PatronDashboard() {
               </div>
 
               {/* Liste des matières premières */}
+              {rawMaterials.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <input
+                    value={stockSearch}
+                    onChange={e => setStockSearch(e.target.value)}
+                    placeholder="🔍 Rechercher une matière première…"
+                    style={S.searchInput}
+                  />
+                </div>
+              )}
               {rawMaterials.length === 0 ? (
                 <p style={S.empty}>Aucune matière première. Ajoutez-en une ci-dessus.</p>
               ) : (
@@ -1724,7 +1913,7 @@ export default function PatronDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {rawMaterials.map((m) => {
+                      {rawMaterials.filter(m => !stockSearch || m.name?.toLowerCase().includes(stockSearch.toLowerCase())).map((m) => {
                         const isLow = m.quantity <= m.min_alert;
                         return (
                           <tr key={m.id} style={{ ...S.tr, background: isLow ? 'rgba(220,38,38,0.08)' : 'rgba(255,255,255,0.015)' }}>
@@ -2166,6 +2355,8 @@ export default function PatronDashboard() {
           )}
 
         </main>
+        </div>{/* fin contenu principal */}
+        </div>{/* fin layout sidebar+contenu */}
       </div>
     </>
   );
@@ -2239,6 +2430,72 @@ const S = {
 
   toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '13px 22px', borderRadius: 12, color: '#fff', fontWeight: 600, fontSize: 15, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' },
 
+  // ── Sidebar navigation
+  sidebar: {
+    width: 228,
+    flexShrink: 0,
+    background: 'linear-gradient(180deg, #06030e 0%, #0c0620 100%)',
+    borderRight: '1px solid rgba(224,64,251,0.1)',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  sidebarInner: {
+    padding: '16px 10px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 3,
+    position: 'sticky',
+    top: 0,
+  },
+  sidebarItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '11px 14px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 13.5,
+    fontWeight: 500,
+    color: '#5a4080',
+    borderRadius: 10,
+    textAlign: 'left',
+    width: '100%',
+    transition: 'all 0.15s',
+    fontFamily: "'Segoe UI', system-ui, Arial, sans-serif",
+  },
+  sidebarItemActive: {
+    background: 'linear-gradient(135deg, rgba(176,32,208,0.2), rgba(240,96,255,0.1))',
+    color: '#f060ff',
+    fontWeight: 700,
+    boxShadow: 'inset 3px 0 0 0 #e040fb, inset 0 0 0 1px rgba(224,64,251,0.22)',
+  },
+  sidebarBadge: {
+    background: '#dc2626',
+    color: '#fff',
+    borderRadius: 20,
+    fontSize: 11,
+    fontWeight: 700,
+    padding: '1px 7px',
+    minWidth: 20,
+    textAlign: 'center',
+  },
+
+  // ── Barre de recherche
+  searchInput: {
+    width: '100%',
+    maxWidth: 420,
+    padding: '10px 14px',
+    border: '1.5px solid rgba(224,64,251,0.18)',
+    borderRadius: 9,
+    fontSize: 14,
+    color: '#f0e8ff',
+    background: 'rgba(255,255,255,0.03)',
+    boxSizing: 'border-box',
+    outline: 'none',
+    fontFamily: "'Segoe UI', system-ui, Arial, sans-serif",
+  },
+
   // ── Navigation cosmique
   nav: {
     background: 'linear-gradient(90deg, #08040f 0%, #110830 50%, #08040f 100%)',
@@ -2265,25 +2522,7 @@ const S = {
     borderRadius: 9, cursor: 'pointer', fontSize: 14, color: '#c090e0', fontWeight: 500,
   },
 
-  // ── Onglets violet sombre
-  tabBar: {
-    background: '#0f0820',
-    borderBottom: '1px solid rgba(224,64,251,0.12)',
-    display: 'flex', padding: '0 28px', overflowX: 'auto',
-  },
-  tabBtn: {
-    padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer',
-    fontSize: 14.5, fontWeight: 500, color: '#5a4080', whiteSpace: 'nowrap',
-    borderBottom: '2px solid transparent', transition: 'color 0.2s',
-  },
-  tabBtnActive: {
-    color: '#f060ff',
-    borderBottom: '2px solid #e040fb',
-    fontWeight: 700,
-    textShadow: '0 0 20px rgba(224,64,251,0.5)',
-  },
-
-  main: { maxWidth: 1600, margin: '0 auto', padding: '24px 48px' },
+  main: { maxWidth: 1400, margin: '0 auto', padding: '28px 40px' },
   sectionTitle: { fontSize: 24, fontWeight: 700, color: '#f0e8ff', marginBottom: 22, letterSpacing: -0.3 },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22, flexWrap: 'wrap', gap: 10 },
   subTitle: { fontSize: 12, fontWeight: 700, color: '#8060a0', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 },

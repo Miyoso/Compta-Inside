@@ -75,6 +75,11 @@ export default async function handler(req, res) {
                COALESCE(SUM(total_amount), 0)::float AS sales
         FROM invoices WHERE company_id = ${companyId} GROUP BY 1
       ),
+      wg AS (
+        SELECT DATE_TRUNC('week', created_at)::date AS week,
+               COALESCE(SUM(grand_total), 0)::float AS garage_sales
+        FROM garage_quotes WHERE company_id = ${companyId} GROUP BY 1
+      ),
       wp AS (
         SELECT DATE_TRUNC('week', purchase_date)::date AS week,
                COALESCE(SUM(total_amount), 0)::float AS purchases
@@ -86,12 +91,14 @@ export default async function handler(req, res) {
         FROM salary_payments WHERE company_id = ${companyId} GROUP BY 1
       )
       SELECT w.week_start,
-             COALESCE(ws.sales,     0) AS sales,
-             COALESCE(wp.purchases, 0) AS purchases,
-             COALESCE(wsal.salaries,0) AS salaries,
-             COALESCE(ws.sales, 0) - COALESCE(wp.purchases, 0) - COALESCE(wsal.salaries, 0) AS delta
+             (COALESCE(ws.sales, 0) + COALESCE(wg.garage_sales, 0))::float AS sales,
+             COALESCE(wp.purchases, 0)::float AS purchases,
+             COALESCE(wsal.salaries, 0)::float AS salaries,
+             (COALESCE(ws.sales, 0) + COALESCE(wg.garage_sales, 0)
+              - COALESCE(wp.purchases, 0) - COALESCE(wsal.salaries, 0))::float AS delta
       FROM weeks w
       LEFT JOIN ws   ON ws.week   = w.week_start
+      LEFT JOIN wg   ON wg.week   = w.week_start
       LEFT JOIN wp   ON wp.week   = w.week_start
       LEFT JOIN wsal ON wsal.week = w.week_start
       ORDER BY w.week_start

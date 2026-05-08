@@ -26,9 +26,10 @@ export default async function handler(req, res) {
     let employees;
 
     if (isGarage) {
-      // Garage : base = grand_total des devis (pas de coût matières)
+      // Garage : base = devis garage + ventes directes (factures classiques)
       employees = await sql`
         WITH period_data AS (
+          -- Devis garage
           SELECT gq.employee_id,
                  COALESCE(SUM(gq.grand_total), 0)::float AS gross_sales,
                  COALESCE(SUM(GREATEST(0, gq.grand_total - COALESCE(gq.parts_total,0))), 0)::float AS margin
@@ -36,6 +37,21 @@ export default async function handler(req, res) {
           WHERE gq.company_id = ${companyId}
             AND gq.created_at > ${lastPaid}
           GROUP BY gq.employee_id
+          UNION ALL
+          -- Ventes directes (factures classiques)
+          SELECT s.employee_id,
+                 COALESCE(SUM(s.total_amount), 0)::float AS gross_sales,
+                 COALESCE(SUM(s.total_amount), 0)::float AS margin
+          FROM sales s
+          WHERE s.company_id = ${companyId}
+            AND s.sale_date > ${lastPaid}
+          GROUP BY s.employee_id
+        ),
+        period_agg AS (
+          SELECT employee_id,
+                 SUM(gross_sales)::float AS gross_sales,
+                 SUM(margin)::float      AS margin
+          FROM period_data GROUP BY employee_id
         ),
         month_data AS (
           SELECT gq.employee_id,
@@ -45,6 +61,20 @@ export default async function handler(req, res) {
           WHERE gq.company_id = ${companyId}
             AND DATE_TRUNC('month', gq.created_at) = DATE_TRUNC('month', NOW())
           GROUP BY gq.employee_id
+          UNION ALL
+          SELECT s.employee_id,
+                 COALESCE(SUM(s.total_amount), 0)::float AS gross_sales,
+                 COALESCE(SUM(s.total_amount), 0)::float AS margin
+          FROM sales s
+          WHERE s.company_id = ${companyId}
+            AND DATE_TRUNC('month', s.sale_date) = DATE_TRUNC('month', NOW())
+          GROUP BY s.employee_id
+        ),
+        month_agg AS (
+          SELECT employee_id,
+                 SUM(gross_sales)::float AS gross_sales,
+                 SUM(margin)::float      AS margin
+          FROM month_data GROUP BY employee_id
         )
         SELECT
           u.id, u.name, u.email, u.role,
@@ -56,8 +86,8 @@ export default async function handler(req, res) {
           COALESCE(md.margin,      0)::float                               AS total_margin,
           (COALESCE(md.margin, 0) * u.salary_percent / 100)::float         AS salary_due
         FROM users u
-        LEFT JOIN period_data pd ON pd.employee_id = u.id
-        LEFT JOIN month_data  md ON md.employee_id = u.id
+        LEFT JOIN period_agg pd ON pd.employee_id = u.id
+        LEFT JOIN month_agg  md ON md.employee_id = u.id
         WHERE u.company_id = ${companyId} AND u.status = 'active'
         ORDER BY week_salary DESC, u.name ASC
       `;
