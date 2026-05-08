@@ -11,14 +11,25 @@ export default async function handler(req, res) {
 
   // ── GET : liste des devis ────────────────────────────────────────
   if (req.method === 'GET') {
-    const quotes = await sql`
-      SELECT gq.*, u.name AS employee_name
-      FROM garage_quotes gq
-      LEFT JOIN users u ON u.id = gq.employee_id
-      WHERE gq.company_id = ${companyId}
-      ORDER BY gq.created_at DESC
-      LIMIT 200
-    `;
+    const mineOnly = req.query.mine === '1';
+    const quotes = mineOnly
+      ? await sql`
+          SELECT gq.*, u.name AS employee_name
+          FROM garage_quotes gq
+          LEFT JOIN users u ON u.id = gq.employee_id
+          WHERE gq.company_id = ${companyId}
+            AND gq.employee_id = ${employeeId}
+          ORDER BY gq.created_at DESC
+          LIMIT 200
+        `
+      : await sql`
+          SELECT gq.*, u.name AS employee_name
+          FROM garage_quotes gq
+          LEFT JOIN users u ON u.id = gq.employee_id
+          WHERE gq.company_id = ${companyId}
+          ORDER BY gq.created_at DESC
+          LIMIT 200
+        `;
     return res.status(200).json({ quotes });
   }
 

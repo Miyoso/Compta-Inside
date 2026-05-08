@@ -71,6 +71,7 @@ export default function GarageDashboard() {
   // ── Registre ──────────────────────────────────────────────────────
   const [quotes, setQuotes]           = useState([]);
   const [expandedQuote, setExpandedQuote] = useState(null);
+  const [registreFilter, setRegistreFilter] = useState('all'); // 'all' | 'week' | 'month'
 
   // ── Dépenses ──────────────────────────────────────────────────────
   const [expenses, setExpenses] = useState([]);
@@ -431,14 +432,34 @@ export default function GarageDashboard() {
         )}
 
         {/* ══ REGISTRE ══ */}
-        {tab==='registre' && (
+        {tab==='registre' && (() => {
+          const now = new Date();
+          const weekStart = new Date(now); weekStart.setDate(now.getDate()-((now.getDay()+6)%7)); weekStart.setHours(0,0,0,0);
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const filteredQ = quotes.filter(q => {
+            const d = new Date(q.created_at);
+            if (registreFilter==='week')  return d >= weekStart;
+            if (registreFilter==='month') return d >= monthStart;
+            return true;
+          });
+          return (
           <div>
-            <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',marginBottom:22}}>Registre des clients</h2>
-            {quotes.length===0 ? (
-              <div style={{color:'#5a4080',textAlign:'center',padding:48,background:'#120c22',borderRadius:16,border:'1px dashed rgba(224,64,251,0.18)'}}>Aucun devis enregistré.</div>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12,marginBottom:22}}>
+              <h2 style={{fontSize:24,fontWeight:700,color:'#f0e8ff',margin:0}}>Registre des clients</h2>
+              <div style={{display:'flex',gap:8}}>
+                {[['all','Tout'],['week','Cette semaine'],['month','Ce mois']].map(([v,l])=>(
+                  <button key={v} onClick={()=>setRegistreFilter(v)}
+                    style={{padding:'6px 14px',borderRadius:20,border:registreFilter===v?'2px solid #fbbf24':'1px solid rgba(251,191,36,0.2)',background:registreFilter===v?'rgba(251,191,36,0.12)':'rgba(255,255,255,0.03)',color:registreFilter===v?'#fbbf24':'#6a4890',fontSize:13,fontWeight:registreFilter===v?700:500,cursor:'pointer'}}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filteredQ.length===0 ? (
+              <div style={{color:'#5a4080',textAlign:'center',padding:48,background:'#120c22',borderRadius:16,border:'1px dashed rgba(224,64,251,0.18)'}}>Aucun devis pour cette période.</div>
             ) : (
               <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                {quotes.map((q,i)=>(
+                {filteredQ.map((q,i)=>(
                   <div key={q.id} style={{background:'linear-gradient(145deg,#16102a,#1e1435)',border:'1px solid rgba(224,64,251,0.18)',borderRadius:14,overflow:'hidden'}}>
                     <button onClick={()=>setExpandedQuote(expandedQuote===q.id?null:q.id)} style={{width:'100%',background:'none',border:'none',padding:'16px 22px',cursor:'pointer',display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
                       <span style={{background:'rgba(251,191,36,0.12)',color:'#fbbf24',borderRadius:8,padding:'4px 10px',fontSize:13,fontWeight:700}}>#{i+1}</span>
@@ -467,7 +488,8 @@ export default function GarageDashboard() {
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* ══ DÉPENSES ══ */}
         {tab==='depenses' && (

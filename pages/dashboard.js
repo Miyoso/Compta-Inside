@@ -29,6 +29,10 @@ export default function EmployeeDashboard() {
   const [toast,    setToast]    = useState(null);
   const [expanded, setExpanded] = useState(null); // id facture dépliée
 
+  // Garage employee state
+  const [myQuotes, setMyQuotes] = useState([]);
+  const [expandedQ, setExpandedQ] = useState(null);
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/');
     if (status === 'authenticated' && ['patron', 'admin'].includes(session?.user?.role))
@@ -55,12 +59,24 @@ export default function EmployeeDashboard() {
     setSalaryData(await r.json());
   }, []);
 
+  const loadMyQuotes = useCallback(async () => {
+    const r = await fetch('/api/garage/devis?mine=1');
+    if (r.ok) { const d = await r.json(); setMyQuotes(d.quotes || []); }
+  }, []);
+
+  const isGarage = session?.user?.companyType === 'garage';
+
   useEffect(() => {
     if (status !== 'authenticated') return;
-    loadProducts();
-    if (tab === 'ventes')  loadInvoices();
-    if (tab === 'salaire') loadSalary();
-  }, [tab, status, loadProducts, loadInvoices, loadSalary]);
+    if (isGarage) {
+      if (tab === 'devis') loadMyQuotes();
+      if (tab === 'salaire') loadSalary();
+    } else {
+      loadProducts();
+      if (tab === 'ventes')  loadInvoices();
+      if (tab === 'salaire') loadSalary();
+    }
+  }, [tab, status, isGarage, loadProducts, loadInvoices, loadSalary, loadMyQuotes]);
 
   async function handleChangePassword(e) {
     e.preventDefault();
@@ -140,7 +156,7 @@ export default function EmployeeDashboard() {
         {/* Nav */}
         <nav style={S.nav}>
           <div style={S.navLeft}>
-            <span style={S.navLogo}>📊 Compta-Inside</span>
+            <span style={S.navLogo}>{isGarage ? '🔧' : '📊'} Compta-Inside</span>
             <span style={S.navCompany}>{session.user.companyName}</span>
           </div>
           <div style={S.navRight}>
@@ -151,15 +167,87 @@ export default function EmployeeDashboard() {
 
         {/* Onglets */}
         <div style={S.tabBar}>
-          <button style={tab === 'ventes'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('ventes')}>🛒 Mes ventes</button>
-          <button style={tab === 'salaire' ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('salaire')}>💵 Mon salaire</button>
-          <button style={tab === 'compte'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('compte')}>⚙️ Mon compte</button>
+          {isGarage ? (
+            <>
+              <button style={tab==='devis'  ?{...S.tabBtn,...S.tabActive}:S.tabBtn} onClick={()=>setTab('devis')}>🔧 Mes devis</button>
+              <button style={tab==='salaire'?{...S.tabBtn,...S.tabActive}:S.tabBtn} onClick={()=>setTab('salaire')}>💵 Mon salaire</button>
+              <button style={tab==='compte' ?{...S.tabBtn,...S.tabActive}:S.tabBtn} onClick={()=>setTab('compte')}>⚙️ Mon compte</button>
+            </>
+          ) : (
+            <>
+              <button style={tab === 'ventes'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('ventes')}>🛒 Mes ventes</button>
+              <button style={tab === 'salaire' ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('salaire')}>💵 Mon salaire</button>
+              <button style={tab === 'compte'  ? { ...S.tabBtn, ...S.tabActive } : S.tabBtn} onClick={() => setTab('compte')}>⚙️ Mon compte</button>
+            </>
+          )}
         </div>
 
         <main style={S.main}>
 
+          {/* ══ ONGLET DEVIS (garage employees) ══ */}
+          {isGarage && tab === 'devis' && (
+            <div>
+              <h2 style={S.title}>🔧 Mes devis</h2>
+              {myQuotes.length === 0 ? (
+                <p style={S.empty}>Aucun devis enregistré pour toi.</p>
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  {myQuotes.map(q=>{
+                    const isOpen = expandedQ === q.id;
+                    const fmtN = n => '$'+Number(n||0).toLocaleString('fr-CA',{maximumFractionDigits:0});
+                    return (
+                      <div key={q.id} style={{background:'linear-gradient(145deg,#16102a,#1e1435)',borderRadius:12,border:'1px solid rgba(251,191,36,0.15)',overflow:'hidden'}}>
+                        <div onClick={()=>setExpandedQ(isOpen?null:q.id)} style={{display:'flex',alignItems:'center',padding:'14px 20px',cursor:'pointer',gap:16}}>
+                          <div style={{flex:1}}>
+                            <span style={{fontWeight:700,color:'#d0b8f8',fontSize:15}}>{q.client_first_name} {q.client_last_name}</span>
+                            <span style={{marginLeft:10,fontSize:12,color:'#8060a0'}}>{q.vehicle_model} · {q.vehicle_category}</span>
+                          </div>
+                          <div style={{fontWeight:800,color:'#fbbf24',fontSize:16}}>{fmtN(q.grand_total)}</div>
+                          <div style={{fontSize:12,color:'#8060a0'}}>{new Date(q.created_at).toLocaleDateString('fr-FR')}</div>
+                          <div style={{color:'#5a4080'}}>{isOpen?'▲':'▼'}</div>
+                        </div>
+                        {isOpen && (
+                          <div style={{padding:'0 20px 16px',borderTop:'1px solid rgba(120,60,180,0.2)'}}>
+                            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginTop:14}}>
+                              {q.selected_performances?.length>0&&(
+                                <div>
+                                  <div style={{fontSize:11,color:'#8060a0',textTransform:'uppercase',marginBottom:4}}>⚡ Performances</div>
+                                  {q.selected_performances.map((p,i)=><div key={i} style={{fontSize:12,color:'#c0a0e0',display:'flex',justifyContent:'space-between'}}><span>{p.type}</span><span>{fmtN(p.price)}</span></div>)}
+                                  <div style={{marginTop:4,fontWeight:700,color:'#d0b8f8',fontSize:12}}>Sous-total: {fmtN(q.perfs_total)}</div>
+                                </div>
+                              )}
+                              {q.selected_customs?.length>0&&(
+                                <div>
+                                  <div style={{fontSize:11,color:'#8060a0',textTransform:'uppercase',marginBottom:4}}>🔩 Customs</div>
+                                  {q.selected_customs.map((c,i)=><div key={i} style={{fontSize:12,color:'#c0a0e0',display:'flex',justifyContent:'space-between'}}><span>{c.type}</span><span>{fmtN(c.price)}</span></div>)}
+                                  <div style={{marginTop:4,fontWeight:700,color:'#d0b8f8',fontSize:12}}>Sous-total: {fmtN(q.customs_total)}</div>
+                                </div>
+                              )}
+                              {q.selected_paints?.length>0&&(
+                                <div>
+                                  <div style={{fontSize:11,color:'#8060a0',textTransform:'uppercase',marginBottom:4}}>🎨 Peintures</div>
+                                  {q.selected_paints.map((p,i)=><div key={i} style={{fontSize:12,color:'#c0a0e0',display:'flex',justifyContent:'space-between'}}><span>{p.type}</span><span>{fmtN(p.price)}</span></div>)}
+                                  <div style={{marginTop:4,fontWeight:700,color:'#d0b8f8',fontSize:12}}>Sous-total: {fmtN(q.paints_total)}</div>
+                                </div>
+                              )}
+                            </div>
+                            {q.notes && <div style={{marginTop:10,padding:'8px 12px',background:'rgba(120,60,180,0.08)',borderRadius:8,fontSize:12,color:'#a080c0'}}>📝 {q.notes}</div>}
+                            <div style={{marginTop:10,display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(120,60,180,0.1)',paddingTop:10}}>
+                              <span style={{fontSize:12,color:'#604080'}}>Enregistré le {new Date(q.created_at).toLocaleString('fr-FR')}</span>
+                              <span style={{fontWeight:800,color:'#fbbf24',fontSize:16}}>Total: {fmtN(q.grand_total)}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ══ ONGLET VENTES ══ */}
-          {tab === 'ventes' && (
+          {!isGarage && tab === 'ventes' && (
             <div style={S.splitLayout}>
 
               {/* Gauche : catalogue produits */}
@@ -251,7 +339,7 @@ export default function EmployeeDashboard() {
           )}
 
           {/* Historique factures (sous le split) */}
-          {tab === 'ventes' && (
+          {!isGarage && tab === 'ventes' && (
             <div style={{ marginTop: 32 }}>
               <h3 style={S.subTitle}>Mes factures de cette semaine</h3>
               {invoices.length === 0 ? (
@@ -303,7 +391,7 @@ export default function EmployeeDashboard() {
                 return (
                   <>
                     <div style={S.infoBox}>
-                      ℹ️ Ton salaire est calculé à <strong>{salaryData.salaryPercent}%</strong> de ta marge (vente − coût matières).
+                      ℹ️ Ton salaire est calculé à <strong>{salaryData.salaryPercent}%</strong> de ta marge ({isGarage ? 'devis − coût pièces' : 'vente − coût matières'}).
                       {salaryData.salaryPercent === 0 && ' Contacte ton patron pour définir ton taux.'}
                     </div>
 
@@ -321,13 +409,13 @@ export default function EmployeeDashboard() {
                         <div style={S.cwStat}>
                           <div style={S.cwStatLabel}>CA brut réalisé</div>
                           <div style={S.cwStatValue}>{fmt(cp.grossSales)}</div>
-                          <div style={S.cwStatSub}>{cp.nbSales} vente{cp.nbSales !== 1 ? 's' : ''}</div>
+                          <div style={S.cwStatSub}>{cp.nbSales} {isGarage ? 'devis' : 'vente'}{cp.nbSales !== 1 ? 's' : ''}</div>
                         </div>
                         <div style={S.cwDivider} />
                         <div style={S.cwStat}>
                           <div style={S.cwStatLabel}>Marge (base)</div>
                           <div style={{ ...S.cwStatValue, color: '#a78bfa', fontSize: 22 }}>{fmt(cp.margin)}</div>
-                          <div style={S.cwStatSub}>après coût matières</div>
+                          <div style={S.cwStatSub}>{isGarage ? 'après coût pièces' : 'après coût matières'}</div>
                         </div>
                         <div style={S.cwDivider} />
                         <div style={{ ...S.cwStat, textAlign: 'right' }}>

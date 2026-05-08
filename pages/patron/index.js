@@ -202,6 +202,12 @@ export default function PatronDashboard() {
   const [garageQuotes,   setGarageQuotes]   = useState([]);
   const [expandedQuote,  setExpandedQuote]  = useState(null);
   const [devisLoading,   setDevisLoading]   = useState(false);
+  const [registreFilter, setRegistreFilter] = useState('all'); // 'all' | 'week' | 'month'
+
+  // Multi-entreprises
+  const [myCompanies,    setMyCompanies]    = useState([]);
+  const [showCompSwitch, setShowCompSwitch] = useState(false);
+  const [activeCompId,   setActiveCompId]   = useState(null); // null = use JWT default
 
   // ── Recherche / filtres ────────────────────────────────────
   const [invoiceSearch,  setInvoiceSearch]  = useState('');
@@ -222,27 +228,46 @@ export default function PatronDashboard() {
     setTimeout(() => setToast(null), 3500);
   };
 
+  // Multi-entreprises : récupérer la liste + restaurer le choix sauvegardé
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    fetch('/api/patron/my-companies').then(r => r.json()).then(d => {
+      if (d.companies && d.companies.length > 1) {
+        setMyCompanies(d.companies);
+        const saved = typeof window !== 'undefined' ? localStorage.getItem('activeCompId') : null;
+        if (saved && d.companies.find(co => String(co.id) === saved)) {
+          setActiveCompId(parseInt(saved));
+        }
+      }
+    }).catch(() => {});
+  }, [status]);
+
+  // companyParam : ajoute ?cid=X aux appels API si une autre entreprise est sélectionnée
+  const getCP = useCallback(() =>
+    (activeCompId && activeCompId !== session?.user?.companyId) ? `?cid=${activeCompId}` : ''
+  , [activeCompId, session?.user?.companyId]);
+
   // Chargements des données selon l'onglet
   const loadOverview = useCallback(async () => {
-    const r = await fetch('/api/patron/overview');
+    const r = await fetch(\`/api/patron/overview\${getCP()}\`);
     const d = await r.json();
     setOverview(d);
   }, []);
 
   const loadEmployees = useCallback(async () => {
-    const r = await fetch('/api/patron/employees');
+    const r = await fetch(`/api/patron/employees${getCP()}`);
     const d = await r.json();
     setEmployees(d.employees ?? d);  // { employees, lastPaid } or plain array
     if (d.lastPaid) setLastPaidDate(d.lastPaid);
   }, []);
 
   const loadProducts = useCallback(async () => {
-    const r = await fetch('/api/patron/products');
+    const r = await fetch(`/api/patron/products${getCP()}`);
     setProducts(await r.json());
   }, []);
 
   const loadSales = useCallback(async () => {
-    const r = await fetch('/api/patron/sales');
+    const r = await fetch(`/api/patron/sales${getCP()}`);
     setSales(await r.json());
   }, []);
 
@@ -252,12 +277,12 @@ export default function PatronDashboard() {
   }, []);
 
   const loadPurchases = useCallback(async () => {
-    const r = await fetch('/api/patron/purchases');
+    const r = await fetch(`/api/patron/purchases${getCP()}`);
     setPurchasesData(await r.json());
   }, []);
 
   const loadPending = useCallback(async () => {
-    const r = await fetch('/api/patron/pending');
+    const r = await fetch(`/api/patron/pending${getCP()}`);
     setPendingUsers(await r.json());
   }, []);
 
@@ -277,7 +302,7 @@ export default function PatronDashboard() {
   }, []);
 
   const loadBalance = useCallback(async () => {
-    const r = await fetch('/api/patron/balance');
+    const r = await fetch(`/api/patron/balance${getCP()}`);
     setBalance(await r.json());
   }, []);
 
@@ -288,7 +313,7 @@ export default function PatronDashboard() {
 
 
   const loadSalaryPayment = useCallback(async () => {
-    const r = await fetch('/api/patron/salary-payment');
+    const r = await fetch(`/api/patron/salary-payment${getCP()}`);
     setSalaryPayment(await r.json());
   }, []);
 
@@ -677,12 +702,39 @@ export default function PatronDashboard() {
         {/* Barre de navigation */}
         <nav style={S.nav}>
           <div style={S.navLeft}>
-            <span style={S.navLogo}>📊 Compta-Inside</span>
+            <span style={S.navLogo}>
+              {session.user.companyType === 'garage' ? '🔧' : session.user.companyType === 'bar' ? '🍺' : '☕'} Compta-Inside
+            </span>
             <span style={S.navCompany}>{session.user.companyName}</span>
           </div>
           <div style={S.navRight}>
             <span style={S.navUser}>👤 {session.user.name}</span>
             {session.user.companyType === 'garage' && (
+              {myCompanies.length > 1 && (
+                <div style={{ position:'relative' }}>
+                  <button onClick={() => setShowCompSwitch(s=>!s)}
+                    style={{ padding:'6px 14px', background:'rgba(96,165,250,0.1)', border:'1px solid rgba(96,165,250,0.3)', borderRadius:8, color:'#60a5fa', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                    🏢 {myCompanies.find(c=>c.id===(activeCompId||session.user.companyId))?.name || session.user.companyName} ▾
+                  </button>
+                  {showCompSwitch && (
+                    <div style={{ position:'absolute', top:'110%', right:0, background:'#16102a', border:'1px solid rgba(96,165,250,0.25)', borderRadius:10, boxShadow:'0 8px 32px rgba(0,0,0,0.7)', zIndex:1000, minWidth:200, overflow:'hidden' }}>
+                      {myCompanies.map(co => (
+                        <button key={co.id}
+                          onClick={() => {
+                            setActiveCompId(co.id);
+                            if (typeof window !== 'undefined') localStorage.setItem('activeCompId', String(co.id));
+                            setShowCompSwitch(false);
+                            setTab('overview');
+                          }}
+                          style={{ display:'block', width:'100%', padding:'11px 16px', background: (activeCompId||session.user.companyId)===co.id?'rgba(96,165,250,0.12)':'none', border:'none', borderBottom:'1px solid rgba(255,255,255,0.05)', color: (activeCompId||session.user.companyId)===co.id?'#60a5fa':'#c0a0d8', fontSize:13, fontWeight:600, cursor:'pointer', textAlign:'left' }}>
+                          {co.company_type==='garage'?'🔧':co.company_type==='bar'?'🍺':'☕'} {co.name}
+                          {(activeCompId||session.user.companyId)===co.id && ' ✓'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <a href='/garage' style={{ padding:'6px 14px', background:'rgba(251,191,36,0.12)', border:'1px solid rgba(251,191,36,0.3)', borderRadius:8, color:'#fbbf24', fontSize:13, fontWeight:700, textDecoration:'none' }}>🔧 Piers 76</a>
             )}
             <button onClick={() => signOut({ callbackUrl: '/' })} style={S.navBtn}>Déconnexion</button>
@@ -763,7 +815,6 @@ export default function PatronDashboard() {
                     {/* ── 3 métriques hero ─────────────────────────────── */}
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16, marginBottom:20 }}>
 
-<<<<<<< HEAD
                       {/* Solde bancaire */}
                       {bal !== null && (
                         <div style={{ background:'linear-gradient(145deg,#0c0a1e,#13102a)', border:`2px solid ${balPos?'rgba(22,163,74,0.4)':'rgba(220,38,38,0.4)'}`, borderRadius:16, padding:'20px 22px' }}>
@@ -813,74 +864,9 @@ export default function PatronDashboard() {
                           <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#9080b0' }}>
                             <span>Salaires</span><span style={{ color:'#7c3aed' }}>− {fmt(overview.weekSalaries)}</span>
                           </div>
-=======
-                  {/* ── Solde Compte Bancaire ─────────────────────────── */}
-                  {balance && (() => {
-                    const bal      = balance.currentBalance;
-                    const isPos    = bal >= 0;
-                    const accent   = isPos ? '#16a34a' : '#dc2626';
-                    const accentBorder = isPos ? 'rgba(22,163,74,0.35)' : 'rgba(220,38,38,0.35)';
-                    const weeks    = balance.weeklyHistory || [];
-                    const maxAbs   = Math.max(1, ...weeks.map(w => Math.abs(w.delta)));
-                    const W = 400, H = 60, pad = 4;
-                    const bw = weeks.length ? Math.floor((W - pad * 2) / weeks.length) - 2 : 40;
-                    return (
-                      <div style={{ background: 'linear-gradient(135deg,#0a0618 0%,#110820 100%)', border: `2px solid ${accentBorder}`, borderRadius: 18, padding: '22px 26px', marginBottom: 28, boxShadow: `0 8px 40px rgba(0,0,0,0.55)` }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
-
-                          {/* Solde principal */}
-                          <div style={{ flex: '1 1 180px' }}>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>🏦 Solde Compte Bancaire</div>
-                            <div style={{ fontSize: 40, fontWeight: 900, color: accent, lineHeight: 1, letterSpacing: -1 }}>{fmt(bal)}</div>
-                            <div style={{ fontSize: 12, color: '#6a4890', marginTop: 6 }}>
-                              Réf. {fmt(balance.refBalance)} · màj {new Date(balance.refDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
-                            </div>
-                            {!editingBalance ? (
-                              <button onClick={() => { setEditingBalance(true); setNewBalanceVal(bal.toFixed(2)); }}
-                                style={{ marginTop: 12, padding: '6px 14px', background: 'rgba(224,64,251,0.12)', color: '#c084fc', border: '1px solid rgba(224,64,251,0.3)', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                                ✏️ Recalibrer
-                              </button>
-                            ) : (
-                              <form onSubmit={handleUpdateBalance} style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                                <input type="number" step="0.01" value={newBalanceVal} onChange={e => setNewBalanceVal(e.target.value)}
-                                  style={{ ...S.input, width: 130, padding: '6px 10px', fontSize: 13 }} placeholder="Solde réel" autoFocus />
-                                <button type="submit" style={{ padding: '6px 14px', background: accent, color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>✓</button>
-                                <button type="button" onClick={() => setEditingBalance(false)} style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.06)', color: '#8060a0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>✕</button>
-                              </form>
-                            )}
-                          </div>
-
-                          {/* Décomposition */}
-                          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8, borderLeft: '1px solid rgba(255,255,255,0.06)', paddingLeft: 22 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#a080c8' }}>
-                              <span>Solde de référence</span><strong style={{ color: '#f0e8ff' }}>{fmt(balance.refBalance)}</strong>
-                            </div>
-                            {balance.garageRevenue > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
-                                <span>+ Devis garage</span><strong>+ {fmt(balance.garageRevenue)}</strong>
-                              </div>
-                            )}
-                            {balance.salesSince > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4ade80' }}>
-                                <span>+ Ventes encaissées</span><strong>+ {fmt(balance.salesSince)}</strong>
-                              </div>
-                            )}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#f87171' }}>
-                              <span>− Achats réglés</span><strong>− {fmt(balance.purchasesSince)}</strong>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#c084fc' }}>
-                              <span>− Salaires payés</span><strong>− {fmt(balance.salariesPaid)}</strong>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700, borderTop: `1px solid ${accentBorder}`, paddingTop: 8, marginTop: 4 }}>
-                              <span style={{ color: '#c0a0d8' }}> = Solde actuel</span><strong style={{ color: accent }}>{fmt(bal)}</strong>
-                            </div>
-                          </div>
-
->>>>>>> 2658def236dec83c6256559792b51385e228011e
                         </div>
                       </div>
 
-<<<<<<< HEAD
                       {/* IRS */}
                       <div style={{ background:'linear-gradient(145deg,#1a0505,#200a0a)', border:'2px solid rgba(220,38,38,0.4)', borderRadius:16, padding:'20px 22px' }}>
                         <div style={{ fontSize:11, fontWeight:700, color:'#991b1b', textTransform:'uppercase', letterSpacing:1, marginBottom:6 }}>🏛️ Taxe IRS — semaine</div>
@@ -970,85 +956,6 @@ export default function PatronDashboard() {
                     {overview.recentSales.length === 0 ? (
                       <p style={S.empty}>Aucune transaction ce mois-ci.</p>
                     ) : (
-=======
-                  {/* ── Graphique CA vs Salaires · 8 semaines ──────────── */}
-                  {balance && balance.weeklyHistory && balance.weeklyHistory.some(w => w.sales > 0 || w.salaries > 0) && (() => {
-                    const weeks = balance.weeklyHistory;
-                    const maxVal = Math.max(1, ...weeks.map(w => Math.max(w.sales, w.salaries)));
-                    const CW = 560, CH = 130, padL = 48, padB = 22, padT = 8, padR = 10;
-                    const plotW = CW - padL - padR;
-                    const plotH = CH - padB - padT;
-                    const n = weeks.length;
-                    const groupW = plotW / n;
-                    const bw = Math.max(4, Math.floor(groupW * 0.3));
-                    const gap = Math.floor(groupW * 0.06);
-                    const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({ pct: r, val: Math.round(maxVal * r) }));
-                    return (
-                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px 12px', marginBottom: 24 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: '#6a4890', textTransform: 'uppercase', letterSpacing: 0.7 }}>CA vs Salaires · 8 semaines</span>
-                          <div style={{ display: 'flex', gap: 16, fontSize: 11, color: '#7a6090' }}>
-                            <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#4ade80', marginRight: 5, verticalAlign: 'middle' }} />CA</span>
-                            <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: '#a78bfa', marginRight: 5, verticalAlign: 'middle' }} />Salaires</span>
-                          </div>
-                        </div>
-                        <svg viewBox={`0 0 ${CW} ${CH}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
-                          {/* Grille horizontale + labels Y */}
-                          {yTicks.map(({ pct, val }) => {
-                            const y = padT + plotH - pct * plotH;
-                            return (
-                              <g key={pct}>
-                                <line x1={padL} y1={y} x2={CW - padR} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                                <text x={padL - 5} y={y + 3.5} textAnchor="end" fontSize="8" fill="#4a3060">{val > 999 ? (val/1000).toFixed(1)+'k' : val}</text>
-                              </g>
-                            );
-                          })}
-
-                          {/* Barres groupées */}
-                          {weeks.map((w, i) => {
-                            const cx = padL + i * groupW + groupW / 2;
-                            const salesH = Math.max(2, Math.round((w.sales / maxVal) * plotH));
-                            const salH   = Math.max(2, Math.round((w.salaries / maxVal) * plotH));
-                            const salesX = cx - bw - gap / 2;
-                            const salX   = cx + gap / 2;
-                            const d = new Date(w.week_start);
-                            const label = `${d.getDate()}/${d.getMonth()+1}`;
-                            return (
-                              <g key={i}>
-                                {/* CA bar */}
-                                <rect x={salesX} y={padT + plotH - salesH} width={bw} height={salesH} rx={2} fill="#4ade80" opacity={0.85} />
-                                {/* Salaires bar */}
-                                <rect x={salX} y={padT + plotH - salH} width={bw} height={salH} rx={2} fill="#a78bfa" opacity={0.85} />
-                                {/* Label valeur CA si visible */}
-                                {salesH > 14 && (
-                                  <text x={salesX + bw/2} y={padT + plotH - salesH - 3} textAnchor="middle" fontSize="7" fill="#4ade80">
-                                    {w.sales > 999 ? (w.sales/1000).toFixed(1)+'k' : Math.round(w.sales)}
-                                  </text>
-                                )}
-                                {/* Label valeur salaire si visible */}
-                                {salH > 14 && (
-                                  <text x={salX + bw/2} y={padT + plotH - salH - 3} textAnchor="middle" fontSize="7" fill="#a78bfa">
-                                    {w.salaries > 999 ? (w.salaries/1000).toFixed(1)+'k' : Math.round(w.salaries)}
-                                  </text>
-                                )}
-                                {/* Axe X label */}
-                                <text x={cx} y={CH - 4} textAnchor="middle" fontSize="8" fill="#4a3060">{label}</text>
-                              </g>
-                            );
-                          })}
-
-                          {/* Axe X */}
-                          <line x1={padL} y1={padT + plotH} x2={CW - padR} y2={padT + plotH} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-                        </svg>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Historique des 4 semaines précédentes */}
-                  {overview.prevWeeks && overview.prevWeeks.some(w => w.sales > 0) && (
-                    <div style={{ marginBottom: 24 }}>
-                      <h3 style={S.subTitle}>Historique — 4 semaines précédentes</h3>
->>>>>>> 2658def236dec83c6256559792b51385e228011e
                       <div style={S.tableWrap}>
                         <table style={S.table}>
                           <thead>
@@ -1063,7 +970,10 @@ export default function PatronDashboard() {
                             {overview.recentSales.map(s => (
                               <tr key={s.id} style={S.tr}>
                                 <td style={S.td}>{s.employee_name}</td>
-                                <td style={S.td}>{s.product_name}</td>
+                                <td style={S.td}>
+                                  {s.type === 'devis' && <span style={{ fontSize:11, background:'rgba(251,191,36,0.15)', color:'#fbbf24', borderRadius:4, padding:'1px 6px', marginRight:6, fontWeight:700 }}>🔧</span>}
+                                  {s.product_name}
+                                </td>
                                 <td style={{ ...S.td, fontWeight:600, color:'#4ade80' }}>{fmt(s.total_amount)}</td>
                                 <td style={{ ...S.td, color:'#5a4080', fontSize:13 }}>{fmtDate(s.sale_date)}</td>
                               </tr>
@@ -2221,14 +2131,34 @@ export default function PatronDashboard() {
           {/* ══════════════════════════════════════════
               ONGLET : REGISTRE  (garage only)
           ══════════════════════════════════════════ */}
-          {tab === 'registre' && (
+          {tab === 'registre' && (() => {
+            const now = new Date();
+            const weekStart = new Date(now); weekStart.setDate(now.getDate() - ((now.getDay()+6)%7)); weekStart.setHours(0,0,0,0);
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const filteredQuotes = garageQuotes.filter(q => {
+              const d = new Date(q.created_at);
+              if (registreFilter === 'week')  return d >= weekStart;
+              if (registreFilter === 'month') return d >= monthStart;
+              return true;
+            });
+            return (
             <div>
-              <h2 style={S.sectionTitle}>📋 Registre des clients — {session.user.companyName}</h2>
-              {garageQuotes.length === 0 ? (
-                <div style={{ textAlign:'center', color:'#8060a0', padding:60, fontSize:15 }}>Aucun devis enregistré</div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:20 }}>
+                <h2 style={{ ...S.sectionTitle, marginBottom:0 }}>📋 Registre des clients — {session.user.companyName}</h2>
+                <div style={{ display:'flex', gap:8 }}>
+                  {[['all','Tout'],['week','Cette semaine'],['month','Ce mois']].map(([v,l])=>(
+                    <button key={v} onClick={()=>setRegistreFilter(v)}
+                      style={{ padding:'6px 14px', borderRadius:20, border: registreFilter===v?'2px solid #e040fb':'1px solid rgba(224,64,251,0.2)', background: registreFilter===v?'rgba(224,64,251,0.15)':'rgba(255,255,255,0.03)', color: registreFilter===v?'#f0e8ff':'#6a4890', fontSize:13, fontWeight:registreFilter===v?700:500, cursor:'pointer', transition:'all 0.15s' }}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {filteredQuotes.length === 0 ? (
+                <div style={{ textAlign:'center', color:'#8060a0', padding:60, fontSize:15 }}>Aucun devis pour cette période</div>
               ) : (
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  {garageQuotes.map(q=>{
+                  {filteredQuotes.map(q=>{
                     const isOpen = expandedQuote === q.id;
                     return (
                       <div key={q.id} style={{ background:'linear-gradient(145deg,#16102a,#1e1435)', borderRadius:12, border:'1px solid rgba(224,64,251,0.15)', overflow:'hidden' }}>
@@ -2306,7 +2236,8 @@ export default function PatronDashboard() {
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {/* ══════════════════════════════════════════
               ONGLET : MON COMPTE

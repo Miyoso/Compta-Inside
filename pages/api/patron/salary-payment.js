@@ -1,12 +1,14 @@
 import { getToken } from 'next-auth/jwt';
 import sql from '../../../lib/db';
+import { resolveCompanyId } from '../../../lib/resolveCompany';
 
 export default async function handler(req, res) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token || !['patron', 'admin'].includes(token.role))
     return res.status(403).json({ error: 'Accès refusé' });
 
-  const companyId = token.companyId;
+  const companyId = await resolveCompanyId(req, token);
+  if (!companyId) return res.status(403).json({ error: 'Accès refusé à cette entreprise' });
 
   // Type d'entreprise
   const [companyRow] = await sql`

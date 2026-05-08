@@ -66,6 +66,7 @@ export default NextAuth({
       if (user) {
         token.id          = user.id;
         token.username    = user.username;
+        token.email       = user.email;
         token.role        = user.role;
         token.companyId   = user.companyId;
         token.companyName = user.companyName;

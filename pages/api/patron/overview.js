@@ -1,6 +1,7 @@
 import { getToken } from 'next-auth/jwt';
 import sql from '../../../lib/db';
 import { computeWeeklyTax } from '../../../lib/tax';
+import { resolveCompanyId } from '../../../lib/resolveCompany';
 
 export default async function handler(req, res) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -9,7 +10,8 @@ export default async function handler(req, res) {
   }
   if (req.method !== 'GET') return res.status(405).end();
 
-  const companyId = token.companyId;
+  const companyId = await resolveCompanyId(req, token);
+  if (!companyId) return res.status(403).json({ error: 'Accès refusé à cette entreprise' });
 
   // Déterminer le type d'entreprise
   const [companyRow] = await sql`
@@ -244,6 +246,7 @@ export default async function handler(req, res) {
     recentSales = await sql`
       SELECT gq.id, u.name AS employee_name,
              CONCAT(gq.client_first_name, ' ', gq.client_last_name) AS product_name,
+             'devis' AS type,
              1 AS quantity, gq.grand_total::float AS total_amount, gq.created_at AS sale_date
       FROM garage_quotes gq
       JOIN users u ON u.id = gq.employee_id
@@ -254,6 +257,7 @@ export default async function handler(req, res) {
   } else {
     recentSales = await sql`
       SELECT s.id, u.name AS employee_name, p.name AS product_name,
+             'vente' AS type,
              s.quantity, s.total_amount::float, s.sale_date
       FROM sales s
       JOIN users    u ON u.id = s.employee_id
