@@ -249,7 +249,7 @@ export default function PatronDashboard() {
 
   // Chargements des données selon l'onglet
   const loadOverview = useCallback(async () => {
-    const r = await fetch(\`/api/patron/overview\${getCP()}\`);
+    const r = await fetch(`/api/patron/overview${getCP()}`);
     const d = await r.json();
     setOverview(d);
   }, []);
@@ -2543,7 +2543,4 @@ const S = {
   pSumValue: { fontSize: 24, fontWeight: 800, color: '#f0e8ff', letterSpacing: -0.3 },
 
   // ── Ventes / Panier
-  cwHeader: { background: 'linear-gradient(135deg, #160830 0%, #200c40 100%)', borderRadius: 14, padding: '18px 22px', marginBottom: 20, border: '1px solid rgba(224,64,251,0.18)' },
-  cwBadge:  { color: '#f060ff', fontWeight: 700, fontSize: 16 },
-
-};
+  cwHeader: { background: 'linear-gradient(135deg, #160830 0%, #200c40 100%)', borderRadius: 14, padding: '18px 22px', marginBottom: 20, border: '1px solid 
