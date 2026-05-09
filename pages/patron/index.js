@@ -2425,80 +2425,80 @@ const S = {
   nav: {}, main: {}, tabBar: {},
 
   // ── Section typography
-  sectionTitle:  { fontSize: 20, fontWeight: 800, color: '#f4eeff', marginBottom: 20, letterSpacing: -0.3 },
-  subTitle:      { fontSize: 15, fontWeight: 700, color: '#8a72c0', marginBottom: 16, letterSpacing: -0.2 },
+  sectionTitle:  { fontSize: 22, fontWeight: 800, color: '#f4eeff', marginBottom: 20, letterSpacing: -0.3 },
+  subTitle:      { fontSize: 16, fontWeight: 700, color: '#8a72c0', marginBottom: 16, letterSpacing: -0.2 },
   sectionHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
 
   // ── KPI cards
   kpiGrid:  { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16, marginBottom: 28 },
-  kpiCard:  { background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: '20px 22px', boxShadow: '0 4px 16px rgba(0,0,0,0.55)', transition: 'border-color 0.2s,box-shadow 0.2s,transform 0.2s' },
-  kpiLabel: { fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#8a72c0', marginBottom: 8 },
-  kpiValue: { fontSize: 34, fontWeight: 900, lineHeight: 1, letterSpacing: -1.5, color: '#f4eeff', fontVariantNumeric: 'tabular-nums' },
-  kpiIcon:  { fontSize: 22, marginBottom: 10, display: 'block' },
+  kpiCard:  { background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 4px 16px rgba(0,0,0,0.55)', transition: 'border-color 0.2s,box-shadow 0.2s,transform 0.2s' },
+  kpiLabel: { fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#8a72c0', marginBottom: 8 },
+  kpiValue: { fontSize: 38, fontWeight: 900, lineHeight: 1, letterSpacing: -1.5, color: '#f4eeff', fontVariantNumeric: 'tabular-nums' },
+  kpiIcon:  { fontSize: 24, marginBottom: 10, display: 'block' },
 
   // ── Tables
   tableWrap: { overflowX: 'auto', borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', background: '#110e28', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' },
-  table:     { width: '100%', borderCollapse: 'collapse', fontSize: 13.5 },
-  th:        { padding: '12px 18px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, color: '#5a4490', textTransform: 'uppercase', letterSpacing: 0.9, borderBottom: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'nowrap', background: 'rgba(6,4,15,0.7)', position: 'sticky', top: 0 },
+  table:     { width: '100%', borderCollapse: 'collapse', fontSize: 15 },
+  th:        { padding: '14px 20px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, color: '#5a4490', textTransform: 'uppercase', letterSpacing: 0.9, borderBottom: '1px solid rgba(255,255,255,0.06)', whiteSpace: 'nowrap', background: 'rgba(6,4,15,0.7)', position: 'sticky', top: 0 },
   tr:        { borderBottom: '1px solid rgba(255,255,255,0.035)', transition: 'background 0.1s' },
-  td:        { padding: '13px 18px', fontSize: 13.5, color: '#c4b0e8', verticalAlign: 'middle', lineHeight: 1.45 },
-  tdNum:     { padding: '13px 18px', fontSize: 14, fontWeight: 700, textAlign: 'right', verticalAlign: 'middle', fontVariantNumeric: 'tabular-nums' },
-  tdDim:     { padding: '13px 18px', fontSize: 12, color: '#5a4490', verticalAlign: 'middle' },
+  td:        { padding: '16px 20px', fontSize: 15, color: '#c4b0e8', verticalAlign: 'middle', lineHeight: 1.45 },
+  tdNum:     { padding: '16px 20px', fontSize: 15, fontWeight: 700, textAlign: 'right', verticalAlign: 'middle', fontVariantNumeric: 'tabular-nums' },
+  tdDim:     { padding: '16px 20px', fontSize: 13, color: '#5a4490', verticalAlign: 'middle' },
 
   // ── Form cards
   formCard: { background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.18)', borderRadius: 14, padding: '22px 24px', marginBottom: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.55)' },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16, alignItems: 'start' },
 
   // ── Form elements
-  label:       { display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: '#8a72c0', marginBottom: 6 },
-  input:       { width: '100%', padding: '10px 14px', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(124,58,237,0.2)', borderRadius: 10, fontSize: 14, color: '#f4eeff', boxSizing: 'border-box', transition: 'border-color 0.15s' },
-  select:      { width: '100%', padding: '10px 14px', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(124,58,237,0.2)', borderRadius: 10, fontSize: 14, color: '#f4eeff', boxSizing: 'border-box', cursor: 'pointer' },
-  searchInput: { width: '100%', padding: '9px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 99, fontSize: 13, color: '#f4eeff', marginBottom: 12 },
+  label:       { display: 'block', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: '#8a72c0', marginBottom: 7 },
+  input:       { width: '100%', padding: '13px 16px', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(124,58,237,0.2)', borderRadius: 10, fontSize: 15, color: '#f4eeff', boxSizing: 'border-box', transition: 'border-color 0.15s' },
+  select:      { width: '100%', padding: '13px 16px', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(124,58,237,0.2)', borderRadius: 10, fontSize: 15, color: '#f4eeff', boxSizing: 'border-box', cursor: 'pointer' },
+  searchInput: { width: '100%', padding: '11px 16px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 99, fontSize: 14, color: '#f4eeff', marginBottom: 12 },
 
   // ── Buttons
-  btnPrimary:   { padding: '10px 20px', background: 'linear-gradient(135deg,#7c3aed,#9f67fa)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(124,58,237,0.4)', transition: 'all 0.15s', whiteSpace: 'nowrap' },
-  btnSecondary: { padding: '9px 18px', background: 'transparent', border: '1.5px solid rgba(124,58,237,0.3)', color: '#9f67fa', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' },
-  btnSmall:     { padding: '5px 11px', fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.04)', color: '#8a72c0', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' },
-  btnApprove:   { padding: '6px 14px', fontSize: 12.5, fontWeight: 700, background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 8, cursor: 'pointer' },
-  btnReject:    { padding: '6px 14px', fontSize: 12.5, fontWeight: 700, background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, cursor: 'pointer' },
+  btnPrimary:   { padding: '12px 24px', background: 'linear-gradient(135deg,#7c3aed,#9f67fa)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(124,58,237,0.4)', transition: 'all 0.15s', whiteSpace: 'nowrap' },
+  btnSecondary: { padding: '11px 22px', background: 'transparent', border: '1.5px solid rgba(124,58,237,0.3)', color: '#9f67fa', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' },
+  btnSmall:     { padding: '7px 14px', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.04)', color: '#8a72c0', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' },
+  btnApprove:   { padding: '7px 16px', fontSize: 13, fontWeight: 700, background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 8, cursor: 'pointer' },
+  btnReject:    { padding: '7px 16px', fontSize: 13, fontWeight: 700, background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, cursor: 'pointer' },
 
   // ── Badges
-  badge:  { padding: '3px 10px', borderRadius: 99, fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap' },
-  chip:   { background: 'rgba(124,58,237,0.15)', color: '#9f67fa', padding: '3px 10px', borderRadius: 99, fontSize: 11.5, fontWeight: 600, display: 'inline-block' },
+  badge:  { padding: '4px 12px', borderRadius: 99, fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' },
+  chip:   { background: 'rgba(124,58,237,0.15)', color: '#9f67fa', padding: '4px 12px', borderRadius: 99, fontSize: 12.5, fontWeight: 600, display: 'inline-block' },
 
   // ── States
-  empty:       { textAlign: 'center', color: '#5a4490', padding: '60px 24px', fontSize: 14, background: 'rgba(255,255,255,0.012)', borderRadius: 14, border: '1px dashed rgba(255,255,255,0.06)' },
-  loading:     { textAlign: 'center', color: '#5a4490', padding: '40px', fontSize: 14 },
-  loadingPage: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#8a72c0', fontSize: 16, gap: 12 },
-  spinner:     { display: 'inline-block', width: 20, height: 20, border: '2.5px solid rgba(124,58,237,0.2)', borderTopColor: '#7c3aed', borderRadius: '50%', animation: 'spin 0.7s linear infinite' },
+  empty:       { textAlign: 'center', color: '#5a4490', padding: '60px 24px', fontSize: 15, background: 'rgba(255,255,255,0.012)', borderRadius: 14, border: '1px dashed rgba(255,255,255,0.06)' },
+  loading:     { textAlign: 'center', color: '#5a4490', padding: '40px', fontSize: 15 },
+  loadingPage: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#8a72c0', fontSize: 17, gap: 12 },
+  spinner:     { display: 'inline-block', width: 22, height: 22, border: '2.5px solid rgba(124,58,237,0.2)', borderTopColor: '#7c3aed', borderRadius: '50%', animation: 'spin 0.7s linear infinite' },
 
   // ── Toast
-  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '12px 20px', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 13.5, boxShadow: '0 8px 32px rgba(0,0,0,0.7)', animation: 'fadeUp 0.2s ease both', maxWidth: 'calc(100vw - 40px)', minWidth: 220 },
+  toast: { position: 'fixed', top: 20, right: 20, zIndex: 9999, padding: '14px 22px', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 15, boxShadow: '0 8px 32px rgba(0,0,0,0.7)', animation: 'fadeUp 0.2s ease both', maxWidth: 'calc(100vw - 40px)', minWidth: 220 },
 
   // ── Alerts
-  alertBanner: { display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, marginBottom: 16, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' },
-  alertLink:   { color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13, fontWeight: 600 },
+  alertBanner: { display: 'flex', alignItems: 'center', gap: 8, padding: '13px 18px', borderRadius: 10, fontSize: 14, fontWeight: 600, marginBottom: 16, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' },
+  alertLink:   { color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 14, fontWeight: 600 },
 
   // ── Pending
   pendingList:    { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 },
   pendingBox:     { background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 12, padding: '14px 16px' },
   pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' },
   pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 3 },
-  pendingTitle:   { fontSize: 14, fontWeight: 700, color: '#f4eeff' },
-  pendingEmail:   { fontSize: 12.5, color: '#8a72c0' },
-  pendingDate:    { fontSize: 11.5, color: '#5a4490', marginTop: 1 },
+  pendingTitle:   { fontSize: 15, fontWeight: 700, color: '#f4eeff' },
+  pendingEmail:   { fontSize: 13.5, color: '#8a72c0' },
+  pendingDate:    { fontSize: 12.5, color: '#5a4490', marginTop: 1 },
   pendingActions: { display: 'flex', gap: 8, alignItems: 'center' },
 
   // ── Purchase summary
   purchaseSummary: { display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20, background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '16px 20px' },
   pSumItem:  { flex: '1 1 130px', display: 'flex', flexDirection: 'column', gap: 4 },
-  pSumLabel: { fontSize: 10.5, color: '#5a4490', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 },
-  pSumValue: { fontSize: 22, fontWeight: 900, color: '#f4eeff', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' },
+  pSumLabel: { fontSize: 11.5, color: '#5a4490', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 },
+  pSumValue: { fontSize: 24, fontWeight: 900, color: '#f4eeff', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' },
 
   // ── Tax rows
   taxBox: { background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '16px 20px', marginBottom: 16 },
-  taxRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 13.5 },
+  taxRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 15 },
 
   // ── Misc
-  qtyBtn2:  { width: 28, height: 28, borderRadius: 7, border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.08)', color: '#9f67fa', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  qtyBtn2:  { width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.08)', color: '#9f67fa', fontSize: 17, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 };

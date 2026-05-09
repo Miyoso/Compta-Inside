@@ -65,9 +65,9 @@
   --sh-v: 0 0 28px rgba(124,58,237,0.22);
 
   /* Layout */
-  --nav-h:    60px;
-  --tab-h:    48px;
-  --px:       48px;
+  --nav-h:    68px;
+  --tab-h:    54px;
+  --px:       52px;
   --max-w:    1480px;
 }
 
@@ -75,10 +75,11 @@
 html { scroll-behavior: smooth; }
 html, body {
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
   background: var(--bg);
   color: var(--t-1);
   color-scheme: dark;
-  line-height: 1.55;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -159,7 +160,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 .ci-nav-right { display:flex; align-items:center; gap:var(--s-2); flex-shrink:0; }
 
 .ci-nav-logo {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.3px;
   color: var(--t-1);
@@ -167,11 +168,11 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 }
 
 .ci-nav-badge {
-  padding: 3px 10px;
+  padding: 4px 12px;
   background: rgba(124,58,237,0.15);
   border: 1px solid var(--bdr);
   border-radius: 99px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -180,27 +181,27 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 }
 
 .ci-nav-company {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--t-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 200px;
 }
 
 .ci-nav-user {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--t-4);
   white-space: nowrap;
 }
 
 .ci-nav-btn {
-  padding: 6px 14px;
+  padding: 8px 16px;
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--bdr-lo);
   border-radius: var(--r-2);
   color: var(--t-2);
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -241,12 +242,12 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 
 .ci-tab-btn {
   position: relative;
-  padding: 0 18px;
+  padding: 0 22px;
   height: var(--tab-h);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 500;
   color: var(--t-4);
   white-space: nowrap;
@@ -325,7 +326,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   background: linear-gradient(145deg, var(--bg-2), var(--bg-3));
   border: 1px solid var(--bdr-lo);
   border-radius: var(--r-4);
-  padding: 20px 22px;
+  padding: 24px 26px;
   box-shadow: var(--sh-2);
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
@@ -335,7 +336,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   transform: translateY(-2px);
 }
 .ci-stat-label {
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -343,7 +344,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   margin-bottom: var(--s-2);
 }
 .ci-stat-value {
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 900;
   line-height: 1;
   letter-spacing: -1.5px;
@@ -351,7 +352,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   font-variant-numeric: tabular-nums;
 }
 .ci-stat-sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--t-4);
   margin-top: var(--s-1);
 }
@@ -373,7 +374,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 .ci-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: 15px;
 }
 .ci-table thead {
   background: rgba(6,4,15,0.7);
@@ -382,9 +383,9 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   z-index: 2;
 }
 .ci-table th {
-  padding: 12px 18px;
+  padding: 14px 20px;
   text-align: left;
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--t-4);
   text-transform: uppercase;
@@ -394,7 +395,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 }
 .ci-table th.r { text-align: right; }
 .ci-table td {
-  padding: 13px 18px;
+  padding: 16px 20px;
   color: var(--t-2);
   border-bottom: 1px solid rgba(255,255,255,0.035);
   vertical-align: middle;
@@ -413,11 +414,11 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   text-align: right;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
 }
 .ci-table td.pos { color: var(--green); }
 .ci-table td.neg { color: var(--red); }
-.ci-table td.dim { color: var(--t-4); font-size: 12px; }
+.ci-table td.dim { color: var(--t-4); font-size: 13px; }
 /* Footer row */
 .ci-table tfoot tr td {
   background: rgba(6,4,15,0.6) !important;
@@ -438,21 +439,21 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 
 .ci-label {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--t-3);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 
 .ci-input, .ci-select {
   width: 100%;
-  padding: 10px 14px;
+  padding: 13px 16px;
   background: rgba(0,0,0,0.4);
   border: 1.5px solid rgba(124,58,237,0.2);
   border-radius: var(--r-2);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--t-1);
   box-sizing: border-box;
 }
@@ -461,11 +462,11 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 
 .ci-search {
   width: 100%;
-  padding: 9px 14px 9px 38px;
+  padding: 11px 16px 11px 42px;
   background: rgba(0,0,0,0.3);
   border: 1px solid var(--bdr-lo);
   border-radius: var(--r-5);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--t-1);
 }
 .ci-search:focus { border-color: var(--bdr); }
@@ -480,9 +481,9 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: var(--r-2);
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -553,8 +554,8 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 }
 
 /* Size variants */
-.ci-btn-sm { padding: 5px 12px; font-size: 12px; border-radius: var(--r-1); }
-.ci-btn-lg { padding: 13px 28px; font-size: 15px; }
+.ci-btn-sm { padding: 7px 14px; font-size: 13px; border-radius: var(--r-1); }
+.ci-btn-lg { padding: 15px 32px; font-size: 16px; }
 
 /* ════════════════════════════════════════════════════════════════
    BADGES & PILLS
@@ -563,9 +564,9 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 99px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -588,12 +589,12 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 ════════════════════════════════════════════════════════════════ */
 .ci-filters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:var(--s-5); }
 .ci-pill {
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: 99px;
   border: 1px solid var(--bdr-lo);
   background: rgba(255,255,255,0.03);
   color: var(--t-3);
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
@@ -616,7 +617,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   text-align: center;
   color: var(--t-4);
   padding: 60px var(--s-5);
-  font-size: 14px;
+  font-size: 15px;
   background: rgba(255,255,255,0.012);
   border-radius: var(--r-3);
   border: 1px dashed var(--bdr-lo);
@@ -644,13 +645,13 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   margin-bottom: var(--s-5);
 }
 .ci-sh-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--t-1);
   letter-spacing: -0.3px;
 }
 .ci-sh-sub {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--t-3);
   letter-spacing: -0.2px;
@@ -662,9 +663,9 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  padding: 11px 16px;
+  padding: 13px 18px;
   border-radius: var(--r-2);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: var(--s-4);
 }
@@ -685,11 +686,11 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   top: 20px;
   right: 20px;
   z-index: 9999;
-  padding: 12px 20px;
+  padding: 14px 22px;
   border-radius: var(--r-2);
   color: #fff;
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: 15px;
   box-shadow: var(--sh-3);
   animation: fadeUp 0.2s ease both;
   max-width: calc(100vw - 40px);
@@ -741,9 +742,9 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
 
   .ci-form-grid   { grid-template-columns: 1fr; }
 
-  .ci-table th, .ci-table td { padding: 10px 12px; font-size: 12px; }
+  .ci-table th, .ci-table td { padding: 11px 13px; font-size: 13px; }
 
   .ci-toast { top: auto; bottom: 16px; right: 14px; left: 14px; max-width: none; }
 
-  .ci-sh-title { font-size: 17px; }
+  .ci-sh-title { font-size: 18px; }
 }
