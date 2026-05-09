@@ -1163,29 +1163,18 @@ export default function PatronDashboard() {
             <div>
               <h2 style={S.sectionTitle}>Achats — Matières premières</h2>
 
-              {/* Récap déduction fiscale */}
+              {/* Barre résumé compacte — évite la redondance avec Vue d'ensemble */}
               {overview && (
-                <div style={S.purchaseSummary}>
-                  <div style={S.pSumItem}>
-                    <div style={S.pSumLabel}>CA du mois</div>
-                    <div style={S.pSumValue}>{fmt(overview.totalSales)}</div>
-                  </div>
-                  <div style={{ ...S.pSumItem, color: '#dc2626' }}>
-                    <div style={S.pSumLabel}>Achats déduits</div>
-                    <div style={{ ...S.pSumValue, color: '#dc2626' }}>− {fmt(overview.totalPurchases)}</div>
-                  </div>
-                  <div style={{ ...S.pSumItem }}>
-                    <div style={S.pSumLabel}>Base imposable</div>
-                    <div style={{ ...S.pSumValue, color: '#8060a0' }}>{fmt(overview.taxableBase)}</div>
-                  </div>
-                  <div style={{ ...S.pSumItem }}>
-                    <div style={S.pSumLabel}>💚 Économie impôts estimée</div>
-                    <div style={{ ...S.pSumValue, color: '#4ade80' }}>{fmt(overview.taxSaving)}</div>
-                  </div>
-                  <div style={{ ...S.pSumItem, color: '#dc2626' }}>
-                    <div style={S.pSumLabel}>🏛️ Impôts dus</div>
-                    <div style={{ ...S.pSumValue, color: '#dc2626' }}>{fmt(overview.taxes)}</div>
-                  </div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:20, padding:'12px 16px', background:'rgba(0,0,0,0.25)', borderRadius:10, border:'1px solid rgba(224,64,251,0.1)', alignItems:'center', fontSize:13 }}>
+                  <span style={{ color:'#8060a0' }}>Ce mois :</span>
+                  <span>CA <strong style={{ color:'#f0e8ff' }}>{fmt(overview.totalSales)}</strong></span>
+                  <span style={{ color:'#5a4080' }}>·</span>
+                  <span>Achats <strong style={{ color:'#f87171' }}>− {fmt(overview.totalPurchases)}</strong></span>
+                  <span style={{ color:'#5a4080' }}>·</span>
+                  <span>Base imposable <strong style={{ color:'#c084fc' }}>{fmt(overview.taxableBase)}</strong></span>
+                  <span style={{ color:'#5a4080' }}>·</span>
+                  <span>Économie impôts <strong style={{ color:'#4ade80' }}>+ {fmt(overview.taxSaving)}</strong></span>
+                  <button onClick={() => setTab('overview')} style={{ marginLeft:'auto', fontSize:11, color:'#7060a0', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>Vue détaillée →</button>
                 </div>
               )}
 
@@ -1525,56 +1514,61 @@ export default function PatronDashboard() {
                       <thead>
                         <tr>
                           <th style={S.th}>Employé</th>
-                          <th style={S.th}>Rôle</th>
-                          <th style={S.th}>CA brut (période)</th>
-                          <th style={S.th}>Marge (période)</th>
-                          <th style={S.th}>Salaire dû</th>
-                          <th style={S.th}>CA brut mois</th>
-                          <th style={S.th}>Marge mois</th>
-                          <th style={S.th}>Salaire mois</th>
                           <th style={S.th}>% Salaire</th>
+                          <th style={{ ...S.th, textAlign:'right' }}>CA semaine</th>
+                          <th style={{ ...S.th, textAlign:'right' }}>Salaire sem.</th>
+                          <th style={{ ...S.th, textAlign:'right' }}>CA mois</th>
+                          <th style={{ ...S.th, textAlign:'right' }}>Salaire dû</th>
+                          <th style={S.th}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {employees.map((emp) => (
                           <tr key={emp.id} style={S.tr}>
-                            <td style={S.td}><strong>{emp.name}</strong></td>
                             <td style={S.td}>
-                              <span style={{ ...S.badge, background: emp.role === 'patron' ? '#dbeafe' : '#f1f5f9', color: emp.role === 'patron' ? '#1d4ed8' : '#475569' }}>
+                              <div style={{ fontWeight: 700, fontSize: 15, color: '#f0e8ff' }}>{emp.name}</div>
+                              <div style={{ fontSize: 11, color: '#5a4080', marginTop: 2 }}>
                                 {emp.role === 'patron' ? '👑 Patron' : '👤 Employé'}
-                              </span>
+                              </div>
                             </td>
-                            <td style={S.td}>{fmt(emp.week_sales)}</td>
-                            <td style={{ ...S.td, color: '#4ade80', fontWeight: 600 }}>{fmt(emp.week_margin ?? emp.week_sales)}</td>
-                            <td style={{ ...S.td, fontWeight: 700, color: '#d97706' }}>{fmt(emp.week_salary)}</td>
-                            <td style={S.td}>{fmt(emp.total_sales)}</td>
-                            <td style={{ ...S.td, color: '#4ade80', fontWeight: 600 }}>{fmt(emp.total_margin ?? emp.total_sales)}</td>
-                            <td style={{ ...S.td, fontWeight: 600, color: '#7c3aed' }}>{fmt(emp.salary_due)}</td>
-                            <td style={S.td}>
+                            <td style={{ ...S.td, minWidth: 120 }}>
                               {editingEmployee === emp.id ? (
                                 <SalaryEditor current={emp.salary_percent} onSave={(v) => handleUpdateSalaryPercent(emp.id, v)} onCancel={() => setEditingEmployee(null)} />
                               ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <span style={{ fontWeight: 600 }}>{emp.salary_percent}%</span>
-                                  <button style={S.btnSmall} onClick={() => setEditingEmployee(emp.id)}>✏️</button>
-                                  {emp.role !== 'patron' && (
-                                    <button style={{ ...S.btnSmall, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleFireEmployee(emp.id, emp.name)}>🚫 Virer</button>
-                                  )}
+                                <div>
+                                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
+                                    <span style={{ fontWeight:700, fontSize:15, color:'#c084fc' }}>{emp.salary_percent}%</span>
+                                    <button style={S.btnSmall} onClick={() => setEditingEmployee(emp.id)}>✏️</button>
+                                  </div>
+                                  {/* Barre visuelle du % salaire */}
+                                  <div style={{ height:4, borderRadius:4, background:'rgba(255,255,255,0.07)', overflow:'hidden' }}>
+                                    <div style={{ height:'100%', width:`${Math.min(100, emp.salary_percent)}%`, background:'linear-gradient(90deg,#7c3aed,#c084fc)', borderRadius:4 }} />
+                                  </div>
                                 </div>
+                              )}
+                            </td>
+                            <td style={{ ...S.td, textAlign:'right', fontVariantNumeric:'tabular-nums', fontWeight:600 }}>{fmt(emp.week_sales)}</td>
+                            <td style={{ ...S.td, textAlign:'right', fontWeight:700, color:'#fbbf24', fontVariantNumeric:'tabular-nums' }}>{fmt(emp.week_salary)}</td>
+                            <td style={{ ...S.td, textAlign:'right', color:'#4ade80', fontWeight:600, fontVariantNumeric:'tabular-nums' }}>{fmt(emp.total_sales)}</td>
+                            <td style={{ ...S.td, textAlign:'right', fontWeight:800, fontSize:16, color:'#7c3aed', fontVariantNumeric:'tabular-nums' }}>
+                              {fmt(emp.salary_due)}
+                            </td>
+                            <td style={S.td}>
+                              {emp.role !== 'patron' && (
+                                <button style={{ ...S.btnSmall, color:'#f87171', borderColor:'rgba(248,113,113,0.3)' }}
+                                  onClick={() => handleFireEmployee(emp.id, emp.name)}>🚫 Virer</button>
                               )}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
-                        <tr style={{ background: '#0f0820', borderTop: '2px solid rgba(224,64,251,0.2)' }}>
-                          <td colSpan={2} style={{ ...S.td, fontWeight: 700 }}>TOTAL</td>
-                          <td style={{ ...S.td, fontWeight: 700 }}>{fmt(employees.reduce((a, e) => a + e.week_sales, 0))}</td>
-                          <td style={{ ...S.td, fontWeight: 700, color: '#4ade80' }}>{fmt(employees.reduce((a, e) => a + (e.week_margin ?? e.week_sales), 0))}</td>
-                          <td style={{ ...S.td, fontWeight: 800, color: '#d97706' }}>{fmt(employees.reduce((a, e) => a + e.week_salary, 0))}</td>
-                          <td style={{ ...S.td, fontWeight: 700 }}>{fmt(employees.reduce((a, e) => a + e.total_sales, 0))}</td>
-                          <td style={{ ...S.td, fontWeight: 700, color: '#4ade80' }}>{fmt(employees.reduce((a, e) => a + (e.total_margin ?? e.total_sales), 0))}</td>
-                          <td style={{ ...S.td, fontWeight: 800, color: '#7c3aed' }}>{fmt(employees.reduce((a, e) => a + e.salary_due, 0))}</td>
+                        <tr style={{ background:'rgba(15,8,32,0.8)', borderTop:'2px solid rgba(224,64,251,0.2)' }}>
+                          <td colSpan={2} style={{ ...S.td, fontWeight:800, color:'#f0e8ff', letterSpacing:0.5 }}>TOTAL ÉQUIPE</td>
+                          <td style={{ ...S.td, textAlign:'right', fontWeight:700, fontVariantNumeric:'tabular-nums' }}>{fmt(employees.reduce((a,e)=>a+e.week_sales,0))}</td>
+                          <td style={{ ...S.td, textAlign:'right', fontWeight:800, color:'#fbbf24', fontVariantNumeric:'tabular-nums' }}>{fmt(employees.reduce((a,e)=>a+e.week_salary,0))}</td>
+                          <td style={{ ...S.td, textAlign:'right', fontWeight:700, color:'#4ade80', fontVariantNumeric:'tabular-nums' }}>{fmt(employees.reduce((a,e)=>a+e.total_sales,0))}</td>
+                          <td style={{ ...S.td, textAlign:'right', fontWeight:800, fontSize:17, color:'#7c3aed', fontVariantNumeric:'tabular-nums' }}>{fmt(employees.reduce((a,e)=>a+e.salary_due,0))}</td>
                           <td style={S.td} />
                         </tr>
                       </tfoot>
@@ -2497,18 +2491,20 @@ const S = {
   },
   taxRow: { display: 'flex', justifyContent: 'space-between', fontSize: 16, color: '#c0a0d8' },
 
-  // ── Tableaux cosmiques
+  // ── Tableaux
   tableWrap: { overflowX: 'auto', borderRadius: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.4)', border: '1px solid rgba(224,64,251,0.12)' },
   table: { width: '100%', borderCollapse: 'collapse', background: '#0e0a1e', minWidth: 500 },
   th: {
-    background: 'rgba(0,0,0,0.4)', padding: '11px 14px', textAlign: 'left',
+    background: 'rgba(0,0,0,0.5)', padding: '13px 18px', textAlign: 'left',
     fontSize: 11, fontWeight: 700, color: '#7060a0',
-    textTransform: 'uppercase', letterSpacing: 0.8,
-    borderBottom: '1px solid rgba(224,64,251,0.15)',
-    whiteSpace: 'nowrap',
+    textTransform: 'uppercase', letterSpacing: 1,
+    borderBottom: '2px solid rgba(224,64,251,0.18)',
+    whiteSpace: 'nowrap', position: 'sticky', top: 0,
   },
-  tr: { borderBottom: '1px solid rgba(255,255,255,0.04)' },
-  td: { padding: '12px 14px', fontSize: 14, color: '#c0a0d8', verticalAlign: 'middle' },
+  tr: { borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.1s' },
+  td: { padding: '14px 18px', fontSize: 14, color: '#c0a0d8', verticalAlign: 'middle', lineHeight: 1.4 },
+  tdNum: { padding: '14px 18px', fontSize: 15, fontWeight: 700, textAlign: 'right', verticalAlign: 'middle', fontVariantNumeric: 'tabular-nums' },
+  tdMuted: { padding: '14px 18px', fontSize: 12, color: '#5a4080', verticalAlign: 'middle' },
 
   badge: { padding: '3px 10px', borderRadius: 20, fontSize: 13, fontWeight: 600 },
   chip: { background: 'rgba(224,64,251,0.12)', color: '#e040fb', padding: '3px 10px', borderRadius: 20, fontSize: 13, fontWeight: 500 },
