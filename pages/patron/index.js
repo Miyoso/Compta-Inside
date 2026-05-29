@@ -31,6 +31,13 @@ const GARAGE_PERF_GROUPS = {
   '🛑 Freins':['Freins 1','Freins 2','Freins 3','Freins 4'],
   '🔩 Suspensions':['Suspensions 1','Suspensions 2','Suspensions 3'],
 };
+const VEHICLE_PERF_MAP = {
+  'Moteur 1':{k:'M',i:0},'Moteur 2':{k:'M',i:1},'Moteur 3':{k:'M',i:2},'Moteur 4':{k:'M',i:3},'Moteur 5':{k:'M',i:4},
+  'Turbo':{k:'T',i:null},
+  'Transmission 1':{k:'Tr',i:0},'Transmission 2':{k:'Tr',i:1},'Transmission 3':{k:'Tr',i:2},'Transmission 4':{k:'Tr',i:3},
+  'Freins 1':{k:'F',i:0},'Freins 2':{k:'F',i:1},'Freins 3':{k:'F',i:2},'Freins 4':{k:'F',i:3},
+  'Suspensions 1':{k:'S',i:0},'Suspensions 2':{k:'S',i:1},'Suspensions 3':{k:'S',i:2},
+};
 const GARAGE_CUSTOM_GROUPS = {
   '🚗 Carrosserie': {
     'Aileron':1500,'Bas de caisse':1200,'Pare-choc AV':1500,'Pare-choc AR':1500,
@@ -198,6 +205,10 @@ export default function PatronDashboard() {
   const [lastPaidDate, setLastPaidDate]     = useState(null);
 
   // Garage / Devis
+  const [vehicleData,    setVehicleData]    = useState(null);
+  const [vehicleSearch,  setVehicleSearch]  = useState('');
+  const [selectedVehicle,setSelectedVehicle]= useState(null);
+  const [showVehicleSug, setShowVehicleSug] = useState(false);
   const [devisClient,    setDevisClient]    = useState({firstName:'',lastName:'',model:'',category:'Sport'});
   const [devisSelPerfs,  setDevisSelPerfs]  = useState(new Set());
   const [devisSelCustoms,setDevisSelCustoms]= useState(new Set());
@@ -668,13 +679,40 @@ export default function PatronDashboard() {
   ];
 
   // ── Devis helpers ────────────────────────────────────────────────────────
+  // Charger données véhicules Excel
+  const isGarageForEffect = session?.user?.companyType === 'garage';
+  useEffect(()=>{
+    if(isGarageForEffect) fetch('/vehicle_prices.json').then(r=>r.json()).then(d=>setVehicleData(d)).catch(()=>{});
+  },[isGarageForEffect]);
+
+  const vehicleSuggestions = vehicleData && vehicleSearch.length>=2
+    ? Object.entries(vehicleData)
+        .filter(([id,v])=>id.toLowerCase().includes(vehicleSearch.toLowerCase())||v.n.toLowerCase().includes(vehicleSearch.toLowerCase()))
+        .slice(0,12).map(([id,v])=>({id,name:v.n,cat:v.c}))
+    : [];
+
+  const getVehicleVente = (perfKey) => {
+    const m = VEHICLE_PERF_MAP[perfKey];
+    if (!m||!selectedVehicle||!vehicleData?.[selectedVehicle]) return null;
+    const u = vehicleData[selectedVehicle].v;
+    return m.k==='T'?(u?.T??null):(u?.[m.k]?.[m.i]??null);
+  };
+  const getVehicleUsine = (perfKey) => {
+    const m = VEHICLE_PERF_MAP[perfKey];
+    if (!m||!selectedVehicle||!vehicleData?.[selectedVehicle]) return null;
+    const u = vehicleData[selectedVehicle].u;
+    return m.k==='T'?(u?.T??null):(u?.[m.k]?.[m.i]??null);
+  };
+
   const garageCatIdx = GARAGE_CATEGORIES.indexOf(devisClient.category);
-  const devisPerfsTotal   = [...devisSelPerfs].reduce((t,p) => t + (GARAGE_PERF_PRICES[p]?.[garageCatIdx]||0), 0);
+  const getPerfVente = (p) => { const vp=getVehicleVente(p); return vp!=null?vp:(GARAGE_PERF_PRICES[p]?.[garageCatIdx]||0); };
+  const getPerfUsine = (p) => { const up=getVehicleUsine(p); return up!=null?up:(GARAGE_PERF_COSTS[p]?.[garageCatIdx]||0); };
+  const devisPerfsTotal   = [...devisSelPerfs].reduce((t,p) => t + getPerfVente(p), 0);
   const devisCustomsTotal = [...devisSelCustoms].reduce((t,c) => t + (GARAGE_CUSTOM_PRICES[c]||0), 0);
   const dvisPaintsTotal   = [...devisSelPaints].reduce((t,p) => { for(const g of Object.values(GARAGE_PAINT_GROUPS)){if(g[p]) return t+g[p];} return t; }, 0);
   const devisGrandTotal   = devisPerfsTotal + devisCustomsTotal + dvisPaintsTotal;
   // Coûts d'usine (pièces)
-  const devisPerfsPartsCost   = [...devisSelPerfs].reduce((t,p) => t + (GARAGE_PERF_COSTS[p]?.[garageCatIdx]||0), 0);
+  const devisPerfsPartsCost   = [...devisSelPerfs].reduce((t,p) => t + getPerfUsine(p), 0);
   const devisCustomsPartsCost = [...devisSelCustoms].reduce((t,c) => t + (GARAGE_CUSTOM_COSTS[c]||0), 0);
   const dvisPaintsPartsCost   = [...devisSelPaints].reduce((t,p) => t + (GARAGE_PAINT_COSTS[p]||0), 0);
   const devisPartsTotal       = devisPerfsPartsCost + devisCustomsPartsCost + dvisPaintsPartsCost;
@@ -694,6 +732,7 @@ export default function PatronDashboard() {
     setDevisClient({firstName:'',lastName:'',model:'',category:'Sport'});
     setDevisSelPerfs(new Set()); setDevisSelCustoms(new Set()); setDevisSelPaints(new Set());
     setDevisNotes(''); setDevisSection('perfs');
+    setSelectedVehicle(null); setVehicleSearch('');
   };
   const submitDevis = async () => {
     if (!devisClient.firstName && !devisClient.lastName) return showToast('Indiquez un nom client', 'error');
@@ -704,7 +743,7 @@ export default function PatronDashboard() {
       body: JSON.stringify({
         clientFirstName: devisClient.firstName, clientLastName: devisClient.lastName,
         vehicleModel: devisClient.model, vehicleCategory: devisClient.category,
-        selectedPerformances: [...devisSelPerfs].map(p=>({type:p,price:GARAGE_PERF_PRICES[p]?.[garageCatIdx]||0})),
+        selectedPerformances: [...devisSelPerfs].map(p=>({type:p,price:getPerfVente(p)})),
         selectedCustoms: [...devisSelCustoms].map(c=>({type:c,price:GARAGE_CUSTOM_PRICES[c]||0})),
         selectedPaints: [...devisSelPaints].map(p=>{let pr=0;for(const g of Object.values(GARAGE_PAINT_GROUPS)){if(g[p]){pr=g[p];break;}}return{type:p,price:pr};}),
         perfsTotal:devisPerfsTotal, customsTotal:devisCustomsTotal, paintsTotal:dvisPaintsTotal, grandTotal:devisGrandTotal, partsTotal:devisPartsTotal, notes:devisNotes,
@@ -2011,13 +2050,35 @@ export default function PatronDashboard() {
                       </div>
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-                      <div>
-                        <div style={{ fontSize:11, color:'#8060a0', textTransform:'uppercase', letterSpacing:0.6, marginBottom:4 }}>Modèle véhicule</div>
-                        <input value={devisClient.model} onChange={e=>setDevisClient(c=>({...c,model:e.target.value}))} placeholder="ex: Zentorno" style={S.input} />
+                      <div style={{ position:'relative', gridColumn:'span 2' }}>
+                        <div style={{ fontSize:11, color:'#8060a0', textTransform:'uppercase', letterSpacing:0.6, marginBottom:4 }}>🚗 Véhicule (nom ou spawn ID)</div>
+                        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                          <input
+                            value={vehicleSearch}
+                            onChange={e=>{setVehicleSearch(e.target.value);setShowVehicleSug(true);if(!e.target.value){setSelectedVehicle(null);setDevisClient(c=>({...c,model:'',category:'Sport'}));setDevisSelPerfs(new Set());}}}
+                            onFocus={()=>setShowVehicleSug(true)}
+                            onBlur={()=>setTimeout(()=>setShowVehicleSug(false),180)}
+                            placeholder="ex: Sultan RS, adder…"
+                            style={S.input}
+                          />
+                          {selectedVehicle && <span style={{ background:'rgba(74,222,128,0.12)', color:'#4ade80', border:'1px solid rgba(74,222,128,0.3)', borderRadius:6, padding:'4px 10px', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>✓ {selectedVehicle}</span>}
+                        </div>
+                        {showVehicleSug && vehicleSuggestions.length>0 && (
+                          <div style={{ position:'absolute', top:'100%', left:0, right:0, background:'#1a0f30', border:'1px solid rgba(224,64,251,0.35)', borderRadius:10, zIndex:300, maxHeight:200, overflowY:'auto', boxShadow:'0 8px 32px rgba(0,0,0,0.7)', marginTop:4 }}>
+                            {vehicleSuggestions.map(sv=>(
+                              <button key={sv.id} onMouseDown={()=>{ setSelectedVehicle(sv.id); setVehicleSearch(sv.name); setShowVehicleSug(false); setDevisClient(c=>({...c,model:sv.name,category:sv.cat})); setDevisSelPerfs(new Set()); }}
+                                style={{ width:'100%', background:'none', border:'none', padding:'9px 14px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ fontWeight:600, color:'#f0e8ff', fontSize:13 }}>{sv.name}</span>
+                                <span style={{ fontSize:11, color:'#8060a0', background:'rgba(255,255,255,0.06)', borderRadius:6, padding:'2px 8px' }}>{sv.cat} · {sv.id}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {!vehicleData && <div style={{ fontSize:10, color:'#5a4080', marginTop:3 }}>Chargement véhicules…</div>}
                       </div>
                       <div>
-                        <div style={{ fontSize:11, color:'#8060a0', textTransform:'uppercase', letterSpacing:0.6, marginBottom:4 }}>Catégorie</div>
-                        <select value={devisClient.category} onChange={e=>setDevisClient(c=>({...c,category:e.target.value}))} style={S.input}>
+                        <div style={{ fontSize:11, color:'#8060a0', textTransform:'uppercase', letterSpacing:0.6, marginBottom:4 }}>Catégorie (auto)</div>
+                        <select value={devisClient.category} onChange={e=>setDevisClient(c=>({...c,category:e.target.value}))} style={{ ...S.input, opacity: selectedVehicle?0.5:1 }}>
                           {GARAGE_CATEGORIES.map(cat=>(
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
@@ -2041,19 +2102,33 @@ export default function PatronDashboard() {
                   {/* ─ Performances ─ */}
                   {devisSection === 'perfs' && (
                     <div>
+                      {selectedVehicle && vehicleData?.[selectedVehicle]
+                        ? <div style={{ marginBottom:12, padding:'6px 12px', background:'rgba(74,222,128,0.08)', border:'1px solid rgba(74,222,128,0.25)', borderRadius:8, fontSize:12, color:'#4ade80', fontWeight:600 }}>✓ {vehicleData[selectedVehicle].n} — prix spécifiques</div>
+                        : <div style={{ marginBottom:12, fontSize:11, color:'#6040a0' }}>Sélectionne un véhicule pour des prix exacts</div>
+                      }
                       {Object.entries(GARAGE_PERF_GROUPS).map(([grpLabel, items])=>(
                         <div key={grpLabel} style={{ marginBottom:16 }}>
                           <div style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.8, marginBottom:8 }}>{grpLabel}</div>
                           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                             {items.map(perf=>{
-                              const catIdx = GARAGE_CATEGORIES.indexOf(devisClient.category);
-                              const price  = GARAGE_PERF_PRICES[perf]?.[catIdx] || 0;
-                              const sel    = devisSelPerfs.has(perf);
+                              const vp  = getVehicleVente(perf);
+                              // Masquer grades indispos pour ce véhicule
+                              if (selectedVehicle && vehicleData?.[selectedVehicle]) {
+                                const m = VEHICLE_PERF_MAP[perf];
+                                if (m) {
+                                  const u = vehicleData[selectedVehicle].v;
+                                  if (m.k==='T' && u?.T==null) return null;
+                                  if (m.k!=='T' && m.i!=null && (u?.[m.k]?.[m.i]==null)) return null;
+                                }
+                              }
+                              const price = vp!=null ? vp : (GARAGE_PERF_PRICES[perf]?.[GARAGE_CATEGORIES.indexOf(devisClient.category)] || 0);
+                              const isVeh = vp!=null;
+                              const sel   = devisSelPerfs.has(perf);
                               return (
                                 <button key={perf} onClick={()=>toggleDevisPerf(perf)}
-                                  style={{ padding:'6px 12px', borderRadius:20, border:`1px solid ${sel?'#e040fb':'rgba(120,60,180,0.3)'}`,
+                                  style={{ padding:'6px 12px', borderRadius:20, border:`1px solid ${sel?'#e040fb':isVeh?'rgba(167,139,250,0.4)':'rgba(120,60,180,0.3)'}`,
                                     background: sel ? 'rgba(224,64,251,0.18)' : 'rgba(30,20,53,0.8)',
-                                    color: sel ? '#e040fb' : '#b090d0', cursor:'pointer', fontSize:12, fontWeight:sel?700:400 }}>
+                                    color: sel ? '#e040fb' : isVeh ? '#a78bfa' : '#b090d0', cursor:'pointer', fontSize:12, fontWeight:sel?700:400 }}>
                                   {perf} — {price.toLocaleString('fr-FR')}$
                                 </button>
                               );
