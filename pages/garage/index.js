@@ -4,6 +4,15 @@ import { useRouter } from 'next/router';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
 const CATEGORIES = ['Compacts','Sedans','Coupés','Motos','Muscle','SUV','Sport','Sports classic','Super'];
+
+// Mapping clé perf → index dans les tableaux du JSON véhicule
+const VEHICLE_PERF_MAP = {
+  'Moteur 1':{k:'M',i:0},'Moteur 2':{k:'M',i:1},'Moteur 3':{k:'M',i:2},'Moteur 4':{k:'M',i:3},'Moteur 5':{k:'M',i:4},
+  'Turbo':{k:'T',i:null},
+  'Transmission 1':{k:'Tr',i:0},'Transmission 2':{k:'Tr',i:1},'Transmission 3':{k:'Tr',i:2},'Transmission 4':{k:'Tr',i:3},
+  'Freins 1':{k:'F',i:0},'Freins 2':{k:'F',i:1},'Freins 3':{k:'F',i:2},'Freins 4':{k:'F',i:3},
+  'Suspensions 1':{k:'S',i:0},'Suspensions 2':{k:'S',i:1},'Suspensions 3':{k:'S',i:2},
+};
 const PERF_PRICES = {
   'Moteur 1':[2000,2500,6000,9500,12500,20000,50000,60000,110000],
   'Moteur 2':[3000,5000,8000,13000,15000,30000,60000,75000,120000],
@@ -61,6 +70,38 @@ export default function GarageDashboard() {
   const [editingBalance, setEditingBalance] = useState(false);
   const [newBalanceVal, setNewBalanceVal] = useState('');
 
+  // ── Données véhicules ─────────────────────────────────────────────
+  const [vehicleData, setVehicleData] = useState(null);
+  const [vehicleSearch, setVehicleSearch] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState(null); // spawn ID
+  const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false);
+
+  useEffect(()=>{
+    fetch('/vehicle_prices.json').then(r=>r.json()).then(d=>setVehicleData(d)).catch(()=>{});
+  },[]);
+
+  // Recherche véhicule
+  const vehicleSuggestions = useMemo(()=>{
+    if (!vehicleData || vehicleSearch.length < 2) return [];
+    const q = vehicleSearch.toLowerCase();
+    return Object.entries(vehicleData)
+      .filter(([id,v])=> id.includes(q) || v.n.toLowerCase().includes(q))
+      .slice(0,12)
+      .map(([id,v])=>({id, name:v.n, cat:v.c}));
+  },[vehicleData, vehicleSearch]);
+
+  // Prix d'une perf pour le véhicule sélectionné (ou fallback catégorie)
+  const getVehiclePrice = useCallback((perfKey) => {
+    const m = VEHICLE_PERF_MAP[perfKey];
+    if (!m) return null;
+    const vd = selectedVehicle && vehicleData?.[selectedVehicle];
+    if (!vd) return null;
+    if (m.k === 'T') return vd.u?.T ?? null;
+    const arr = vd.u?.[m.k];
+    if (!arr) return null;
+    return arr[m.i] ?? null;
+  },[selectedVehicle, vehicleData]);
+
   // ── Devis builder ─────────────────────────────────────────────────
   const [client, setClient] = useState({firstName:'',lastName:'',model:'',category:'Sport'});
   const [selPerfs, setSelPerfs]     = useState(new Set());
@@ -104,7 +145,12 @@ export default function GarageDashboard() {
 
   // ── Totaux devis ──────────────────────────────────────────────────
   const catIdx = CATEGORIES.indexOf(client.category);
-  const perfsTotal   = useMemo(()=>{let t=0;selPerfs.forEach(p=>{t+=(PERF_PRICES[p]?.[catIdx]||0);});return t;},[selPerfs,catIdx]);
+  const perfPrice = useCallback((p) => {
+    const vp = getVehiclePrice(p);
+    if (vp != null) return vp;
+    return PERF_PRICES[p]?.[catIdx] || 0;
+  },[getVehiclePrice, catIdx]);
+  const perfsTotal   = useMemo(()=>{let t=0;selPerfs.forEach(p=>{t+=perfPrice(p);});return t;},[selPerfs,perfPrice]);
   const customsTotal = useMemo(()=>{let t=0;selCustoms.forEach(c=>{t+=(CUSTOM_PRICES[c]||0);});return t;},[selCustoms]);
   const paintsTotal  = useMemo(()=>{let t=0;selPaints.forEach(p=>{for(const g of Object.values(PAINT_GROUPS)){if(g[p]){t+=g[p];break;}}});return t;},[selPaints]);
   const grandTotal   = perfsTotal+customsTotal+paintsTotal;
@@ -112,14 +158,14 @@ export default function GarageDashboard() {
   const togglePerf   = (p) => setSelPerfs(s=>{const n=new Set(s);n.has(p)?n.delete(p):n.add(p);return n;});
   const toggleCustom = (c) => setSelCustoms(s=>{const n=new Set(s);n.has(c)?n.delete(c):n.add(c);return n;});
   const togglePaint  = (p) => setSelPaints(s=>{const n=new Set(s);n.has(p)?n.delete(p):n.add(p);return n;});
-  const resetDevis   = () => { setClient({firstName:'',lastName:'',model:'',category:'Sport'}); setSelPerfs(new Set()); setSelCustoms(new Set()); setSelPaints(new Set()); setDevisNotes(''); setActiveSection('perfs'); };
+  const resetDevis   = () => { setClient({firstName:'',lastName:'',model:'',category:'Sport'}); setSelPerfs(new Set()); setSelCustoms(new Set()); setSelPaints(new Set()); setDevisNotes(''); setActiveSection('perfs'); setSelectedVehicle(null); setVehicleSearch(''); };
 
   const submitDevis = async () => {
     if (!client.firstName && !client.lastName) return showToast('Indiquez un nom client',false);
     setLoading(true);
     const r = await fetch('/api/garage/devis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      clientFirstName:client.firstName, clientLastName:client.lastName, vehicleModel:client.model, vehicleCategory:client.category,
-      selectedPerformances:[...selPerfs].map(p=>({type:p,price:PERF_PRICES[p]?.[catIdx]||0})),
+      clientFirstName:client.firstName, clientLastName:client.lastName, vehicleModel:client.model, vehicleCategory:client.category, vehicleSpawnId:selectedVehicle||'',
+      selectedPerformances:[...selPerfs].map(p=>({type:p,price:perfPrice(p)})),
       selectedCustoms:[...selCustoms].map(c=>({type:c,price:CUSTOM_PRICES[c]||0})),
       selectedPaints:[...selPaints].map(p=>{let price=0;for(const g of Object.values(PAINT_GROUPS)){if(g[p]){price=g[p];break;}}return{type:p,price};}),
       perfsTotal,customsTotal,paintsTotal,grandTotal,notes:devisNotes,
@@ -319,15 +365,49 @@ export default function GarageDashboard() {
                 <div style={{...card,border:'1px solid rgba(251,191,36,0.2)',marginBottom:20}}>
                   <div style={{fontSize:12,fontWeight:800,color:'#fbbf24',textTransform:'uppercase',letterSpacing:1,marginBottom:16}}>👤 Client & Véhicule</div>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14}}>
-                    {[['Prénom','firstName','Michel'],['Nom','lastName','Dupont'],['Modèle','model','Sultan RS']].map(([lbl,key,ph])=>(
+                    {[['Prénom','firstName','Michel'],['Nom','lastName','Dupont']].map(([lbl,key,ph])=>(
                       <div key={key}>
                         <label style={labelS}>{lbl}</label>
                         <input value={client[key]} onChange={e=>setClient(c=>({...c,[key]:e.target.value}))} style={inputS} placeholder={ph}/>
                       </div>
                     ))}
+                    {/* Recherche véhicule */}
+                    <div style={{position:'relative',gridColumn:'span 2'}}>
+                      <label style={labelS}>🚗 Véhicule (nom ou spawn ID)</label>
+                      <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                        <input
+                          value={vehicleSearch}
+                          onChange={e=>{setVehicleSearch(e.target.value);setShowVehicleSuggestions(true);if(!e.target.value){setSelectedVehicle(null);setClient(c=>({...c,model:'',category:'Sport'}));}}}
+                          onFocus={()=>setShowVehicleSuggestions(true)}
+                          onBlur={()=>setTimeout(()=>setShowVehicleSuggestions(false),180)}
+                          style={{...inputS,flex:1}}
+                          placeholder="Ex: Sultan RS, adder, brioso…"
+                        />
+                        {selectedVehicle && (
+                          <span style={{background:'rgba(74,222,128,0.12)',color:'#4ade80',border:'1px solid rgba(74,222,128,0.3)',borderRadius:8,padding:'6px 12px',fontSize:12,fontWeight:700,whiteSpace:'nowrap'}}>✓ {selectedVehicle}</span>
+                        )}
+                      </div>
+                      {showVehicleSuggestions && vehicleSuggestions.length>0 && (
+                        <div style={{position:'absolute',top:'100%',left:0,right:0,background:'#1a0f30',border:'1px solid rgba(224,64,251,0.35)',borderRadius:10,zIndex:200,maxHeight:240,overflowY:'auto',boxShadow:'0 8px 32px rgba(0,0,0,0.7)',marginTop:4}}>
+                          {vehicleSuggestions.map(sv=>(
+                            <button key={sv.id} onMouseDown={()=>{
+                              setSelectedVehicle(sv.id);
+                              setVehicleSearch(sv.name);
+                              setShowVehicleSuggestions(false);
+                              setClient(c=>({...c, model:sv.name, category:sv.cat}));
+                              setSelPerfs(new Set());
+                            }} style={{width:'100%',background:'none',border:'none',padding:'10px 14px',cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
+                              <span style={{fontWeight:600,color:'#f0e8ff',fontSize:14}}>{sv.name}</span>
+                              <span style={{fontSize:11,color:'#8060a0',background:'rgba(255,255,255,0.06)',borderRadius:6,padding:'2px 8px'}}>{sv.cat} · {sv.id}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {!vehicleData && <div style={{fontSize:11,color:'#5a4080',marginTop:4}}>Chargement des véhicules…</div>}
+                    </div>
                     <div>
-                      <label style={labelS}>Catégorie</label>
-                      <select value={client.category} onChange={e=>setClient(c=>({...c,category:e.target.value}))} style={inputS}>
+                      <label style={labelS}>Catégorie (auto)</label>
+                      <select value={client.category} onChange={e=>setClient(c=>({...c,category:e.target.value}))} style={{...inputS,opacity:selectedVehicle?0.5:1}}>
                         {CATEGORIES.map(cat=><option key={cat} value={cat}>{cat}</option>)}
                       </select>
                     </div>
@@ -344,17 +424,38 @@ export default function GarageDashboard() {
                 {/* Performances */}
                 {activeSection==='perfs' && (
                   <div style={card}>
-                    <div style={{fontSize:12,color:'#8060a0',marginBottom:16}}>Prix basés sur la catégorie : <strong style={{color:'#fbbf24'}}>{client.category}</strong></div>
+                    {selectedVehicle && vehicleData?.[selectedVehicle] ? (
+                      <div style={{fontSize:12,color:'#4ade80',marginBottom:16,display:'flex',alignItems:'center',gap:8}}>
+                        <span style={{background:'rgba(74,222,128,0.1)',border:'1px solid rgba(74,222,128,0.3)',borderRadius:6,padding:'3px 10px',fontWeight:700}}>✓ {vehicleData[selectedVehicle].n}</span>
+                        <span style={{color:'#5a4080'}}>Prix spécifiques à ce véhicule</span>
+                      </div>
+                    ) : (
+                      <div style={{fontSize:12,color:'#8060a0',marginBottom:16}}>Prix basés sur la catégorie : <strong style={{color:'#fbbf24'}}>{client.category}</strong>{!selectedVehicle&&<span style={{color:'#6040a0'}}> — sélectionne un véhicule pour des prix exacts</span>}</div>
+                    )}
                     {Object.entries(PERF_GROUPS).map(([grp,items])=>(
                       <div key={grp} style={{marginBottom:20}}>
                         <div style={{fontSize:13,fontWeight:700,color:'#c084fc',marginBottom:10}}>{grp}</div>
                         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:10}}>
                           {items.map(item=>{
-                            const price=PERF_PRICES[item]?.[catIdx]||0;
+                            const vp = getVehiclePrice(item);
+                            const price = vp != null ? vp : (PERF_PRICES[item]?.[catIdx]||0);
+                            const isVehicleSpecific = vp != null;
+                            if (selectedVehicle && vehicleData?.[selectedVehicle]) {
+                              const m = VEHICLE_PERF_MAP[item];
+                              if (m) {
+                                const u = vehicleData[selectedVehicle].u;
+                                if (m.k === 'T' && u.T == null) return null;
+                                if (m.k !== 'T' && m.i != null) {
+                                  const arr = u[m.k];
+                                  if (!arr || arr[m.i] == null) return null;
+                                }
+                              }
+                            }
                             const sel=selPerfs.has(item);
-                            return (<button key={item} onClick={()=>togglePerf(item)} style={{background:sel?'linear-gradient(145deg,#1e0a30,#280d40)':'#120c22',border:sel?'2px solid #e040fb':'1px solid rgba(224,64,251,0.15)',borderRadius:10,padding:'12px 16px',cursor:'pointer',textAlign:'left'}}>
+                            return (<button key={item} onClick={()=>togglePerf(item)} style={{background:sel?'linear-gradient(145deg,#1e0a30,#280d40)':'#120c22',border:sel?'2px solid #e040fb':'1px solid rgba(224,64,251,0.15)',borderRadius:10,padding:'12px 16px',cursor:'pointer',textAlign:'left',position:'relative'}}>
                               <div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontWeight:600,fontSize:14,color:sel?'#f0e8ff':'#c0a0d8'}}>{item}</span>{sel&&<span style={{color:'#e040fb'}}>✓</span>}</div>
-                              <div style={{fontSize:15,fontWeight:700,color:sel?'#e040fb':'#8060a0',marginTop:4}}>{fmt(price)}</div>
+                              <div style={{fontSize:15,fontWeight:700,color:sel?'#e040fb':isVehicleSpecific?'#a78bfa':'#8060a0',marginTop:4}}>{fmt(price)}</div>
+                              {isVehicleSpecific && !sel && <div style={{position:'absolute',top:6,right:8,fontSize:9,color:'#7c3aed',fontWeight:700,letterSpacing:0.5}}>VÉHICULE</div>}
                             </button>);
                           })}
                         </div>
@@ -425,7 +526,7 @@ export default function GarageDashboard() {
                     <span style={{fontSize:15,color:'#d0b8f8',fontWeight:600}}>TOTAL</span>
                     <span style={{fontSize:30,fontWeight:900,color:'#fbbf24',letterSpacing:-1}}>{fmt(grandTotal)}</span>
                   </div>
-                  {[...selPerfs].length>0&&(<div style={{marginBottom:10}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Performances</div>{[...selPerfs].map(p=><div key={p} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#a080c8',padding:'2px 0'}}><span>{p}</span><span>{fmt(PERF_PRICES[p]?.[catIdx]||0)}</span></div>)}</div>)}
+                  {[...selPerfs].length>0&&(<div style={{marginBottom:10}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Performances</div>{[...selPerfs].map(p=><div key={p} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#a080c8',padding:'2px 0'}}><span>{p}</span><span>{fmt(perfPrice(p))}</span></div>)}</div>)}
                   {[...selCustoms].length>0&&(<div style={{marginBottom:10}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Customs</div>{[...selCustoms].map(c=><div key={c} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#a080c8',padding:'2px 0'}}><span>{c}</span><span>{fmt(CUSTOM_PRICES[c]||0)}</span></div>)}</div>)}
                   {[...selPaints].length>0&&(<div style={{marginBottom:10}}><div style={{fontSize:11,color:'#6a4890',fontWeight:700,textTransform:'uppercase',marginBottom:4}}>Peintures</div>{[...selPaints].map(p=>{let pr=0;for(const g of Object.values(PAINT_GROUPS)){if(g[p]){pr=g[p];break;}}return<div key={p} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#a080c8',padding:'2px 0'}}><span>{p}</span><span>{fmt(pr)}</span></div>;})}</div>)}
                   <button onClick={submitDevis} disabled={loading||grandTotal===0} style={{width:'100%',padding:'14px',background:grandTotal===0?'#1a0c2e':'linear-gradient(135deg,#d97706,#fbbf24)',color:grandTotal===0?'#3a2060':'#1a0c00',border:'none',borderRadius:12,cursor:grandTotal===0?'not-allowed':'pointer',fontSize:15,fontWeight:900,marginBottom:10,boxShadow:grandTotal>0?'0 4px 20px rgba(251,191,36,0.35)':'none'}}>
