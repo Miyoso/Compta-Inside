@@ -1,6 +1,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Head from 'next/head';
 
 
@@ -117,7 +117,7 @@ const fmtDate = (d) =>
 export default function PatronDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(() => { if (typeof window === 'undefined') return 'overview'; return localStorage.getItem('ci_tab') || 'overview'; });
 
   // Données
   const [overview, setOverview] = useState(null);
@@ -187,7 +187,7 @@ export default function PatronDashboard() {
 
   // Panier (onglet Ventes)
   const [cart, setCart] = useState([]);
-  const [cartEmployee, setCartEmployee] = useState('');
+  const [cartEmployee, setCartEmployee] = useState(() => { if (typeof window === 'undefined') return ''; return localStorage.getItem('ci_lastEmployee') || ''; });
   const [invoices, setInvoices] = useState([]);
   const [expandedInv, setExpandedInv] = useState(null);
   const [costPrices, setCostPrices] = useState([]);
@@ -230,7 +230,18 @@ export default function PatronDashboard() {
   const [productSearch,  setProductSearch]  = useState('');
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [stockSearch,    setStockSearch]    = useState('');
-  const [serviceMode,    setServiceMode]    = useState(false); // false = Gestion, true = Service
+  const [serviceMode,    setServiceMode]    = useState(() => { if (typeof window === 'undefined') return false; return localStorage.getItem('ci_serviceMode') === 'true'; }); // false = Gestion, true = Service
+
+  // Modal confirmation custom
+  const [confirmModal, setConfirmModal] = useState(null); // {msg, onConfirm}
+  const askConfirm = useCallback((msg, fn) => setConfirmModal({ msg, onConfirm: fn }), []);
+
+  // Largeur fenêtre (mobile)
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  // Refs auto-focus
+  const devisFirstNameRef = useRef(null);
+  const vehicleSearchRef  = useRef(null);
 
   // Redirection si pas patron
   useEffect(() => {
@@ -244,6 +255,36 @@ export default function PatronDashboard() {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
+
+  // ── Persistances localStorage ────────────────────────────
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('ci_tab', tab); }, [tab]);
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('ci_serviceMode', String(serviceMode)); }, [serviceMode]);
+  useEffect(() => { if (typeof window !== 'undefined' && cartEmployee) localStorage.setItem('ci_lastEmployee', cartEmployee); }, [cartEmployee]);
+
+  // ── Resize listener ──────────────────────────────────────
+  useEffect(() => {
+    const handler = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  // ── Raccourcis clavier Devis (Alt+1/2/3) ────────────────
+  useEffect(() => {
+    if (tab !== 'devis') return;
+    const handler = (e) => {
+      if (!e.altKey) return;
+      if (e.key === '1') { e.preventDefault(); setDevisSection('perfs'); }
+      if (e.key === '2') { e.preventDefault(); setDevisSection('customs'); }
+      if (e.key === '3') { e.preventDefault(); setDevisSection('paints'); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [tab]);
+
+  // ── Auto-focus premier champ ────────────────────────────
+  useEffect(() => {
+    if (tab === 'devis') setTimeout(() => devisFirstNameRef.current?.focus(), 80);
+  }, [tab]);
 
   // Multi-entreprises : récupérer la liste + restaurer le choix sauvegardé
   useEffect(() => {
@@ -274,8 +315,17 @@ export default function PatronDashboard() {
   const loadEmployees = useCallback(async () => {
     const r = await fetch(`/api/patron/employees${getCP()}`);
     const d = await r.json();
-    setEmployees(d.employees ?? d);  // { employees, lastPaid } or plain array
+    const list = d.employees ?? d;
+    setEmployees(list);
     if (d.lastPaid) setLastPaidDate(d.lastPaid);
+    // Auto-sélectionner le dernier employé sauvé ou le patron connecté
+    setCartEmployee(prev => {
+      if (prev && list.find(e => String(e.id) === String(prev))) return prev;
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('ci_lastEmployee') : null;
+      if (saved && list.find(e => String(e.id) === saved)) return saved;
+      const patron = list.find(e => e.role === 'patron');
+      return patron ? String(patron.id) : (list[0] ? String(list[0].id) : '');
+    });
   }, []);
 
   const loadProducts = useCallback(async () => {
@@ -384,18 +434,19 @@ export default function PatronDashboard() {
 
   // ── Paiement des salaires de la semaine ──────────────────────
   async function handlePaySalaries() {
-    if (!confirm('Confirmer le paiement des salaires de la semaine ? Cette action est irréversible.')) return;
-    setPayingNow(true);
-    const r = await fetch('/api/patron/salary-payment', { method: 'POST' });
-    const d = await r.json();
-    setPayingNow(false);
-    if (r.ok) {
-      showToast(`✅ Salaires payés — ${fmt(d.total)} déduits du solde`);
-      loadSalaryPayment();
-      loadBalance();
-    } else {
-      showToast(d.error, 'error');
-    }
+    askConfirm('Confirmer le paiement des salaires de la semaine ? Cette action est irréversible.', async () => {
+      setPayingNow(true);
+      const r = await fetch('/api/patron/salary-payment', { method: 'POST' });
+      const d = await r.json();
+      setPayingNow(false);
+      if (r.ok) {
+        showToast(`✅ Salaires payés — ${fmt(d.total)} déduits du solde`);
+        loadSalaryPayment();
+        loadBalance();
+      } else {
+        showToast(d.error, 'error');
+      }
+    });
   }
 
   // ── Actions matières premières ─────────────────────────────
@@ -416,9 +467,10 @@ export default function PatronDashboard() {
   }
 
   async function handleDeleteRm(id) {
-    if (!confirm('Supprimer cette matière première ?')) return;
-    await fetch('/api/patron/raw-materials', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    showToast('Supprimée.'); loadRawMaterials();
+    askConfirm('Supprimer cette matière première ?', async () => {
+      await fetch('/api/patron/raw-materials', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      showToast('Supprimée.'); loadRawMaterials();
+    });
   }
 
   async function handleUpdateRmStock(id, qty) {
@@ -475,17 +527,18 @@ export default function PatronDashboard() {
   // ── Actions validation comptes ─────────────────────────────
   async function handleAccountAction(id, action) {
     const label = action === 'approve' ? 'approuver' : 'refuser';
-    if (!confirm(`Veux-tu ${label} ce compte ?`)) return;
-    const r = await fetch('/api/patron/pending', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, action }),
+    askConfirm(`Veux-tu ${label} ce compte ?`, async () => {
+      const r = await fetch('/api/patron/pending', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action }),
+      });
+      if (r.ok) {
+        showToast(action === 'approve' ? '✅ Compte approuvé !' : '❌ Compte refusé.');
+        loadPending();
+        loadEmployees();
+      }
     });
-    if (r.ok) {
-      showToast(action === 'approve' ? '✅ Compte approuvé !' : '❌ Compte refusé.');
-      loadPending();
-      loadEmployees();
-    }
   }
 
   // ── Actions achats ─────────────────────────────────────────
@@ -515,9 +568,10 @@ export default function PatronDashboard() {
   }
 
   async function handleDeletePurchase(id) {
-    if (!confirm('Supprimer cet achat ? Le stock sera ajusté si applicable.')) return;
-    await fetch('/api/patron/purchases', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    showToast('Achat supprimé.'); loadPurchases(); loadOverview(); loadRawMaterials();
+    askConfirm('Supprimer cet achat ? Le stock sera ajusté si applicable.', async () => {
+      await fetch('/api/patron/purchases', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      showToast('Achat supprimé.'); loadPurchases(); loadOverview(); loadRawMaterials();
+    });
   }
 
   // ── Gestion du panier (onglet Ventes) ────────────────────
@@ -551,9 +605,10 @@ export default function PatronDashboard() {
   }
 
   async function handleDeleteInvoice(id) {
-    if (!confirm('Annuler cette facture et remettre le stock ?')) return;
-    await fetch('/api/invoices', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    showToast('Facture annulée.'); loadInvoices(); loadOverview();
+    askConfirm('Annuler cette facture et remettre le stock ?', async () => {
+      await fetch('/api/invoices', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      showToast('Facture annulée.'); loadInvoices(); loadOverview();
+    });
   }
 
   // ── Actions produits ──
@@ -584,17 +639,18 @@ export default function PatronDashboard() {
   }
 
   async function handleDeleteProduct(id) {
-    if (!confirm('Supprimer ce produit ? Cette action est irréversible.')) return;
+    askConfirm('Supprimer ce produit ? Cette action est irréversible.', async () => {
     const r = await fetch('/api/patron/products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     if (r.ok) {
-      showToast('Produit supprimé.');
-      if (recipeProduct?.id === id) { setRecipeProduct(null); setRecipe([]); }
-      loadProducts();
-    } else {
-      let msg = 'Impossible de supprimer ce produit.';
-      try { const d = await r.json(); if (d.error) msg = d.error; } catch {}
-      showToast(msg, 'error');
-    }
+        showToast('Produit supprimé.');
+        if (recipeProduct?.id === id) { setRecipeProduct(null); setRecipe([]); }
+        loadProducts();
+      } else {
+        let msg = 'Impossible de supprimer ce produit.';
+        try { const d = await r.json(); if (d.error) msg = d.error; } catch {}
+        showToast(msg, 'error');
+      }
+    });
   }
 
   function openEditProduct(p) {
@@ -632,21 +688,23 @@ export default function PatronDashboard() {
   }
 
   async function handleDeleteSale(id) {
-    if (!confirm('Annuler cette vente ?')) return;
-    await fetch('/api/patron/sales', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    showToast('Vente annulée.'); loadSales(); loadEmployees(); loadOverview();
+    askConfirm('Annuler cette vente ?', async () => {
+      await fetch('/api/patron/sales', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      showToast('Vente annulée.'); loadSales(); loadEmployees(); loadOverview();
+    });
   }
 
   // ── Actions employés ──
   async function handleFireEmployee(id, name) {
-    if (!confirm(`Virer ${name} ? Il/elle ne pourra plus accéder à l'application. L'historique des ventes est conservé.`)) return;
-    const r = await fetch('/api/patron/employees', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
+    askConfirm(`Virer ${name} ? Il/elle ne pourra plus accéder à l'application. L'historique des ventes est conservé.`, async () => {
+      const r = await fetch('/api/patron/employees', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (r.ok) { showToast(`${name} a été retiré(e) de l'entreprise.`); loadEmployees(); }
+      else { const d = await r.json(); showToast(d.error, 'error'); }
     });
-    if (r.ok) { showToast(`${name} a été retiré(e) de l'entreprise.`); loadEmployees(); }
-    else { const d = await r.json(); showToast(d.error, 'error'); }
   }
 
   async function handleUpdateSalaryPercent(id, pct) {
@@ -731,11 +789,23 @@ export default function PatronDashboard() {
   const toggleDevisPerf   = (p) => setDevisSelPerfs(s => { const n=new Set(s); n.has(p)?n.delete(p):n.add(p); return n; });
   const toggleDevisCustom = (c) => setDevisSelCustoms(s => { const n=new Set(s); n.has(c)?n.delete(c):n.add(c); return n; });
   const toggleDvisPaint   = (p) => setDevisSelPaints(s => { const n=new Set(s); n.has(p)?n.delete(p):n.add(p); return n; });
-  const deleteQuote = async (id) => {
-    if (!confirm('Supprimer ce devis ? Cette action est irréversible.')) return;
-    const r = await fetch(`/api/garage/devis?id=${id}`, { method: 'DELETE' });
-    if (r.ok) { showToast('Devis supprimé'); setGarageQuotes(q => q.filter(x => x.id !== id)); }
-    else showToast('Erreur lors de la suppression', 'error');
+  const deleteQuote = (id) => {
+    askConfirm('Supprimer ce devis ? Cette action est irréversible.', async () => {
+      const r = await fetch(`/api/garage/devis?id=${id}`, { method: 'DELETE' });
+      if (r.ok) { showToast('Devis supprimé'); setGarageQuotes(q => q.filter(x => x.id !== id)); }
+      else showToast('Erreur lors de la suppression', 'error');
+    });
+  };
+
+  const duplicateDevis = (q) => {
+    setDevisClient({ firstName: q.client_first_name||'', lastName: q.client_last_name||'', model: q.vehicle_model||'', category: q.vehicle_category||'Sport' });
+    setVehicleSearch(q.vehicle_model||''); setSelectedVehicle(null);
+    setDevisSelPerfs(new Set((q.selected_performances||[]).map(p=>p.type)));
+    setDevisSelCustoms(new Set((q.selected_customs||[]).map(c=>c.type)));
+    setDevisSelPaints(new Set((q.selected_paints||[]).map(p=>p.type)));
+    setDevisNotes(q.notes||'');
+    setDevisSection('perfs');
+    setTab('devis');
   };
 
   const resetDevis = () => {
@@ -771,6 +841,33 @@ export default function PatronDashboard() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <div style={S.page}>
+
+        {/* Modal confirmation custom */}
+        {confirmModal && (
+          <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9997 }} onClick={()=>setConfirmModal(null)}>
+            <div style={{ background:'#16102a', border:'1px solid rgba(224,64,251,0.35)', borderRadius:16, padding:'28px 32px', maxWidth:420, width:'90%', boxShadow:'0 20px 60px rgba(0,0,0,0.8)' }} onClick={e=>e.stopPropagation()}>
+              <div style={{ fontSize:20, marginBottom:12 }}>⚠️</div>
+              <p style={{ color:'#d0b8f8', fontSize:15, marginBottom:24, lineHeight:1.6 }}>{confirmModal.msg}</p>
+              <div style={{ display:'flex', gap:12, justifyContent:'flex-end' }}>
+                <button onClick={()=>setConfirmModal(null)} style={{ padding:'9px 22px', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.06)', color:'#8060a0', cursor:'pointer', fontWeight:600, fontSize:14 }}>Annuler</button>
+                <button onClick={()=>{ const fn=confirmModal.onConfirm; setConfirmModal(null); fn(); }} style={{ padding:'9px 22px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#7c3aed,#e040fb)', color:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>Confirmer</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Panier mobile fixe */}
+        {tab === 'ventes' && windowWidth < 768 && cart.length > 0 && (
+          <div style={{ position:'fixed', bottom:0, left:0, right:0, background:'#16102a', borderTop:'2px solid rgba(224,64,251,0.35)', padding:'12px 20px', display:'flex', alignItems:'center', gap:16, zIndex:500, boxShadow:'0 -8px 32px rgba(0,0,0,0.7)' }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:11, color:'#8060a0', fontWeight:600 }}>Total panier ({cart.reduce((a,i)=>a+i.quantity,0)} art.)</div>
+              <div style={{ fontSize:22, fontWeight:900, color:'#f0e8ff' }}>{fmt(cartTotal)}</div>
+            </div>
+            <button onClick={submitCart} disabled={loading} style={{ padding:'12px 24px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#7c3aed,#e040fb)', color:'#fff', fontWeight:800, fontSize:15, cursor:'pointer', opacity:loading?0.6:1 }}>
+              {loading ? '…' : '✅ Valider'}
+            </button>
+          </div>
+        )}
 
         {/* Toast notification */}
         {toast && (
@@ -914,7 +1011,11 @@ export default function PatronDashboard() {
                 </div>
               )}
 
-              {!overview ? <p style={S.loading}>Chargement…</p> : (() => {
+              {!overview ? (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16, marginBottom:20 }}>
+                  {[1,2,3].map(i=><div key={i} style={{ background:'linear-gradient(145deg,#0c0a1e,#13102a)', borderRadius:16, padding:'20px 22px', border:'1px solid rgba(120,60,180,0.15)' }}><div style={{ height:12, width:'60%', borderRadius:6, background:'rgba(120,60,180,0.18)', marginBottom:12 }}/><div style={{ height:32, width:'80%', borderRadius:8, background:'rgba(120,60,180,0.12)' }}/></div>)}
+                </div>
+              ) : (() => {
                 const netAfterTax = Math.max(0, overview.weekNet) - overview.weekTaxAmount;
                 const bal = balance?.currentBalance ?? null;
                 const balPos = bal === null || bal >= 0;
@@ -2090,11 +2191,11 @@ export default function PatronDashboard() {
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
                       <div>
                         <div style={{ fontSize:11, color:'#8060a0', textTransform:'uppercase', letterSpacing:0.6, marginBottom:4 }}>Prénom</div>
-                        <input value={devisClient.firstName} onChange={e=>setDevisClient(c=>({...c,firstName:e.target.value}))} placeholder="Prénom" style={S.input} />
+                        <input ref={devisFirstNameRef} value={devisClient.firstName} onChange={e=>setDevisClient(c=>({...c,firstName:e.target.value}))} onKeyDown={e=>e.key==='Enter'&&submitDevis()} placeholder="Prénom" style={S.input} />
                       </div>
                       <div>
                         <div style={{ fontSize:11, color:'#8060a0', textTransform:'uppercase', letterSpacing:0.6, marginBottom:4 }}>Nom</div>
-                        <input value={devisClient.lastName} onChange={e=>setDevisClient(c=>({...c,lastName:e.target.value}))} placeholder="Nom" style={S.input} />
+                        <input value={devisClient.lastName} onChange={e=>setDevisClient(c=>({...c,lastName:e.target.value}))} onKeyDown={e=>e.key==='Enter'&&submitDevis()} placeholder="Nom" style={S.input} />
                       </div>
                     </div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
@@ -2154,9 +2255,33 @@ export default function PatronDashboard() {
                         ? <div style={{ marginBottom:12, padding:'6px 12px', background:'rgba(74,222,128,0.08)', border:'1px solid rgba(74,222,128,0.25)', borderRadius:8, fontSize:12, color:'#4ade80', fontWeight:600 }}>✓ {vehicleData[selectedVehicle].n} — prix spécifiques</div>
                         : <div style={{ marginBottom:12, fontSize:11, color:'#6040a0' }}>Sélectionne un véhicule pour des prix exacts</div>
                       }
+                      {/* ── Raccourcis sélection ── */}
+                      <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap' }}>
+                        <button onClick={()=>{
+                          const all = new Set();
+                          Object.values(GARAGE_PERF_GROUPS).forEach(items => items.forEach(p => {
+                            if (selectedVehicle && vehicleData?.[selectedVehicle]) {
+                              const m = VEHICLE_PERF_MAP[p];
+                              if (m) { const u = vehicleData[selectedVehicle].v; if (m.k==='T' && u?.T==null) return; if (m.k!=='T' && m.i!=null && u?.[m.k]?.[m.i]==null) return; }
+                            }
+                            all.add(p);
+                          }));
+                          setDevisSelPerfs(all);
+                        }} style={{ padding:'5px 14px', borderRadius:8, border:'1px solid rgba(224,64,251,0.4)', background:'rgba(224,64,251,0.1)', color:'#e040fb', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                          ⚡ Pack complet
+                        </button>
+                        {devisSelPerfs.size > 0 && (
+                          <button onClick={()=>setDevisSelPerfs(new Set())} style={{ padding:'5px 14px', borderRadius:8, border:'1px solid rgba(120,60,180,0.3)', background:'rgba(120,60,180,0.08)', color:'#a080c0', fontSize:12, cursor:'pointer' }}>
+                            ✕ Tout désélectionner
+                          </button>
+                        )}
+                      </div>
                       {Object.entries(GARAGE_PERF_GROUPS).map(([grpLabel, items])=>(
                         <div key={grpLabel} style={{ marginBottom:16 }}>
-                          <div style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.8, marginBottom:8 }}>{grpLabel}</div>
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                            <div style={{ fontSize:12, color:'#8060a0', fontWeight:700, textTransform:'uppercase', letterSpacing:0.8 }}>{grpLabel}</div>
+                            <button onClick={()=>{ const grpItems = items.filter(p => { if (selectedVehicle && vehicleData?.[selectedVehicle]) { const m = VEHICLE_PERF_MAP[p]; if (m) { const u = vehicleData[selectedVehicle].v; if (m.k==='T' && u?.T==null) return false; if (m.k!=='T' && m.i!=null && u?.[m.k]?.[m.i]==null) return false; } } return true; }); setDevisSelPerfs(s => { const n = new Set(s); grpItems.forEach(p => n.add(p)); return n; }); }} style={{ padding:'2px 8px', borderRadius:6, border:'1px solid rgba(120,60,180,0.25)', background:'rgba(120,60,180,0.08)', color:'#8060a0', fontSize:10, cursor:'pointer', fontWeight:600 }}>Tout</button>
+                          </div>
                           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                             {items.map(perf=>{
                               const vp  = getVehicleVente(perf);
@@ -2414,10 +2539,16 @@ export default function PatronDashboard() {
                               <div style={{ fontSize:12, color:'#604080' }}>
                                 Employé: {q.employee_name || '—'} · Enregistré le {new Date(q.created_at).toLocaleString('fr-FR')}
                               </div>
-                              <button onClick={e => { e.stopPropagation(); deleteQuote(q.id); }}
-                                style={{ padding:'5px 14px', borderRadius:8, border:'1px solid rgba(220,50,50,0.4)', background:'rgba(220,50,50,0.1)', color:'#f87171', cursor:'pointer', fontSize:12, fontWeight:600 }}>
-                                🗑️ Supprimer
-                              </button>
+                              <div style={{ display:'flex', gap:8 }}>
+                                <button onClick={e => { e.stopPropagation(); duplicateDevis(q); }}
+                                  style={{ padding:'5px 14px', borderRadius:8, border:'1px solid rgba(96,165,250,0.4)', background:'rgba(96,165,250,0.1)', color:'#60a5fa', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+                                  📋 Dupliquer
+                                </button>
+                                <button onClick={e => { e.stopPropagation(); deleteQuote(q.id); }}
+                                  style={{ padding:'5px 14px', borderRadius:8, border:'1px solid rgba(220,50,50,0.4)', background:'rgba(220,50,50,0.1)', color:'#f87171', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+                                  🗑️ Supprimer
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -2599,28 +2730,4 @@ const S = {
 
   // ── Alerts
   alertBanner: { display: 'flex', alignItems: 'center', gap: 8, padding: '13px 18px', borderRadius: 10, fontSize: 14, fontWeight: 600, marginBottom: 16, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' },
-  alertLink:   { color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 14, fontWeight: 600 },
-
-  // ── Pending
-  pendingList:    { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 },
-  pendingBox:     { background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 12, padding: '14px 16px' },
-  pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' },
-  pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 3 },
-  pendingTitle:   { fontSize: 15, fontWeight: 700, color: '#f4eeff' },
-  pendingEmail:   { fontSize: 13.5, color: '#8a72c0' },
-  pendingDate:    { fontSize: 12.5, color: '#5a4490', marginTop: 1 },
-  pendingActions: { display: 'flex', gap: 8, alignItems: 'center' },
-
-  // ── Purchase summary
-  purchaseSummary: { display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20, background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '16px 20px' },
-  pSumItem:  { flex: '1 1 130px', display: 'flex', flexDirection: 'column', gap: 4 },
-  pSumLabel: { fontSize: 11.5, color: '#5a4490', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 },
-  pSumValue: { fontSize: 24, fontWeight: 900, color: '#f4eeff', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' },
-
-  // ── Tax rows
-  taxBox: { background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '16px 20px', marginBottom: 16 },
-  taxRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 15 },
-
-  // ── Misc
-  qtyBtn2:  { width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.08)', color: '#9f67fa', fontSize: 17, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-};
+  alertLink:   { color: '#fbbf24', background: 'none',
