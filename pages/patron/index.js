@@ -230,7 +230,6 @@ export default function PatronDashboard() {
   const [productSearch,  setProductSearch]  = useState('');
   const [purchaseSearch, setPurchaseSearch] = useState('');
   const [stockSearch,    setStockSearch]    = useState('');
-  const [serviceMode,    setServiceMode]    = useState(() => { if (typeof window === 'undefined') return false; return localStorage.getItem('ci_serviceMode') === 'true'; }); // false = Gestion, true = Service
 
   // Modal confirmation custom
   const [confirmModal, setConfirmModal] = useState(null); // {msg, onConfirm}
@@ -258,7 +257,6 @@ export default function PatronDashboard() {
 
   // ── Persistances localStorage ────────────────────────────
   useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('ci_tab', tab); }, [tab]);
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('ci_serviceMode', String(serviceMode)); }, [serviceMode]);
   useEffect(() => { if (typeof window !== 'undefined' && cartEmployee) localStorage.setItem('ci_lastEmployee', cartEmployee); }, [cartEmployee]);
 
   // ── Resize listener ──────────────────────────────────────
@@ -727,11 +725,7 @@ export default function PatronDashboard() {
     { key: 'compte',   label: '⚙️ Mon compte' },
   ];
 
-  const serviceTabs = isGarage
-    ? [{ key: 'devis', label: '🔧 Devis' }, { key: 'ventes', label: '🧾 Ventes' }]
-    : [{ key: 'ventes', label: '🧾 Ventes rapides' }];
-
-  const tabs = serviceMode ? serviceTabs : mgmtTabs;
+  const tabs = mgmtTabs;
 
   // ── Groupes de navigation sidebar ──────────────────────────
   const tabGroupDefs = [
@@ -905,29 +899,6 @@ export default function PatronDashboard() {
                 )}
               </div>
             )}
-            {session.user.companyType === 'garage' && (
-              <a href='/garage' className="ci-nav-link">🔧 Piers 76</a>
-            )}
-            <button
-              onClick={() => {
-                const next = !serviceMode;
-                setServiceMode(next);
-                setTab(next ? (isGarage ? 'devis' : 'ventes') : 'overview');
-              }}
-              style={{
-                padding: '6px 16px',
-                background: serviceMode ? 'rgba(220,38,38,0.15)' : 'rgba(34,197,94,0.15)',
-                border: `1px solid ${serviceMode ? 'rgba(220,38,38,0.5)' : 'rgba(34,197,94,0.5)'}`,
-                borderRadius: 8,
-                color: serviceMode ? '#f87171' : '#4ade80',
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              {serviceMode ? '🔴 Fin de service' : '🟢 Prendre le service'}
-            </button>
             <button onClick={() => signOut({ callbackUrl: '/' })} className="ci-nav-btn">Déconnexion</button>
           </div>
         </nav>
@@ -937,30 +908,21 @@ export default function PatronDashboard() {
 
           {/* ── Sidebar ── */}
           <aside className="ci-sidebar">
-            {serviceMode ? (
-              <>
-                <div className="ci-sidebar-service-badge">🔴 En service</div>
-                {serviceTabs.map(t => (
-                  <button key={t.key} className={`ci-sidebar-item${tab===t.key?' active':''}`} onClick={()=>setTab(t.key)}>{t.label}</button>
-                ))}
-              </>
-            ) : (
-              tabGroupDefs.map(group => {
-                const groupTabs = group.keys.map(k=>mgmtTabs.find(t=>t.key===k)).filter(Boolean);
-                if (!groupTabs.length) return null;
-                return (
-                  <div key={group.label} className="ci-sidebar-group">
-                    <div className="ci-sidebar-group-label">{group.label}</div>
-                    {groupTabs.map(t => (
-                      <button key={t.key} className={`ci-sidebar-item${tab===t.key?' active':''}`} onClick={()=>setTab(t.key)}>
-                        <span className="ci-sidebar-item-label">{t.label}</span>
-                        {t.badge > 0 && <span className="ci-tab-badge">{t.badge}</span>}
-                      </button>
-                    ))}
-                  </div>
-                );
-              })
-            )}
+            {tabGroupDefs.map(group => {
+              const groupTabs = group.keys.map(k=>mgmtTabs.find(t=>t.key===k)).filter(Boolean);
+              if (!groupTabs.length) return null;
+              return (
+                <div key={group.label} className="ci-sidebar-group">
+                  <div className="ci-sidebar-group-label">{group.label}</div>
+                  {groupTabs.map(t => (
+                    <button key={t.key} className={`ci-sidebar-item${tab===t.key?' active':''}`} onClick={()=>setTab(t.key)}>
+                      <span className="ci-sidebar-item-label">{t.label}</span>
+                      {t.badge > 0 && <span className="ci-tab-badge">{t.badge}</span>}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
           </aside>
 
           {/* ── Contenu principal ── */}
