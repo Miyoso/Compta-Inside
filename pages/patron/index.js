@@ -268,19 +268,6 @@ export default function PatronDashboard() {
     return () => window.removeEventListener('resize', handler);
   }, []);
 
-  // ── Raccourcis clavier Devis (Alt+1/2/3) ────────────────
-  useEffect(() => {
-    if (tab !== 'devis') return;
-    const handler = (e) => {
-      if (!e.altKey) return;
-      if (e.key === '1') { e.preventDefault(); setDevisSection('perfs'); }
-      if (e.key === '2') { e.preventDefault(); setDevisSection('customs'); }
-      if (e.key === '3') { e.preventDefault(); setDevisSection('paints'); }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [tab]);
-
   // ── Auto-focus premier champ ────────────────────────────
   useEffect(() => {
     if (tab === 'devis') setTimeout(() => devisFirstNameRef.current?.focus(), 80);
