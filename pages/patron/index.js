@@ -2215,8 +2215,7 @@ export default function PatronDashboard() {
                       <div style={{ marginBottom:10 }}>
                         <div style={{ fontSize:11, color:'#8060a0', textTransform:'uppercase', marginBottom:4 }}>⚡ Performances</div>
                         {[...devisSelPerfs].map(p=>{
-                          const catIdx = GARAGE_CATEGORIES.indexOf(devisClient.category);
-                          const price  = GARAGE_PERF_PRICES[p]?.[catIdx] || 0;
+                          const price = getPerfVente(p);
                           return <div key={p} style={{ display:'flex', justifyContent:'space-between', fontSize:13, color:'#c0a0e0', marginBottom:2 }}><span>{p}</span><span>{price.toLocaleString('fr-FR')}$</span></div>;
                         })}
                       </div>
