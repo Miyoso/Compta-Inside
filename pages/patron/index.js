@@ -733,6 +733,13 @@ export default function PatronDashboard() {
 
   const tabs = serviceMode ? serviceTabs : mgmtTabs;
 
+  // ── Groupes de navigation sidebar ──────────────────────────
+  const tabGroupDefs = [
+    { label: '🛒 Vente',      keys: isGarage ? ['devis','ventes'] : ['ventes'] },
+    { label: '📊 Gestion',    keys: ['overview','achats','salaires','produits','stocks', ...(isGarage?['registre']:[])] },
+    { label: '👤 Personnel',  keys: ['compte'] },
+  ];
+
   // ── Devis helpers ────────────────────────────────────────────────────────
   // Charger données véhicules Excel
   const isGarageForEffect = session?.user?.companyType === 'garage';
@@ -925,42 +932,39 @@ export default function PatronDashboard() {
           </div>
         </nav>
 
-        {/* ── Tab bar horizontale ── */}
-        <div className="ci-tabs">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              className={`ci-tab-btn${tab === t.key ? ' active' : ''}`}
-              onClick={() => setTab(t.key)}
-            >
-              {t.label}
-              {t.badge > 0 && (
-                <span style={{ marginLeft:6, background:'#dc2626', color:'#fff', borderRadius:20, fontSize:10, fontWeight:700, padding:'1px 6px', verticalAlign:'middle' }}>{t.badge}</span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* ── Layout : sidebar + contenu ── */}
+        <div className="ci-layout">
 
-        {/* ── Bannière mode service ── */}
-        {serviceMode && (
-          <div style={{
-            background: 'linear-gradient(90deg, rgba(220,38,38,0.15), rgba(220,38,38,0.08))',
-            borderBottom: '1px solid rgba(220,38,38,0.3)',
-            padding: '8px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            fontSize: 13,
-            color: '#f87171',
-            fontWeight: 600,
-          }}>
-            🔴 Mode Service actif — {isGarage ? 'Devis clients uniquement' : 'Ventes rapides uniquement'}
-            <span style={{ marginLeft:'auto', opacity:0.7, fontWeight:400 }}>Cliquez sur "Fin de service" pour revenir à la gestion complète</span>
-          </div>
-        )}
+          {/* ── Sidebar ── */}
+          <aside className="ci-sidebar">
+            {serviceMode ? (
+              <>
+                <div className="ci-sidebar-service-badge">🔴 En service</div>
+                {serviceTabs.map(t => (
+                  <button key={t.key} className={`ci-sidebar-item${tab===t.key?' active':''}`} onClick={()=>setTab(t.key)}>{t.label}</button>
+                ))}
+              </>
+            ) : (
+              tabGroupDefs.map(group => {
+                const groupTabs = group.keys.map(k=>mgmtTabs.find(t=>t.key===k)).filter(Boolean);
+                if (!groupTabs.length) return null;
+                return (
+                  <div key={group.label} className="ci-sidebar-group">
+                    <div className="ci-sidebar-group-label">{group.label}</div>
+                    {groupTabs.map(t => (
+                      <button key={t.key} className={`ci-sidebar-item${tab===t.key?' active':''}`} onClick={()=>setTab(t.key)}>
+                        <span className="ci-sidebar-item-label">{t.label}</span>
+                        {t.badge > 0 && <span className="ci-tab-badge">{t.badge}</span>}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })
+            )}
+          </aside>
 
-        {/* ── Contenu principal ── */}
-        <main className="ci-page">
+          {/* ── Contenu principal ── */}
+          <main className="ci-page">
 
           {/* ══════════════════════════════════════════
               ONGLET : VUE D'ENSEMBLE
@@ -2594,7 +2598,8 @@ export default function PatronDashboard() {
             </div>
           )}
 
-        </main>
+          </main>
+        </div>{/* /ci-layout */}
       </div>
     </>
   );
@@ -2717,4 +2722,4 @@ const S = {
 
   // ── Alerts
   alertBanner: { display: 'flex', alignItems: 'center', gap: 8, padding: '13px 18px', borderRadius: 10, fontSize: 14, fontWeight: 600, marginBottom: 16, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' },
-  alertLink:   { color: '#fbbf24', background: 'none',
+  alertLink:   { color: '#fbbf24', background: 'none',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            

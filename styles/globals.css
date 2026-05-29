@@ -226,43 +226,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   white-space: nowrap;
 }
 
-/* ── Tab bar ───────────────────────────────────────────────────── */
-.ci-tabs {
-  background: var(--bg-1);
-  border-bottom: 1px solid var(--bdr-lo);
-  display: flex;
-  padding: 0 var(--px);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  gap: 2px;
-}
-.ci-tabs::-webkit-scrollbar { display: none; }
-
-.ci-tab-btn {
-  position: relative;
-  padding: 0 22px;
-  height: var(--tab-h);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  font-size: 14.5px;
-  font-weight: 500;
-  color: var(--t-4);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color 0.15s;
-  flex-shrink: 0;
-  border-radius: 0;
-}
-.ci-tab-btn:hover:not(:disabled) { color: var(--t-2); opacity: 1; }
-.ci-tab-btn.active {
-  color: var(--t-1);
-  font-weight: 700;
-  border-bottom-color: var(--v-3);
-}
-/* Tab badge (ex: comptes en attente) */
+/* ── Tab badge ─────────────────────────────────────────────────── */
 .ci-tab-badge {
   display: inline-flex;
   align-items: center;
@@ -270,7 +234,7 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  margin-left: 6px;
+  margin-left: auto;
   background: var(--v-3);
   border-radius: 99px;
   font-size: 10px;
@@ -278,11 +242,103 @@ button:disabled               { opacity: 0.4; cursor: not-allowed; }
   color: #fff;
 }
 
+/* ── Sidebar layout ─────────────────────────────────────────────── */
+.ci-layout {
+  display: flex;
+  min-height: calc(100vh - var(--nav-h));
+}
+
+.ci-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-1);
+  border-right: 1px solid var(--bdr-lo);
+  position: sticky;
+  top: var(--nav-h);
+  height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0 24px;
+  scrollbar-width: none;
+}
+.ci-sidebar::-webkit-scrollbar { display: none; }
+
+.ci-sidebar-group {
+  margin-bottom: 6px;
+}
+
+.ci-sidebar-group-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--t-4);
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  padding: 10px 18px 4px;
+}
+
+.ci-sidebar-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 9px 18px 9px 20px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  color: var(--t-3);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.13s, background 0.13s, border-color 0.13s;
+  border-radius: 0 8px 8px 0;
+  margin-right: 10px;
+  gap: 8px;
+}
+.ci-sidebar-item:hover:not(:disabled) {
+  color: var(--t-2);
+  background: rgba(255,255,255,0.04);
+  opacity: 1;
+}
+.ci-sidebar-item.active {
+  color: var(--t-1);
+  font-weight: 700;
+  background: rgba(124,58,237,0.14);
+  border-left-color: var(--v-3);
+}
+
+.ci-sidebar-item-label { flex: 1; }
+
+.ci-sidebar-service-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 10px 18px 8px;
+  border-bottom: 1px solid rgba(248,113,113,0.15);
+  margin-bottom: 6px;
+}
+
 /* ── Page container ────────────────────────────────────────────── */
 .ci-page {
-  max-width: var(--max-w);
+  flex: 1;
+  min-width: 0;
+  max-width: calc(var(--max-w) - 220px);
   margin: 0 auto;
-  padding: var(--s-5) var(--px);
+  padding: var(--s-5) var(--s-6);
+}
+
+/* ── Mobile : sidebar horizontale ──────────────────────────────── */
+@media (max-width: 768px) {
+  .ci-layout           { flex-direction: column; }
+  .ci-sidebar          { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 4px 8px; border-right: none; border-bottom: 1px solid var(--bdr-lo); gap: 2px; }
+  .ci-sidebar-group    { display: flex; align-items: center; gap: 2px; }
+  .ci-sidebar-group-label  { display: none; }
+  .ci-sidebar-item     { width: auto; padding: 8px 12px; border-left: none; border-bottom: 2px solid transparent; border-radius: 0; margin-right: 0; font-size: 13px; }
+  .ci-sidebar-item.active  { background: none; border-bottom-color: var(--v-3); border-left-color: transparent; }
+  .ci-sidebar-service-badge { display: none; }
+  .ci-page             { padding: var(--s-4) var(--s-4); }
 }
 
 /* ════════════════════════════════════════════════════════════════
