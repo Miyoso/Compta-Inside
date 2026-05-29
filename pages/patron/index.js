@@ -683,7 +683,7 @@ export default function PatronDashboard() {
   ];
 
   const serviceTabs = isGarage
-    ? [{ key: 'devis',  label: '🔧 Devis' }]
+    ? [{ key: 'devis', label: '🔧 Devis' }, { key: 'ventes', label: '🧾 Ventes' }]
     : [{ key: 'ventes', label: '🧾 Ventes rapides' }];
 
   const tabs = serviceMode ? serviceTabs : mgmtTabs;
@@ -2599,28 +2599,4 @@ const S = {
 
   // ── Alerts
   alertBanner: { display: 'flex', alignItems: 'center', gap: 8, padding: '13px 18px', borderRadius: 10, fontSize: 14, fontWeight: 600, marginBottom: 16, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24' },
-  alertLink:   { color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 14, fontWeight: 600 },
-
-  // ── Pending
-  pendingList:    { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 },
-  pendingBox:     { background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 12, padding: '14px 16px' },
-  pendingRow:     { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' },
-  pendingInfo:    { display: 'flex', flexDirection: 'column', gap: 3 },
-  pendingTitle:   { fontSize: 15, fontWeight: 700, color: '#f4eeff' },
-  pendingEmail:   { fontSize: 13.5, color: '#8a72c0' },
-  pendingDate:    { fontSize: 12.5, color: '#5a4490', marginTop: 1 },
-  pendingActions: { display: 'flex', gap: 8, alignItems: 'center' },
-
-  // ── Purchase summary
-  purchaseSummary: { display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20, background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '16px 20px' },
-  pSumItem:  { flex: '1 1 130px', display: 'flex', flexDirection: 'column', gap: 4 },
-  pSumLabel: { fontSize: 11.5, color: '#5a4490', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 },
-  pSumValue: { fontSize: 24, fontWeight: 900, color: '#f4eeff', letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums' },
-
-  // ── Tax rows
-  taxBox: { background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '16px 20px', marginBottom: 16 },
-  taxRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 15 },
-
-  // ── Misc
-  qtyBtn2:  { width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.08)', color: '#9f67fa', fontSize: 17, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-};
+  alertLink:   { color: '#fbbf24', background: 'none',
