@@ -818,6 +818,12 @@ export default function PatronDashboard() {
     else showToast('Erreur.', 'error');
   }
 
+  // ── Devis helpers ── must be before early return (Rules of Hooks)
+  const isGarageForEffect = session?.user?.companyType === 'garage';
+  useEffect(()=>{
+    if(isGarageForEffect) fetch('/vehicle_prices.json').then(r=>r.json()).then(d=>setVehicleData(d)).catch(()=>{});
+  },[isGarageForEffect]);
+
   if (status === 'loading' || !session) {
     return <div style={S.loadingPage}><div style={S.spinner} /></div>;
   }
@@ -862,12 +868,6 @@ export default function PatronDashboard() {
   ];
 
   // ── Devis helpers ────────────────────────────────────────────────────────
-  // Charger données véhicules Excel
-  const isGarageForEffect = session?.user?.companyType === 'garage';
-  useEffect(()=>{
-    if(isGarageForEffect) fetch('/vehicle_prices.json').then(r=>r.json()).then(d=>setVehicleData(d)).catch(()=>{});
-  },[isGarageForEffect]);
-
   const vehicleSuggestions = vehicleData && vehicleSearch.length>=2
     ? Object.entries(vehicleData)
         .filter(([id,v])=>id.toLowerCase().includes(vehicleSearch.toLowerCase())||v.n.toLowerCase().includes(vehicleSearch.toLowerCase()))
