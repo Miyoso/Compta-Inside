@@ -33,10 +33,21 @@ export default function EmployeeDashboard() {
   const [myQuotes, setMyQuotes] = useState([]);
   const [expandedQ, setExpandedQ] = useState(null);
 
+  // Immo employee state
+  const [immoLocations, setImmoLocations] = useState([]);
+  const [immoBiens,     setImmoBiens]     = useState([]);
+  const [immoSearch,    setImmoSearch]    = useState('');
+  const [immoLoading,   setImmoLoading]   = useState(false);
+  const defaultImmoForm = { bien_id:'', bien_nom:'', adresse:'', client_prenom:'', client_nom:'', client_numero:'', tier_stock:1000, nb_jours:1, notes:'' };
+  const [immoForm, setImmoForm] = useState(defaultImmoForm);
+  const [immoSelectedBien, setImmoSelectedBien] = useState(null);
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/');
     if (status === 'authenticated' && ['patron', 'admin'].includes(session?.user?.role))
       router.push('/patron');
+    if (status === 'authenticated' && session?.user?.companyType === 'immobilier')
+      setTab('locations');
   }, [status, session, router]);
 
   const showToast = (msg, type = 'success') => {
@@ -65,18 +76,33 @@ export default function EmployeeDashboard() {
   }, []);
 
   const isGarage = session?.user?.companyType === 'garage';
+  const isImmo   = session?.user?.companyType === 'immobilier';
+
+  const loadImmoLocations = useCallback(async () => {
+    const r = await fetch('/api/employee/immo-locations');
+    if (r.ok) setImmoLocations(await r.json());
+  }, []);
+
+  const loadImmoBiens = useCallback(async () => {
+    const r = await fetch('/immo_biens.json');
+    if (r.ok) setImmoBiens(await r.json());
+  }, []);
 
   useEffect(() => {
     if (status !== 'authenticated') return;
-    if (isGarage) {
-      if (tab === 'devis') loadMyQuotes();
+    if (isImmo) {
+      loadImmoBiens();
+      if (tab === 'locations') loadImmoLocations();
+      if (tab === 'salaire')   loadSalary();
+    } else if (isGarage) {
+      if (tab === 'devis')   loadMyQuotes();
       if (tab === 'salaire') loadSalary();
     } else {
       loadProducts();
       if (tab === 'ventes')  loadInvoices();
       if (tab === 'salaire') loadSalary();
     }
-  }, [tab, status, isGarage, loadProducts, loadInvoices, loadSalary, loadMyQuotes]);
+  }, [tab, status, isGarage, isImmo, loadProducts, loadInvoices, loadSalary, loadMyQuotes, loadImmoLocations, loadImmoBiens]);
 
   async function handleChangePassword(e) {
     e.preventDefault();
@@ -156,7 +182,7 @@ export default function EmployeeDashboard() {
         {/* Nav */}
         <nav className="ci-nav">
           <div className="ci-nav-left">
-            <span className="ci-nav-logo">{isGarage ? '🔧' : '📊'} Compta-Inside</span>
+            <span className="ci-nav-logo">{isGarage ? '🔧' : isImmo ? '🏠' : '📊'} Compta-Inside</span>
             <span className="ci-nav-company">{session.user.companyName}</span>
           </div>
           <div className="ci-nav-right">
@@ -167,7 +193,13 @@ export default function EmployeeDashboard() {
 
         {/* Onglets */}
         <div className="ci-tabs">
-          {isGarage ? (
+          {isImmo ? (
+            <>
+              <button className={`ci-tab-btn${tab==='locations'?' active':''}`} onClick={()=>setTab('locations')}>🏠 Locations</button>
+              <button className={`ci-tab-btn${tab==='biens'    ?' active':''}`} onClick={()=>setTab('biens')}>🗂️ Catalogue Biens</button>
+              <button className={`ci-tab-btn${tab==='compte'   ?' active':''}`} onClick={()=>setTab('compte')}>⚙️ Mon compte</button>
+            </>
+          ) : isGarage ? (
             <>
               <button className={`ci-tab-btn${tab==='devis'  ?' active':''}`} onClick={()=>setTab('devis')}>🔧 Mes devis</button>
               <button className={`ci-tab-btn${tab==='salaire'?' active':''}`} onClick={()=>setTab('salaire')}>💵 Mon salaire</button>
@@ -183,6 +215,171 @@ export default function EmployeeDashboard() {
         </div>
 
         <main className="ci-page">
+
+          {/* ══ ONGLETS IMMOBILIER ══ */}
+          {isImmo && tab === 'locations' && (
+            <div>
+              <h2 style={S.title}>🏠 Enregistrer une location</h2>
+              {/* Formulaire */}
+              <div style={{background:'linear-gradient(145deg,#16102a,#1e1435)',borderRadius:16,padding:24,marginBottom:28,border:'1px solid rgba(224,64,251,0.15)',maxWidth:600}}>
+                {/* Recherche bien */}
+                <div style={{marginBottom:14}}>
+                  <label style={S.label}>Rechercher un bien</label>
+                  <input style={S.input} placeholder="Nom ou catégorie..." value={immoSearch}
+                    onChange={e=>{ setImmoSearch(e.target.value); setImmoSelectedBien(null); setImmoForm(f=>({...f,bien_id:'',bien_nom:''})); }} />
+                  {immoSearch.length >= 2 && !immoSelectedBien && (
+                    <div style={{background:'#0a061a',border:'1px solid rgba(224,64,251,0.2)',borderRadius:8,marginTop:4,maxHeight:200,overflowY:'auto'}}>
+                      {immoBiens.filter(b=>b.nom.toLowerCase().includes(immoSearch.toLowerCase())||b.categorie.toLowerCase().includes(immoSearch.toLowerCase())).slice(0,10).map(b=>(
+                        <div key={b.id} onClick={()=>{ setImmoSelectedBien(b); setImmoSearch(b.nom); setImmoForm(f=>({...f,bien_id:b.id,bien_nom:b.nom,tier_stock:1000})); }}
+                          style={{padding:'10px 14px',cursor:'pointer',borderBottom:'1px solid rgba(224,64,251,0.08)',color:'#d0b8f8',fontSize:14}}>
+                          <strong>{b.nom}</strong> <span style={{color:'#8060a0',fontSize:12}}>— {b.categorie}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Palier et prix */}
+                {immoSelectedBien && (
+                  <div style={{marginBottom:14}}>
+                    <label style={S.label}>Palier de stockage</label>
+                    <select style={S.input} value={immoForm.tier_stock} onChange={e=>setImmoForm(f=>({...f,tier_stock:parseInt(e.target.value)}))}>
+                      {immoSelectedBien.tiers.map(t=>(
+                        <option key={t.stock} value={t.stock}>{t.stock} — {fmt(t.prix_jour)}/jour</option>
+                      ))}
+                    </select>
+                    <div style={{marginTop:6,fontSize:13,color:'#8060a0'}}>
+                      Prix/jour : <strong style={{color:'#e040fb'}}>{fmt(immoSelectedBien.tiers.find(t=>t.stock===immoForm.tier_stock)?.prix_jour||0)}</strong>
+                    </div>
+                  </div>
+                )}
+                {/* Nb jours */}
+                <div style={{marginBottom:14}}>
+                  <label style={S.label}>Nombre de jours</label>
+                  <input style={S.input} type="number" min="1" value={immoForm.nb_jours}
+                    onChange={e=>setImmoForm(f=>({...f,nb_jours:parseInt(e.target.value)||1}))} />
+                </div>
+                {/* Client */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+                  <div>
+                    <label style={S.label}>Prénom client</label>
+                    <input style={S.input} value={immoForm.client_prenom} onChange={e=>setImmoForm(f=>({...f,client_prenom:e.target.value}))} />
+                  </div>
+                  <div>
+                    <label style={S.label}>Nom client</label>
+                    <input style={S.input} value={immoForm.client_nom} onChange={e=>setImmoForm(f=>({...f,client_nom:e.target.value}))} />
+                  </div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+                  <div>
+                    <label style={S.label}>N° IC / Téléphone</label>
+                    <input style={S.input} value={immoForm.client_numero} onChange={e=>setImmoForm(f=>({...f,client_numero:e.target.value}))} />
+                  </div>
+                  <div>
+                    <label style={S.label}>Adresse du bien</label>
+                    <input style={S.input} value={immoForm.adresse} onChange={e=>setImmoForm(f=>({...f,adresse:e.target.value}))} />
+                  </div>
+                </div>
+                <div style={{marginBottom:18}}>
+                  <label style={S.label}>Notes</label>
+                  <input style={S.input} value={immoForm.notes} onChange={e=>setImmoForm(f=>({...f,notes:e.target.value}))} />
+                </div>
+                {/* Résumé prix */}
+                {immoSelectedBien && (
+                  <div style={{background:'rgba(224,64,251,0.07)',border:'1px solid rgba(224,64,251,0.18)',borderRadius:10,padding:'12px 16px',marginBottom:18,fontSize:14,color:'#d0b8f8'}}>
+                    {(() => {
+                      const tier = immoSelectedBien.tiers.find(t=>t.stock===immoForm.tier_stock);
+                      const pj   = tier?.prix_jour || 0;
+                      const tot  = pj * (immoForm.nb_jours||1);
+                      const ben  = tot * ((immoSelectedBien.marge_pct||20)/100);
+                      const tax  = tot * ((immoSelectedBien.taxe_pct||10)/100);
+                      return (
+                        <div style={{display:'flex',gap:24,flexWrap:'wrap'}}>
+                          <div>Total : <strong style={{color:'#f0e8ff'}}>{fmt(tot)}</strong></div>
+                          <div>Bénéfice agence : <strong style={{color:'#e040fb'}}>{fmt(ben)}</strong></div>
+                          <div>Taxe : <strong style={{color:'#fbbf24'}}>{fmt(tax)}</strong></div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+                <button disabled={immoLoading || !immoForm.bien_id || !immoForm.client_prenom || !immoForm.client_nom}
+                  style={{...S.btnPrimary,opacity:(!immoForm.bien_id||!immoForm.client_prenom||!immoForm.client_nom)?0.5:1}}
+                  onClick={async()=>{
+                    if (!immoSelectedBien) return;
+                    const tier = immoSelectedBien.tiers.find(t=>t.stock===immoForm.tier_stock);
+                    setImmoLoading(true);
+                    const r = await fetch('/api/employee/immo-locations',{
+                      method:'POST',
+                      headers:{'Content-Type':'application/json'},
+                      body:JSON.stringify({
+                        bien_id:immoForm.bien_id, bien_nom:immoForm.bien_nom, adresse:immoForm.adresse,
+                        client_prenom:immoForm.client_prenom, client_nom:immoForm.client_nom, client_numero:immoForm.client_numero,
+                        tier_stock:immoForm.tier_stock, nb_jours:immoForm.nb_jours, prix_jour:tier?.prix_jour||0,
+                        taxe_pct:immoSelectedBien.taxe_pct||10, marge_pct:immoSelectedBien.marge_pct||20, notes:immoForm.notes
+                      })
+                    });
+                    setImmoLoading(false);
+                    if (r.ok) {
+                      showToast('Location enregistree !');
+                      setImmoForm(defaultImmoForm); setImmoSelectedBien(null); setImmoSearch('');
+                      loadImmoLocations();
+                    } else { const d=await r.json(); showToast(d.error,'error'); }
+                  }}>
+                  {immoLoading ? 'Enregistrement...' : '✅ Enregistrer la location'}
+                </button>
+              </div>
+              {/* Mes locations */}
+              <h3 style={{...S.subTitle,marginBottom:12}}>📋 Mes locations</h3>
+              {immoLocations.length===0 ? (
+                <p style={S.empty}>Aucune location enregistrée.</p>
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {immoLocations.map(l=>(
+                    <div key={l.id} style={{background:'linear-gradient(145deg,#16102a,#1e1435)',borderRadius:12,padding:'14px 18px',border:'1px solid rgba(224,64,251,0.12)',display:'flex',flexWrap:'wrap',gap:12,alignItems:'center'}}>
+                      <div style={{flex:1,minWidth:160}}>
+                        <div style={{fontWeight:700,color:'#d0b8f8',fontSize:15}}>{l.bien_nom}</div>
+                        <div style={{fontSize:12,color:'#8060a0',marginTop:2}}>{l.client_prenom} {l.client_nom} — {l.nb_jours}j</div>
+                      </div>
+                      <div style={{fontWeight:800,color:'#e040fb',fontSize:16}}>{fmt(l.prix_total)}</div>
+                      <div style={{fontSize:12,color:'#5a4080'}}>{new Date(l.created_at).toLocaleDateString('fr-FR')}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {isImmo && tab === 'biens' && (
+            <div>
+              <h2 style={S.title}>🗂️ Catalogue Biens</h2>
+              <input style={{...S.input,marginBottom:18,maxWidth:360}} placeholder="Rechercher un bien..." value={immoSearch}
+                onChange={e=>setImmoSearch(e.target.value)} />
+              {(['Hébergement','Appartement','Villa & Maison','Bureau','Parking & Garage','Stockage']).map(cat=>{
+                const biens = immoBiens.filter(b=>b.categorie===cat&&(immoSearch.length<2||b.nom.toLowerCase().includes(immoSearch.toLowerCase())));
+                if (!biens.length) return null;
+                return (
+                  <div key={cat} style={{marginBottom:24}}>
+                    <h3 style={{...S.subTitle,marginBottom:10}}>{cat}</h3>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
+                      {biens.map(b=>(
+                        <div key={b.id} style={{background:'linear-gradient(145deg,#16102a,#1e1435)',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(224,64,251,0.12)'}}>
+                          <div style={{fontWeight:700,color:'#f0e8ff',fontSize:14,marginBottom:6}}>{b.nom}</div>
+                          <div style={{fontSize:11,color:'#5a4080',marginBottom:8}}>Taxe {b.taxe_pct}% · Marge {b.marge_pct}%</div>
+                          <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                            {b.tiers.map(t=>(
+                              <div key={t.stock} style={{background:'rgba(224,64,251,0.08)',border:'1px solid rgba(224,64,251,0.18)',borderRadius:6,padding:'4px 8px',fontSize:11,color:'#d0b8f8'}}>
+                                {t.stock} — {fmt(t.prix_jour)}/j
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* ══ ONGLET DEVIS (garage employees) ══ */}
           {isGarage && tab === 'devis' && (
