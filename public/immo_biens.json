@@ -1,0 +1,2102 @@
+[
+  {
+    "id": 1,
+    "nom": "Motel",
+    "categorie": "Hébergement",
+    "prix30j": 8100,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 1350
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1080
+      },
+      {
+        "stock": 300,
+        "prix_jour": 810
+      },
+      {
+        "stock": 100,
+        "prix_jour": 540
+      },
+      {
+        "stock": 50,
+        "prix_jour": 270
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 2,
+    "nom": "Studio 1",
+    "categorie": "Hébergement",
+    "prix30j": 9900,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 1650
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1320
+      },
+      {
+        "stock": 300,
+        "prix_jour": 990
+      },
+      {
+        "stock": 100,
+        "prix_jour": 660
+      },
+      {
+        "stock": 50,
+        "prix_jour": 330
+      }
+    ],
+    "taxe_pct": 12.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 3,
+    "nom": "Appartement 1",
+    "categorie": "Appartement",
+    "prix30j": 15000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 2500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 2000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 1500
+      },
+      {
+        "stock": 100,
+        "prix_jour": 1000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 500
+      }
+    ],
+    "taxe_pct": 12.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 4,
+    "nom": "Grand Appartement 1",
+    "categorie": "Appartement",
+    "prix30j": 30000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 5000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1000
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 5,
+    "nom": "Duplex 1",
+    "categorie": "Appartement",
+    "prix30j": 45000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 7500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 6000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1500
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 6,
+    "nom": "Grand Appartement 2",
+    "categorie": "Appartement",
+    "prix30j": 30000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 5000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1000
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 7,
+    "nom": "Penthouse Moderne",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 8,
+    "nom": "Penthouse Sombre",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 9,
+    "nom": "Penthouse Coloré",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 10,
+    "nom": "Penthouse Elegant",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 11,
+    "nom": "Penthouse monochrome",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 12,
+    "nom": "Penthouse chaleureux",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 13,
+    "nom": "Penthouse Intense",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 14,
+    "nom": "Penthouse Aqua",
+    "categorie": "Appartement",
+    "prix30j": 57000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 9500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 7600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 5700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1900
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 15,
+    "nom": "Villa 1",
+    "categorie": "Villa / Maison",
+    "prix30j": 67500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 11250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 9000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2250
+      }
+    ],
+    "taxe_pct": 18.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 16,
+    "nom": "Ville 2",
+    "categorie": "Villa / Maison",
+    "prix30j": 67500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 11250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 9000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2250
+      }
+    ],
+    "taxe_pct": 18.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 17,
+    "nom": "Villa 3",
+    "categorie": "Villa / Maison",
+    "prix30j": 67500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 11250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 9000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2250
+      }
+    ],
+    "taxe_pct": 18.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 18,
+    "nom": "Villa 4",
+    "categorie": "Villa / Maison",
+    "prix30j": 67500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 11250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 9000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2250
+      }
+    ],
+    "taxe_pct": 18.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 19,
+    "nom": "Villa 5",
+    "categorie": "Villa / Maison",
+    "prix30j": 67500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 11250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 9000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2250
+      }
+    ],
+    "taxe_pct": 18.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 20,
+    "nom": "Villa 6",
+    "categorie": "Villa / Maison",
+    "prix30j": 67500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 11250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 9000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2250
+      }
+    ],
+    "taxe_pct": 18.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 21,
+    "nom": "Bureau Psy",
+    "categorie": "Bureau",
+    "prix30j": 30000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 5000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 22,
+    "nom": "Bureau Chaleureux",
+    "categorie": "Bureau",
+    "prix30j": 150000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 25000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 20000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 15000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 10000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 23,
+    "nom": "Bureau Classique",
+    "categorie": "Bureau",
+    "prix30j": 144000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 24000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 19200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 14400
+      },
+      {
+        "stock": 100,
+        "prix_jour": 9600
+      },
+      {
+        "stock": 50,
+        "prix_jour": 4800
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 24,
+    "nom": "Bureau Vintage",
+    "categorie": "Bureau",
+    "prix30j": 150000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 25000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 20000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 15000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 10000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 25,
+    "nom": "Bureau Contrasté",
+    "categorie": "Bureau",
+    "prix30j": 168000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 28000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 22400
+      },
+      {
+        "stock": 300,
+        "prix_jour": 16800
+      },
+      {
+        "stock": 100,
+        "prix_jour": 11200
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5600
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 26,
+    "nom": "Bureau Luxueux",
+    "categorie": "Bureau",
+    "prix30j": 174000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 29000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 23200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 17400
+      },
+      {
+        "stock": 100,
+        "prix_jour": 11600
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5800
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 27,
+    "nom": "Bureau Cool",
+    "categorie": "Bureau",
+    "prix30j": 162000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 27000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 21600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 16200
+      },
+      {
+        "stock": 100,
+        "prix_jour": 10800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5400
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 28,
+    "nom": "Bureau Nordique",
+    "categorie": "Bureau",
+    "prix30j": 180000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 30000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 24000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 18000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 12000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 6000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 29,
+    "nom": "Bureau Conservative",
+    "categorie": "Bureau",
+    "prix30j": 156000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 26000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 20800
+      },
+      {
+        "stock": 300,
+        "prix_jour": 15600
+      },
+      {
+        "stock": 100,
+        "prix_jour": 10400
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5200
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 30,
+    "nom": "Bureau Poli",
+    "categorie": "Bureau",
+    "prix30j": 156000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 26000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 20800
+      },
+      {
+        "stock": 300,
+        "prix_jour": 15600
+      },
+      {
+        "stock": 100,
+        "prix_jour": 10400
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5200
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 31,
+    "nom": "Petit appart Luxe 1",
+    "categorie": "Appartement",
+    "prix30j": 36000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 6000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4800
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3600
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2400
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1200
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 32,
+    "nom": "Petit appart Luxe 2",
+    "categorie": "Appartement",
+    "prix30j": 36000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 6000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4800
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3600
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2400
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1200
+      }
+    ],
+    "taxe_pct": 15.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 33,
+    "nom": "Chambre hotel Luxe",
+    "categorie": "Hébergement",
+    "prix30j": 9000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 1500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 900
+      },
+      {
+        "stock": 100,
+        "prix_jour": 600
+      },
+      {
+        "stock": 50,
+        "prix_jour": 300
+      }
+    ],
+    "taxe_pct": 12.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 34,
+    "nom": "Villa Vide",
+    "categorie": "Villa / Maison",
+    "prix30j": 60000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 10000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 8000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2000
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 35,
+    "nom": "Bureau Petit Vide",
+    "categorie": "Bureau",
+    "prix30j": 24000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 3200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 2400
+      },
+      {
+        "stock": 100,
+        "prix_jour": 1600
+      },
+      {
+        "stock": 50,
+        "prix_jour": 800
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 36,
+    "nom": "Bureau Moyen Vide",
+    "categorie": "Bureau",
+    "prix30j": 36000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 6000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4800
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3600
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2400
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1200
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 37,
+    "nom": "Bureau Grand Vide",
+    "categorie": "Bureau",
+    "prix30j": 120000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 20000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 16000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 12000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 8000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 4000
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 38,
+    "nom": "Maison Petite Vide",
+    "categorie": "Villa / Maison",
+    "prix30j": 30000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 5000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1000
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 39,
+    "nom": "Maison Petite 2 Vide",
+    "categorie": "Villa / Maison",
+    "prix30j": 33000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 5500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 4400
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3300
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2200
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1100
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 40,
+    "nom": "Maison Moyenne Vide",
+    "categorie": "Villa / Maison",
+    "prix30j": 0,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 0
+      },
+      {
+        "stock": 500,
+        "prix_jour": 0
+      },
+      {
+        "stock": 300,
+        "prix_jour": 0
+      },
+      {
+        "stock": 100,
+        "prix_jour": 0
+      },
+      {
+        "stock": 50,
+        "prix_jour": 0
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 41,
+    "nom": "Grand Appartement Vide",
+    "categorie": "Appartement",
+    "prix30j": 27000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 3600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 2700
+      },
+      {
+        "stock": 100,
+        "prix_jour": 1800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 900
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 42,
+    "nom": "Maison Grande Vide",
+    "categorie": "Villa / Maison",
+    "prix30j": 67500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 11250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 9000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 6750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2250
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 43,
+    "nom": "Grand Appartement 2 Vide",
+    "categorie": "Appartement",
+    "prix30j": 75000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 12500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 10000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 7500
+      },
+      {
+        "stock": 100,
+        "prix_jour": 5000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2500
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 44,
+    "nom": "Villa 2 Vide",
+    "categorie": "Villa / Maison",
+    "prix30j": 150000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 25000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 20000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 15000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 10000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5000
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 45,
+    "nom": "Caravane Vide",
+    "categorie": "Hébergement",
+    "prix30j": 9000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 1500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 900
+      },
+      {
+        "stock": 100,
+        "prix_jour": 600
+      },
+      {
+        "stock": 50,
+        "prix_jour": 300
+      }
+    ],
+    "taxe_pct": 20.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 46,
+    "nom": "Caravane",
+    "categorie": "Hébergement",
+    "prix30j": 0,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 0
+      },
+      {
+        "stock": 500,
+        "prix_jour": 0
+      },
+      {
+        "stock": 300,
+        "prix_jour": 0
+      },
+      {
+        "stock": 100,
+        "prix_jour": 0
+      },
+      {
+        "stock": 50,
+        "prix_jour": 0
+      }
+    ],
+    "taxe_pct": 12.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 47,
+    "nom": "Garage 2 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 4500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 750
+      },
+      {
+        "stock": 500,
+        "prix_jour": 600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 450
+      },
+      {
+        "stock": 100,
+        "prix_jour": 300
+      },
+      {
+        "stock": 50,
+        "prix_jour": 150
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 48,
+    "nom": "Garage 3 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 5400,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 900
+      },
+      {
+        "stock": 500,
+        "prix_jour": 720
+      },
+      {
+        "stock": 300,
+        "prix_jour": 540
+      },
+      {
+        "stock": 100,
+        "prix_jour": 360
+      },
+      {
+        "stock": 50,
+        "prix_jour": 180
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 49,
+    "nom": "Garage 6 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 7500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 1250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 250
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 50,
+    "nom": "10 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 12000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 2000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 1200
+      },
+      {
+        "stock": 100,
+        "prix_jour": 800
+      },
+      {
+        "stock": 50,
+        "prix_jour": 400
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 51,
+    "nom": "14 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 24000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 3200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 2400
+      },
+      {
+        "stock": 100,
+        "prix_jour": 1600
+      },
+      {
+        "stock": 50,
+        "prix_jour": 800
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 52,
+    "nom": "20 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 37500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 6250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 5000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 3750
+      },
+      {
+        "stock": 100,
+        "prix_jour": 2500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1250
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 53,
+    "nom": "25 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 45000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 7500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 6000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 4500
+      },
+      {
+        "stock": 100,
+        "prix_jour": 3000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 1500
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 54,
+    "nom": "35 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 75000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 12500
+      },
+      {
+        "stock": 500,
+        "prix_jour": 10000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 7500
+      },
+      {
+        "stock": 100,
+        "prix_jour": 5000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 2500
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 55,
+    "nom": "100 places",
+    "categorie": "Parking / Garage",
+    "prix30j": 240000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 40000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 32000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 24000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 16000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 8000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 56,
+    "nom": "Garage Camion",
+    "categorie": "Parking / Garage",
+    "prix30j": 150000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 25000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 20000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 15000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 10000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 5000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 57,
+    "nom": "Garage Bateau",
+    "categorie": "Parking / Garage",
+    "prix30j": 300000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 50000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 40000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 30000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 20000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 10000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 58,
+    "nom": "Garage Abandonné",
+    "categorie": "Parking / Garage",
+    "prix30j": 0,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 0
+      },
+      {
+        "stock": 500,
+        "prix_jour": 0
+      },
+      {
+        "stock": 300,
+        "prix_jour": 0
+      },
+      {
+        "stock": 100,
+        "prix_jour": 0
+      },
+      {
+        "stock": 50,
+        "prix_jour": 0
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 59,
+    "nom": "Garage Avion",
+    "categorie": "Parking / Garage",
+    "prix30j": 360000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 60000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 48000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 36000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 24000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 12000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 60,
+    "nom": "Petit Stockage",
+    "categorie": "Stockage",
+    "prix30j": 2100,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 350
+      },
+      {
+        "stock": 500,
+        "prix_jour": 280
+      },
+      {
+        "stock": 300,
+        "prix_jour": 210
+      },
+      {
+        "stock": 100,
+        "prix_jour": 140
+      },
+      {
+        "stock": 50,
+        "prix_jour": 70
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 61,
+    "nom": "Petit Entrepôt",
+    "categorie": "Stockage",
+    "prix30j": 4500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 750
+      },
+      {
+        "stock": 500,
+        "prix_jour": 600
+      },
+      {
+        "stock": 300,
+        "prix_jour": 450
+      },
+      {
+        "stock": 100,
+        "prix_jour": 300
+      },
+      {
+        "stock": 50,
+        "prix_jour": 150
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 61,
+    "nom": "Moyen Entrepôt",
+    "categorie": "Stockage",
+    "prix30j": 10500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 1750
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1400
+      },
+      {
+        "stock": 300,
+        "prix_jour": 1050
+      },
+      {
+        "stock": 100,
+        "prix_jour": 700
+      },
+      {
+        "stock": 50,
+        "prix_jour": 350
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 62,
+    "nom": "Grand Entrepôt",
+    "categorie": "Stockage",
+    "prix30j": 24000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 4000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 3200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 2400
+      },
+      {
+        "stock": 100,
+        "prix_jour": 1600
+      },
+      {
+        "stock": 50,
+        "prix_jour": 800
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 63,
+    "nom": "Bunker",
+    "categorie": "Stockage",
+    "prix30j": 750000,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 125000
+      },
+      {
+        "stock": 500,
+        "prix_jour": 100000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 75000
+      },
+      {
+        "stock": 100,
+        "prix_jour": 50000
+      },
+      {
+        "stock": 50,
+        "prix_jour": 25000
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 64,
+    "nom": "Morgue",
+    "categorie": "Stockage",
+    "prix30j": 0,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 0
+      },
+      {
+        "stock": 500,
+        "prix_jour": 0
+      },
+      {
+        "stock": 300,
+        "prix_jour": 0
+      },
+      {
+        "stock": 100,
+        "prix_jour": 0
+      },
+      {
+        "stock": 50,
+        "prix_jour": 0
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 65,
+    "nom": "Conteneur Vide",
+    "categorie": "Stockage",
+    "prix30j": 1500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 250
+      },
+      {
+        "stock": 500,
+        "prix_jour": 200
+      },
+      {
+        "stock": 300,
+        "prix_jour": 150
+      },
+      {
+        "stock": 100,
+        "prix_jour": 100
+      },
+      {
+        "stock": 50,
+        "prix_jour": 50
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 66,
+    "nom": "Petit Entrepôt Vide",
+    "categorie": "Stockage",
+    "prix30j": 4200,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 700
+      },
+      {
+        "stock": 500,
+        "prix_jour": 560
+      },
+      {
+        "stock": 300,
+        "prix_jour": 420
+      },
+      {
+        "stock": 100,
+        "prix_jour": 280
+      },
+      {
+        "stock": 50,
+        "prix_jour": 140
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 67,
+    "nom": "Petit Entrepôt Vide 2",
+    "categorie": "Stockage",
+    "prix30j": 4200,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 700
+      },
+      {
+        "stock": 500,
+        "prix_jour": 560
+      },
+      {
+        "stock": 300,
+        "prix_jour": 420
+      },
+      {
+        "stock": 100,
+        "prix_jour": 280
+      },
+      {
+        "stock": 50,
+        "prix_jour": 140
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 68,
+    "nom": "Moyen Entrepôt Vide",
+    "categorie": "Stockage",
+    "prix30j": 9750,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 1625
+      },
+      {
+        "stock": 500,
+        "prix_jour": 1300
+      },
+      {
+        "stock": 300,
+        "prix_jour": 975
+      },
+      {
+        "stock": 100,
+        "prix_jour": 650
+      },
+      {
+        "stock": 50,
+        "prix_jour": 325
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  },
+  {
+    "id": 69,
+    "nom": "Grand Entrepôt Vide",
+    "categorie": "Stockage",
+    "prix30j": 22500,
+    "tiers": [
+      {
+        "stock": 1000,
+        "prix_jour": 3750
+      },
+      {
+        "stock": 500,
+        "prix_jour": 3000
+      },
+      {
+        "stock": 300,
+        "prix_jour": 2250
+      },
+      {
+        "stock": 100,
+        "prix_jour": 1500
+      },
+      {
+        "stock": 50,
+        "prix_jour": 750
+      }
+    ],
+    "taxe_pct": 10.0,
+    "marge_pct": 20.0
+  }
+]

@@ -232,7 +232,17 @@ export default function PatronDashboard() {
   const [stockSearch,    setStockSearch]    = useState('');
 
   // Modal confirmation custom
-  const [confirmModal, setConfirmModal] = useState(null); // {msg, onConfirm}
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // ── Immobilier state ─────────────────────────────────────────
+  const [immoLocations, setImmoLocations] = useState([]);
+  const [immoLoading,   setImmoLoading]   = useState(false);
+  const [immoBiens,     setImmoBiens]     = useState([]);
+  const [immoForm, setImmoForm] = useState({
+    employee_id: '', bien_id: '', bien_nom: '', client_nom: '',
+    tier_stock: 1000, nb_jours: 1, notes: ''
+  });
+  const [immoSearch, setImmoSearch] = useState(''); // {msg, onConfirm}
   const askConfirm = useCallback((msg, fn) => setConfirmModal({ msg, onConfirm: fn }), []);
 
   // Largeur fenêtre (mobile)
@@ -358,6 +368,14 @@ export default function PatronDashboard() {
     setBalance(await r.json());
   }, []);
 
+  const loadImmoLocations = async () => {
+    setImmoLoading(true);
+    try {
+      const r = await fetch('/api/patron/immo-locations');
+      if (r.ok) setImmoLocations(await r.json());
+    } finally { setImmoLoading(false); }
+  };
+
   const loadGarageQuotes = useCallback(async () => {
     const r = await fetch('/api/garage/devis');
     if (r.ok) { const d = await r.json(); setGarageQuotes(d.quotes || []); }
@@ -376,7 +394,11 @@ export default function PatronDashboard() {
     loadPending(); // toujours chargé pour le badge
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); loadSalaryPayment(); }
     if (tab === 'devis')    { /* nothing to preload */ }
-    if (tab === 'registre') { loadGarageQuotes(); }
+    if (tab === 'registre')   { loadGarageQuotes(); }
+    if (tab === 'locations' || tab === 'reg_immo') { loadImmoLocations(); loadEmployees(); }
+    if (tab === 'biens') {
+      fetch('/immo_biens.json').then(r=>r.json()).then(d=>setImmoBiens(d)).catch(()=>{});
+    }
     if (tab === 'ventes')   { loadProducts(); loadEmployees(); loadInvoices(); }
     if (tab === 'produits') { loadProducts(); loadRawMaterials(); loadCostPrices(); }
     if (tab === 'stocks')   { loadRawMaterials(); loadStockMovements(); }
@@ -709,7 +731,8 @@ export default function PatronDashboard() {
   const pendingCount = pendingUsers.filter(u => u.status === 'pending').length;
   const isGarage = session.user.companyType === 'garage';
   const isCafe = session.user.companyType === 'cafe';
-  const isBar  = session.user.companyType === 'bar';
+  const isBar   = session.user.companyType === 'bar';
+  const isImmo  = session.user.companyType === 'immobilier';
 
   const mgmtTabs = [
     { key: 'overview', label: '🏠 Vue d\'ensemble', badge: pendingCount },
@@ -722,13 +745,22 @@ export default function PatronDashboard() {
       { key: 'devis',    label: '🔧 Devis Custom' },
       { key: 'registre', label: '📋 Registre' },
     ] : []),
+    ...(isImmo ? [
+      { key: 'locations',   label: '🏠 Locations' },
+      { key: 'biens',       label: '🗂️ Catalogue Biens' },
+      { key: 'reg_immo',    label: '📋 Registre Locations' },
+    ] : []),
     { key: 'compte',   label: '⚙️ Mon compte' },
   ];
 
   const tabs = mgmtTabs;
 
   // ── Groupes de navigation sidebar ──────────────────────────
-  const tabGroupDefs = [
+  const tabGroupDefs = isImmo ? [
+    { label: '🏠 Immobilier', keys: ['locations','biens','reg_immo'] },
+    { label: '📊 Gestion',    keys: ['overview','achats','salaires','produits','stocks'] },
+    { label: '👤 Personnel',  keys: ['compte'] },
+  ] : [
     { label: '🛒 Vente',      keys: isGarage ? ['devis','ventes'] : ['ventes'] },
     { label: '📊 Gestion',    keys: ['overview','achats','salaires','produits','stocks', ...(isGarage?['registre']:[])] },
     { label: '👤 Personnel',  keys: ['compte'] },
@@ -891,7 +923,7 @@ export default function PatronDashboard() {
                           setTab('overview');
                         }}
                         style={{ display:'block', width:'100%', padding:'11px 16px', background:(activeCompId||session.user.companyId)===co.id?'rgba(96,165,250,0.12)':'none', border:'none', borderBottom:'1px solid rgba(255,255,255,0.05)', color:(activeCompId||session.user.companyId)===co.id?'#60a5fa':'#c0a0d8', fontSize:13, fontWeight:600, cursor:'pointer', textAlign:'left' }}>
-                        {co.company_type==='garage'?'🔧':co.company_type==='bar'?'🍺':'☕'} {co.name}
+                        {co.company_type==='garage'?'🔧':co.company_type==='immobilier'?'🏠':co.company_type==='bar'?'🍺':'☕'} {co.name}
                         {(activeCompId||session.user.companyId)===co.id && ' ✓'}
                       </button>
                     ))}
@@ -2517,6 +2549,248 @@ export default function PatronDashboard() {
           {/* ══════════════════════════════════════════
               ONGLET : MON COMPTE
           ══════════════════════════════════════════ */}
+          {tab === 'locations' && (() => {
+            const bien = immoBiens.find(b => b.id === parseInt(immoForm.bien_id));
+            const tier = bien?.tiers?.find(t => t.stock === immoForm.tier_stock);
+            const prixJour = tier?.prix_jour ?? 0;
+            const nbJ = parseInt(immoForm.nb_jours) || 0;
+            const prixTotal = prixJour * nbJ;
+            const taxePct = bien?.taxe_pct ?? 10;
+            const margePct = bien?.marge_pct ?? 20;
+            const benefice = +(prixTotal * margePct / 100).toFixed(2);
+            const taxeRev  = +(prixTotal * taxePct / 100).toFixed(2);
+
+            const handleImmoSubmit = async (e) => {
+              e.preventDefault();
+              if (!immoForm.employee_id || !immoForm.bien_id || !immoForm.client_nom || nbJ < 1) return;
+              const payload = {
+                employee_id: immoForm.employee_id,
+                bien_id: parseInt(immoForm.bien_id),
+                bien_nom: bien?.nom || immoForm.bien_nom,
+                client_nom: immoForm.client_nom.trim(),
+                tier_stock: immoForm.tier_stock,
+                nb_jours: nbJ,
+                prix_jour: prixJour,
+                taxe_pct: taxePct,
+                marge_pct: margePct,
+                notes: immoForm.notes,
+              };
+              const r = await fetch('/api/patron/immo-locations', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+              if (r.ok) {
+                const d = await r.json();
+                showToast(`✅ Location enregistrée — $${d.prix_total?.toLocaleString('fr-FR')}`);
+                setImmoForm({ employee_id: immoForm.employee_id, bien_id: '', bien_nom: '', client_nom: '', tier_stock: 1000, nb_jours: 1, notes: '' });
+                setImmoSearch('');
+                loadImmoLocations();
+              } else {
+                const err = await r.json();
+                showToast('❌ ' + (err.error || 'Erreur'));
+              }
+            };
+
+            const filteredBiens = immoBiens.filter(b =>
+              b.nom.toLowerCase().includes(immoSearch.toLowerCase()) ||
+              b.categorie.toLowerCase().includes(immoSearch.toLowerCase())
+            );
+
+            // Group by category for select
+            const cats = [...new Set(immoBiens.map(b => b.categorie))];
+
+            return (
+              <div style={{ maxWidth: 680, margin: '0 auto' }}>
+                <h2 style={S.sectionTitle}>🏠 Nouvelle Location</h2>
+                <form onSubmit={handleImmoSubmit} style={{ background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '20px 24px', marginBottom: 24 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    {/* Employé */}
+                    <div>
+                      <label style={S.label}>Employé</label>
+                      <select value={immoForm.employee_id} onChange={e=>setImmoForm(f=>({...f, employee_id: e.target.value}))} required style={S.input}>
+                        <option value="">— Choisir —</option>
+                        {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                      </select>
+                    </div>
+                    {/* Client */}
+                    <div>
+                      <label style={S.label}>Nom du client (IC)</label>
+                      <input value={immoForm.client_nom} onChange={e=>setImmoForm(f=>({...f, client_nom: e.target.value}))} required placeholder="Ex: John Dupont" style={S.input} />
+                    </div>
+                    {/* Bien */}
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={S.label}>Bien</label>
+                      <input value={immoSearch || (bien ? bien.nom : '')} onChange={e=>{setImmoSearch(e.target.value); setImmoForm(f=>({...f, bien_id:'', bien_nom:''}));}} placeholder="Rechercher un bien…" style={{...S.input, marginBottom: 6}} />
+                      {immoSearch.length > 0 && !bien && (
+                        <div style={{ background: '#110e28', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
+                          {filteredBiens.length === 0 ? (
+                            <div style={{ padding: '10px 14px', color: '#5a4490', fontSize: 13 }}>Aucun résultat</div>
+                          ) : filteredBiens.map(b => (
+                            <button key={b.id} type="button" style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', background: 'none', border: 'none', color: '#d0b8f8', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 14 }}
+                              onClick={()=>{ setImmoForm(f=>({...f, bien_id: String(b.id), bien_nom: b.nom})); setImmoSearch(''); }}>
+                              <span style={{ fontWeight: 700 }}>{b.nom}</span>
+                              <span style={{ color: '#5a4490', fontSize: 12, marginLeft: 10 }}>{b.categorie}</span>
+                              <span style={{ color: '#7c3aed', fontSize: 12, marginLeft: 10 }}>${b.tiers[0].prix_jour.toLocaleString('fr-FR')}/j (1000kg)</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Tier */}
+                    <div>
+                      <label style={S.label}>Palier stockage</label>
+                      <select value={immoForm.tier_stock} onChange={e=>setImmoForm(f=>({...f, tier_stock: parseInt(e.target.value)}))} style={S.input}>
+                        <option value={1000}>1 000 kg</option>
+                        <option value={500}>500 kg</option>
+                        <option value={300}>300 kg</option>
+                        <option value={100}>100 kg</option>
+                        <option value={50}>50 kg</option>
+                      </select>
+                    </div>
+                    {/* Nb jours */}
+                    <div>
+                      <label style={S.label}>Nombre de jours</label>
+                      <input type="number" min="1" value={immoForm.nb_jours} onChange={e=>setImmoForm(f=>({...f, nb_jours: parseInt(e.target.value)||1}))} style={S.input} />
+                    </div>
+                    {/* Notes */}
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={S.label}>Notes (optionnel)</label>
+                      <input value={immoForm.notes} onChange={e=>setImmoForm(f=>({...f, notes: e.target.value}))} placeholder="Remarques…" style={S.input} />
+                    </div>
+                  </div>
+
+                  {/* Récap prix */}
+                  {bien && (
+                    <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+                      {[
+                        { label: 'Prix/jour', val: `$${prixJour.toLocaleString('fr-FR')}` },
+                        { label: `Total (${nbJ}j)`, val: `$${prixTotal.toLocaleString('fr-FR')}`, hl: true },
+                        { label: `Bénéfice agence (${margePct}%)`, val: `$${benefice.toLocaleString('fr-FR')}` },
+                        { label: `Taxe reversée (${taxePct}%)`, val: `$${taxeRev.toLocaleString('fr-FR')}` },
+                      ].map(item => (
+                        <div key={item.label} style={{ background: item.hl ? 'rgba(124,58,237,0.12)' : 'rgba(255,255,255,0.03)', borderRadius: 10, padding: '12px 14px', border: item.hl ? '1px solid rgba(124,58,237,0.3)' : '1px solid rgba(255,255,255,0.06)' }}>
+                          <div style={{ fontSize: 11, color: '#5a4490', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>{item.label}</div>
+                          <div style={{ fontSize: 22, fontWeight: 900, color: item.hl ? '#c084fc' : '#f4eeff', fontVariantNumeric: 'tabular-nums' }}>{item.val}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={!bien || !immoForm.employee_id || !immoForm.client_nom || nbJ < 1} style={{ marginTop: 20, ...S.btnPrimary, opacity: (!bien || !immoForm.employee_id || !immoForm.client_nom || nbJ < 1) ? 0.4 : 1 }}>
+                    ✅ Enregistrer la location
+                  </button>
+                </form>
+
+                {/* Dernières locations */}
+                <h3 style={{ ...S.sectionTitle, fontSize: 16 }}>📋 Dernières locations</h3>
+                {immoLoading ? <div style={{ color: '#5a4490', padding: 20 }}>Chargement…</div> : immoLocations.slice(0, 10).map(loc => (
+                  <div key={loc.id} style={{ background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.1)', borderRadius: 12, padding: '14px 18px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: '#d0b8f8', fontSize: 15 }}>{loc.bien_nom}</div>
+                      <div style={{ color: '#8a72c0', fontSize: 13 }}>Client: {loc.client_nom} · {loc.nb_jours}j · {loc.tier_stock}kg · par {loc.employee_name}</div>
+                      <div style={{ color: '#5a4490', fontSize: 12 }}>{new Date(loc.created_at).toLocaleDateString('fr-FR')}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#c084fc' }}>${parseFloat(loc.prix_total).toLocaleString('fr-FR')}</div>
+                      <div style={{ fontSize: 12, color: '#5a4490' }}>Bénéf: ${parseFloat(loc.benefice_agence).toLocaleString('fr-FR')}</div>
+                    </div>
+                    <button onClick={() => askConfirm('Supprimer cette location ?', async () => {
+                      await fetch('/api/patron/immo-locations', { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ id: loc.id }) });
+                      loadImmoLocations();
+                    })} style={{ ...S.btnSmall, color: '#f87171' }}>🗑️</button>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {tab === 'biens' && (() => {
+            const cats = [...new Set(immoBiens.map(b => b.categorie))];
+            return (
+              <div>
+                <h2 style={S.sectionTitle}>🗂️ Catalogue des Biens</h2>
+                <input value={immoSearch} onChange={e=>setImmoSearch(e.target.value)} placeholder="Rechercher un bien ou catégorie…" style={{ ...S.input, maxWidth: 400, marginBottom: 24 }} />
+                {cats.map(cat => {
+                  const catBiens = immoBiens.filter(b => b.categorie === cat && (
+                    immoSearch === '' || b.nom.toLowerCase().includes(immoSearch.toLowerCase()) || cat.toLowerCase().includes(immoSearch.toLowerCase())
+                  ));
+                  if (catBiens.length === 0) return null;
+                  return (
+                    <div key={cat} style={{ marginBottom: 28 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12 }}>{cat}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                        {catBiens.map(b => (
+                          <div key={b.id} style={{ background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.12)', borderRadius: 12, padding: '14px 16px' }}>
+                            <div style={{ fontWeight: 700, color: '#d0b8f8', fontSize: 15, marginBottom: 6 }}>{b.nom}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                              {b.tiers.map(t => (
+                                <span key={t.stock} style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 6, padding: '3px 8px', fontSize: 12, color: '#c084fc' }}>
+                                  {t.stock}kg: ${t.prix_jour.toLocaleString('fr-FR')}/j
+                                </span>
+                              ))}
+                            </div>
+                            <div style={{ fontSize: 12, color: '#5a4490' }}>
+                              Taxe {b.taxe_pct}% · Marge agence {b.marge_pct}% · 30j forfait: ${b.prix30j.toLocaleString('fr-FR')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {tab === 'reg_immo' && (
+            <div>
+              <h2 style={S.sectionTitle}>📋 Registre des Locations</h2>
+              {immoLoading ? <div style={{ color: '#5a4490', padding: 20 }}>Chargement…</div> : (
+                immoLocations.length === 0
+                  ? <div style={{ color: '#5a4490', padding: 20 }}>Aucune location enregistrée.</div>
+                  : <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid rgba(124,58,237,0.2)' }}>
+                            {['Date','Employé','Bien','Client','Palier','Jours','Prix/j','Total','Bénéfice','Taxe',''].map(h => (
+                              <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#5a4490', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, whiteSpace: 'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {immoLocations.map(loc => (
+                            <tr key={loc.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                              <td style={{ padding: '10px 12px', color: '#8a72c0', whiteSpace: 'nowrap' }}>{new Date(loc.created_at).toLocaleDateString('fr-FR')}</td>
+                              <td style={{ padding: '10px 12px', color: '#d0b8f8', fontWeight: 600 }}>{loc.employee_name}</td>
+                              <td style={{ padding: '10px 12px', color: '#f4eeff' }}>{loc.bien_nom}</td>
+                              <td style={{ padding: '10px 12px', color: '#d0b8f8' }}>{loc.client_nom}</td>
+                              <td style={{ padding: '10px 12px', color: '#c084fc', textAlign: 'right' }}>{loc.tier_stock}kg</td>
+                              <td style={{ padding: '10px 12px', color: '#c084fc', textAlign: 'right' }}>{loc.nb_jours}</td>
+                              <td style={{ padding: '10px 12px', color: '#c084fc', textAlign: 'right', whiteSpace: 'nowrap' }}>${parseFloat(loc.prix_jour).toLocaleString('fr-FR')}</td>
+                              <td style={{ padding: '10px 12px', color: '#a78bfa', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>${parseFloat(loc.prix_total).toLocaleString('fr-FR')}</td>
+                              <td style={{ padding: '10px 12px', color: '#4ade80', textAlign: 'right', whiteSpace: 'nowrap' }}>${parseFloat(loc.benefice_agence).toLocaleString('fr-FR')}</td>
+                              <td style={{ padding: '10px 12px', color: '#f87171', textAlign: 'right', whiteSpace: 'nowrap' }}>${parseFloat(loc.taxe_reversee).toLocaleString('fr-FR')}</td>
+                              <td style={{ padding: '10px 12px' }}>
+                                <button onClick={() => askConfirm('Supprimer cette location ?', async () => {
+                                  await fetch('/api/patron/immo-locations', { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ id: loc.id }) });
+                                  loadImmoLocations();
+                                })} style={{ ...S.btnSmall, color: '#f87171' }}>🗑️</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr style={{ borderTop: '2px solid rgba(124,58,237,0.3)' }}>
+                            <td colSpan={7} style={{ padding: '12px 12px', color: '#7c3aed', fontWeight: 800, fontSize: 13 }}>TOTAUX</td>
+                            <td style={{ padding: '12px 12px', color: '#a78bfa', fontWeight: 900, textAlign: 'right' }}>${immoLocations.reduce((s,l)=>s+parseFloat(l.prix_total),0).toLocaleString('fr-FR')}</td>
+                            <td style={{ padding: '12px 12px', color: '#4ade80', fontWeight: 900, textAlign: 'right' }}>${immoLocations.reduce((s,l)=>s+parseFloat(l.benefice_agence),0).toLocaleString('fr-FR')}</td>
+                            <td style={{ padding: '12px 12px', color: '#f87171', fontWeight: 900, textAlign: 'right' }}>${immoLocations.reduce((s,l)=>s+parseFloat(l.taxe_reversee),0).toLocaleString('fr-FR')}</td>
+                            <td></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+              )}
+            </div>
+          )}
+
           {tab === 'compte' && (
             <div style={{ maxWidth: 480, margin: '0 auto' }}>
               <h2 style={S.sectionTitle}>⚙️ Mon compte</h2>
