@@ -759,7 +759,7 @@ export default function PatronDashboard() {
   // ── Groupes de navigation sidebar ──────────────────────────
   const tabGroupDefs = isImmo ? [
     { label: '🏠 Immobilier', keys: ['locations','biens','reg_immo'] },
-    { label: '📊 Gestion',    keys: ['overview','achats','salaires','produits','stocks'] },
+    { label: '📊 Gestion',    keys: ['overview','salaires'] },
     { label: '👤 Personnel',  keys: ['compte'] },
   ] : [
     { label: '🛒 Vente',      keys: isGarage ? ['devis','ventes'] : ['ventes'] },
