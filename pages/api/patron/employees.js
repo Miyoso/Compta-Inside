@@ -17,6 +17,47 @@ export default async function handler(req, res) {
       SELECT COALESCE(company_type, 'cafe') AS company_type FROM companies WHERE id = ${companyId}
     `;
     const isGarage = companyRow?.company_type === 'garage';
+    const isImmo   = companyRow?.company_type === 'immobilier';
+
+    if (isImmo) {
+      const [lastPayRow2] = await sql`
+        SELECT COALESCE(MAX(paid_at), '1970-01-01T00:00:00Z'::timestamptz) AS last_paid
+        FROM salary_payments WHERE company_id = ${companyId}
+      `;
+      const lastPaid2 = lastPayRow2.last_paid;
+      const emps = await sql`
+        WITH period_data AS (
+          SELECT il.employee_id,
+                 COALESCE(SUM(il.benefice_agence),0)::float AS gross_sales,
+                 COALESCE(SUM(il.benefice_agence),0)::float AS margin
+          FROM immo_locations il
+          WHERE il.company_id = ${companyId} AND il.created_at > ${lastPaid2}
+          GROUP BY il.employee_id
+        ),
+        month_data AS (
+          SELECT il.employee_id,
+                 COALESCE(SUM(il.benefice_agence),0)::float AS gross_sales,
+                 COALESCE(SUM(il.benefice_agence),0)::float AS margin
+          FROM immo_locations il
+          WHERE il.company_id = ${companyId}
+            AND DATE_TRUNC('month', il.created_at) = DATE_TRUNC('month', NOW())
+          GROUP BY il.employee_id
+        )
+        SELECT u.id, u.name, u.email, u.role, u.salary_percent::float,
+               COALESCE(pd.gross_sales,0)::float                               AS week_sales,
+               COALESCE(pd.margin,     0)::float                               AS week_margin,
+               (COALESCE(pd.margin,0) * u.salary_percent / 100)::float         AS week_salary,
+               COALESCE(md.gross_sales,0)::float                               AS total_sales,
+               COALESCE(md.margin,     0)::float                               AS total_margin,
+               (COALESCE(md.margin,0) * u.salary_percent / 100)::float         AS salary_due
+        FROM users u
+        LEFT JOIN period_data pd ON pd.employee_id = u.id
+        LEFT JOIN month_data  md ON md.employee_id = u.id
+        WHERE u.company_id = ${companyId} AND u.status = 'active'
+        ORDER BY week_salary DESC, u.name ASC
+      `;
+      return res.status(200).json({ employees: emps, lastPaid: lastPaid2 });
+    }
 
     // Date du dernier paiement
     const [lastPayRow] = await sql`

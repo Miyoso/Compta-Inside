@@ -18,6 +18,103 @@ export default async function handler(req, res) {
     SELECT COALESCE(company_type, 'cafe') AS company_type FROM companies WHERE id = ${companyId}
   `;
   const isGarage = companyRow?.company_type === 'garage';
+  const isImmo   = companyRow?.company_type === 'immobilier';
+
+  // ── Immobilier : court-circuit complet vers immo_locations ──
+  if (isImmo) {
+    // CA semaine = bénéfice agence des locations cette semaine
+    const [wImmo] = await sql`
+      SELECT COALESCE(SUM(benefice_agence),0)::float AS ca,
+             COALESCE(SUM(taxe_reversee),0)::float   AS tax
+      FROM immo_locations
+      WHERE company_id = ${companyId}
+        AND created_at >= DATE_TRUNC('week', NOW())
+    `;
+    const weekSalesImmo = wImmo.ca;
+    const weekTaxImmo   = wImmo.tax;
+
+    // Salaires semaine
+    const wSalRows = await sql`
+      SELECT COALESCE(SUM(il.benefice_agence * u.salary_percent / 100),0)::float AS week_sal
+      FROM immo_locations il
+      JOIN users u ON u.id = il.employee_id
+      WHERE il.company_id = ${companyId}
+        AND il.created_at >= DATE_TRUNC('week', NOW())
+    `;
+    const weekSalariesImmo = wSalRows[0]?.week_sal ?? 0;
+
+    // Mois en cours
+    const [mImmo] = await sql`
+      SELECT COALESCE(SUM(benefice_agence),0)::float AS ca,
+             COALESCE(SUM(taxe_reversee),0)::float   AS tax
+      FROM immo_locations
+      WHERE company_id = ${companyId}
+        AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', NOW())
+    `;
+    const mSalRows = await sql`
+      SELECT COALESCE(SUM(il.benefice_agence * u.salary_percent / 100),0)::float AS month_sal
+      FROM immo_locations il
+      JOIN users u ON u.id = il.employee_id
+      WHERE il.company_id = ${companyId}
+        AND DATE_TRUNC('month', il.created_at) = DATE_TRUNC('month', NOW())
+    `;
+    const monthSalesImmo    = mImmo.ca;
+    const monthSalariesImmo = mSalRows[0]?.month_sal ?? 0;
+
+    const { computeWeeklyTax: cTax } = await import('../../../lib/tax.js').catch(()=>({ computeWeeklyTax: computeWeeklyTax }));
+    const weekNetRaw   = weekSalesImmo - weekSalariesImmo;
+    const weekTaxObj   = computeWeeklyTax(Math.max(0, weekNetRaw));
+    const monthNetRaw  = monthSalesImmo - monthSalariesImmo;
+    const monthTaxObj  = computeWeeklyTax(Math.max(0, monthNetRaw));
+
+    // Semaines précédentes
+    const prevWeeksImmo = [];
+    for (let i = 1; i <= 4; i++) {
+      const [pw] = await sql`
+        SELECT COALESCE(SUM(benefice_agence),0)::float AS ca
+        FROM immo_locations
+        WHERE company_id = ${companyId}
+          AND created_at >= DATE_TRUNC('week', NOW()) - (${i}  * INTERVAL '1 week')
+          AND created_at <  DATE_TRUNC('week', NOW()) - (${i-1} * INTERVAL '1 week')
+      `;
+      const [ps] = await sql`
+        SELECT COALESCE(SUM(il.benefice_agence * u.salary_percent / 100),0)::float AS sal
+        FROM immo_locations il JOIN users u ON u.id = il.employee_id
+        WHERE il.company_id = ${companyId}
+          AND il.created_at >= DATE_TRUNC('week', NOW()) - (${i}  * INTERVAL '1 week')
+          AND il.created_at <  DATE_TRUNC('week', NOW()) - (${i-1} * INTERVAL '1 week')
+      `;
+      const pSales = pw.ca; const pSal = ps.sal;
+      const pNet   = pSales - pSal;
+      const pTax   = computeWeeklyTax(Math.max(0, pNet));
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - ((weekStart.getDay()+6)%7) - i*7);
+      prevWeeksImmo.push({ weekStart: weekStart.toISOString().split('T')[0], sales: pSales, purchases: 0, salaries: pSal, net: pNet, taxBase: Math.max(0,pNet), tax: pTax.tax, rate: pTax.rate, bracket: pTax.bracket });
+    }
+
+    // Dernières locations
+    const recentImmo = await sql`
+      SELECT il.id, u.name AS employee_name, il.bien_nom AS product_name,
+             'location' AS type, il.nb_jours AS quantity,
+             il.benefice_agence::float AS total_amount, il.created_at AS sale_date
+      FROM immo_locations il JOIN users u ON u.id = il.employee_id
+      WHERE il.company_id = ${companyId}
+      ORDER BY il.created_at DESC LIMIT 10
+    `;
+
+    const [alertRow2] = await sql`SELECT COUNT(*)::int AS count FROM raw_materials WHERE company_id = ${companyId} AND quantity <= min_alert`;
+
+    return res.status(200).json({
+      weekSales: weekSalesImmo, weekPurchases: 0, weekSalaries: weekSalariesImmo,
+      weekNet: weekNetRaw, weekTaxBase: Math.max(0,weekNetRaw),
+      weekTaxAmount: weekTaxObj.tax, weekTaxRate: weekTaxObj.rate,
+      weekTaxEffectiveRate: weekTaxObj.effectiveRate, weekBracket: weekTaxObj.bracket,
+      totalSales: monthSalesImmo, totalPurchases: 0, totalSalaries: monthSalariesImmo,
+      taxableBase: Math.max(0,monthNetRaw), taxSaving: 0,
+      taxes: monthTaxObj.tax, taxRate: monthTaxObj.rate,
+      prevWeeks: prevWeeksImmo, alertsCount: alertRow2.count, recentSales: recentImmo,
+    });
+  }
 
   // ── CA de la semaine (sales + garage_quotes si garage) ────────
   const [weekSalesRow] = await sql`
