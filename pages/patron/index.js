@@ -369,76 +369,90 @@ export default function PatronDashboard() {
     setBalance(await r.json());
   }, []);
 
-  const genAttestation = (loc) => {
-    const date = new Date(loc.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const genAttestation = (loc, companyName) => {
+    const fmt = (d) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const dateDoc   = fmt(loc.created_at);
+    const dateDebut = dateDoc;
+    const dateFin   = (() => {
+      const d = new Date(loc.created_at);
+      d.setDate(d.getDate() + (parseInt(loc.nb_jours) || 0));
+      return fmt(d.toISOString());
+    })();
     const refNum = String(loc.id).padStart(5, '0');
+    const coName = (companyName || 'Dynasty 8').toUpperCase();
     const notesBlock = loc.notes ? '<div class="legal"><strong>Notes :</strong> ' + loc.notes + '</div>' : '';
     const parts = [
       '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>',
-      '<title>Attestation de Location</title>',
+      '<title>Attestation — ' + loc.bien_nom + '</title>',
       '<style>',
       '* { margin:0; padding:0; box-sizing:border-box; }',
-      'body { font-family: Georgia, serif; color: #1a1a2e; background:#fff; padding:50px 60px; max-width:800px; margin:0 auto; }',
-      '.header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1a1a2e; padding-bottom:20px; margin-bottom:30px; }',
-      '.company-name { font-size:26px; font-weight:bold; letter-spacing:1px; }',
-      '.company-sub { font-size:12px; color:#555; margin-top:4px; letter-spacing:2px; text-transform:uppercase; }',
-      '.doc-ref { text-align:right; font-size:12px; color:#555; }',
-      '.ref-num { font-size:14px; font-weight:bold; color:#1a1a2e; }',
-      'h1 { text-align:center; font-size:20px; letter-spacing:3px; text-transform:uppercase; margin:30px 0 8px; }',
-      '.subtitle { text-align:center; font-size:12px; color:#555; letter-spacing:1px; margin-bottom:35px; }',
-      '.intro { font-size:14px; line-height:1.8; margin-bottom:28px; }',
-      '.section { margin-bottom:28px; }',
-      '.section-title { font-size:11px; font-weight:bold; text-transform:uppercase; letter-spacing:2px; color:#555; border-bottom:1px solid #ddd; padding-bottom:6px; margin-bottom:14px; }',
-      '.grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 30px; }',
-      '.field { margin-bottom:6px; }',
-      '.field-label { font-size:11px; color:#777; text-transform:uppercase; letter-spacing:0.8px; }',
-      '.field-value { font-size:14px; font-weight:bold; color:#1a1a2e; margin-top:2px; }',
-      '.total-box { background:#f5f3ff; border:2px solid #1a1a2e; border-radius:4px; padding:18px 22px; margin:28px 0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }',
-      '.tl { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1px; }',
-      '.tv { font-size:20px; font-weight:bold; color:#1a1a2e; margin-top:4px; }',
-      '.legal { font-size:12px; color:#666; line-height:1.7; background:#f9f9f9; border-left:3px solid #1a1a2e; padding:14px 18px; margin:28px 0; }',
-      '.signatures { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:50px; }',
-      '.sig-box { border-top:1px solid #1a1a2e; padding-top:10px; }',
-      '.sig-label { font-size:11px; color:#777; text-transform:uppercase; letter-spacing:1px; }',
-      '.sig-name { font-size:13px; font-weight:bold; margin-top:4px; }',
-      '.sig-space { height:60px; }',
-      '.footer { margin-top:40px; padding-top:16px; border-top:1px solid #ddd; font-size:10px; color:#999; text-align:center; }',
-      '@media print { body { padding:30px 40px; } @page { margin:1cm; size:A4; } }',
+      'body { font-family: Georgia, serif; color: #1a1a2e; background:#fff; padding:28px 40px; max-width:780px; margin:0 auto; font-size:13px; }',
+      '.header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1a1a2e; padding-bottom:14px; margin-bottom:18px; }',
+      '.company-name { font-size:22px; font-weight:bold; letter-spacing:1px; }',
+      '.company-sub { font-size:10px; color:#555; margin-top:3px; letter-spacing:2px; text-transform:uppercase; }',
+      '.doc-ref { text-align:right; font-size:11px; color:#555; }',
+      '.ref-num { font-size:13px; font-weight:bold; color:#1a1a2e; }',
+      'h1 { text-align:center; font-size:16px; letter-spacing:3px; text-transform:uppercase; margin:14px 0 4px; }',
+      '.subtitle { text-align:center; font-size:10px; color:#555; letter-spacing:1px; margin-bottom:16px; }',
+      '.intro { font-size:12px; line-height:1.6; margin-bottom:14px; }',
+      '.two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }',
+      '.section-title { font-size:9px; font-weight:bold; text-transform:uppercase; letter-spacing:2px; color:#555; border-bottom:1px solid #ddd; padding-bottom:4px; margin-bottom:8px; }',
+      '.grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; }',
+      '.field-label { font-size:9px; color:#777; text-transform:uppercase; letter-spacing:0.7px; }',
+      '.field-value { font-size:12px; font-weight:bold; color:#1a1a2e; margin-top:1px; }',
+      '.total-box { background:#f5f3ff; border:2px solid #1a1a2e; border-radius:4px; padding:10px 16px; margin:12px 0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }',
+      '.tl { font-size:9px; color:#555; text-transform:uppercase; letter-spacing:1px; }',
+      '.tv { font-size:17px; font-weight:bold; color:#1a1a2e; margin-top:2px; }',
+      '.legal { font-size:10px; color:#666; line-height:1.6; background:#f9f9f9; border-left:3px solid #1a1a2e; padding:8px 12px; margin:10px 0; }',
+      '.signatures { display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:24px; }',
+      '.sig-box { border-top:1px solid #1a1a2e; padding-top:6px; }',
+      '.sig-label { font-size:9px; color:#777; text-transform:uppercase; letter-spacing:1px; }',
+      '.sig-name { font-size:11px; font-weight:bold; margin-top:3px; }',
+      '.sig-space { height:44px; }',
+      '.footer { margin-top:16px; padding-top:10px; border-top:1px solid #ddd; font-size:9px; color:#999; text-align:center; }',
+      '@media print { body { padding:18px 28px; } @page { margin:0.7cm; size:A4; } html,body { height:100%; } }',
       '</style></head><body>',
       '<div class="header"><div>',
-      '<div class="company-name">DYNASTY 9</div>',
+      '<div class="company-name">' + coName + '</div>',
       '<div class="company-sub">Agence Immobilière — San Andreas</div>',
       '</div><div class="doc-ref">',
       '<div>Réf. <span class="ref-num">ATT-' + refNum + '</span></div>',
-      '<div style="margin-top:4px">Date : ' + date + '</div>',
-      '<div style="margin-top:4px">Agent : ' + loc.employee_name + '</div>',
+      '<div style="margin-top:3px">Établi le : ' + dateDoc + '</div>',
+      '<div style="margin-top:3px">Agent : ' + loc.employee_name + '</div>',
       '</div></div>',
       '<h1>Attestation de Location</h1>',
-      '<div class="subtitle">Document officiel — Agence Immobilière Dynasty 9</div>',
-      '<p class="intro">L\'agence immobilière <strong>Dynasty 9</strong>, représentée par l\'agent soussigné <strong>' + loc.employee_name + '</strong>, atteste par le présent document avoir procédé à la location du bien désigné ci-après au profit du locataire mentionné, aux conditions tarifaires en vigueur à la date indiquée.</p>',
-      '<div class="section"><div class="section-title">Informations du locataire</div><div class="grid">',
-      '<div class="field"><div class="field-label">Prénom</div><div class="field-value">' + (loc.client_prenom || '—') + '</div></div>',
-      '<div class="field"><div class="field-label">Nom de famille</div><div class="field-value">' + loc.client_nom + '</div></div>',
-      '<div class="field"><div class="field-label">N° Téléphone / IC</div><div class="field-value">' + (loc.client_numero || '—') + '</div></div>',
+      '<div class="subtitle">Document officiel — Agence Immobilière ' + coName + '</div>',
+      '<p class="intro">L'agence immobilière <strong>' + coName + '</strong>, représentée par l'agent soussigné <strong>' + loc.employee_name + '</strong>, atteste avoir procédé à la location du bien désigné ci-après au profit du locataire mentionné, aux conditions tarifaires en vigueur.</p>',
+      '<div class="two-col">',
+      '<div><div class="section-title">Locataire</div><div class="grid">',
+      '<div><div class="field-label">Prénom</div><div class="field-value">' + (loc.client_prenom || '—') + '</div></div>',
+      '<div><div class="field-label">Nom</div><div class="field-value">' + loc.client_nom + '</div></div>',
+      '<div style="grid-column:1/-1"><div class="field-label">N° Téléphone / IC</div><div class="field-value">' + (loc.client_numero || '—') + '</div></div>',
       '</div></div>',
-      '<div class="section"><div class="section-title">Bien loué</div><div class="grid">',
-      '<div class="field"><div class="field-label">Désignation</div><div class="field-value">' + loc.bien_nom + '</div></div>',
-      '<div class="field"><div class="field-label">Adresse</div><div class="field-value">' + (loc.adresse || '—') + '</div></div>',
-      '<div class="field"><div class="field-label">Capacité stockage</div><div class="field-value">' + loc.tier_stock + ' kg</div></div>',
-      '<div class="field"><div class="field-label">Durée de location</div><div class="field-value">' + loc.nb_jours + ' jour(s)</div></div>',
+      '<div><div class="section-title">Bien loué</div><div class="grid">',
+      '<div><div class="field-label">Désignation</div><div class="field-value">' + loc.bien_nom + '</div></div>',
+      '<div><div class="field-label">Capacité stockage</div><div class="field-value">' + loc.tier_stock + ' kg</div></div>',
+      '<div style="grid-column:1/-1"><div class="field-label">Adresse</div><div class="field-value">' + (loc.adresse || '—') + '</div></div>',
       '</div></div>',
+      '</div>',
+      '<div class="section-title">Période de location</div>',
+      '<div class="grid" style="margin-bottom:10px">',
+      '<div><div class="field-label">Date de début</div><div class="field-value">' + dateDebut + '</div></div>',
+      '<div><div class="field-label">Date de fin</div><div class="field-value">' + dateFin + '</div></div>',
+      '<div><div class="field-label">Durée</div><div class="field-value">' + loc.nb_jours + ' jour(s)</div></div>',
+      '</div>',
       '<div class="total-box">',
       '<div><div class="tl">Prix / jour</div><div class="tv">$' + parseFloat(loc.prix_jour).toLocaleString('fr-FR') + '</div></div>',
       '<div><div class="tl">Total location</div><div class="tv">$' + parseFloat(loc.prix_total).toLocaleString('fr-FR') + '</div></div>',
       '<div><div class="tl">Taxe reversée (' + loc.taxe_pct + '%)</div><div class="tv">$' + parseFloat(loc.taxe_reversee).toLocaleString('fr-FR') + '</div></div>',
       '</div>',
       notesBlock,
-      '<div class="legal">La présente attestation est délivrée à la demande du locataire pour servir et valoir ce que de droit. Ce document confirme l\'accord entre les parties sur les conditions de location susmentionnées. Toute modification devra faire l\'objet d\'un avenant signé des deux parties.</div>',
+      '<div class="legal">La présente attestation est délivrée à la demande du locataire pour servir et valoir ce que de droit. Ce document confirme l'accord entre les parties sur les conditions susmentionnées. Toute modification devra faire l'objet d'un avenant signé des deux parties.</div>',
       '<div class="signatures">',
-      '<div class="sig-box"><div class="sig-label">Signature de l\'agent</div><div class="sig-name">' + loc.employee_name + '</div><div class="sig-space"></div></div>',
+      '<div class="sig-box"><div class="sig-label">Signature de l'agent</div><div class="sig-name">' + loc.employee_name + '</div><div class="sig-space"></div></div>',
       '<div class="sig-box"><div class="sig-label">Signature du locataire</div><div class="sig-name">' + (loc.client_prenom || '') + ' ' + loc.client_nom + '</div><div class="sig-space"></div></div>',
       '</div>',
-      '<div class="footer">Dynasty 9 — Agence Immobilière — San Andreas · Réf. ATT-' + refNum + ' · ' + date + '</div>',
+      '<div class="footer">' + coName + ' — Agence Immobilière — San Andreas · Réf. ATT-' + refNum + ' · ' + dateDoc + '</div>',
       '<script>window.onload = function(){ window.print(); }<\/script>',
       '</body></html>',
     ];
@@ -2922,7 +2936,7 @@ export default function PatronDashboard() {
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: 20, fontWeight: 900, color: '#c084fc', marginBottom: 6 }}>${parseFloat(loc.prix_total).toLocaleString('fr-FR')}</div>
-                        <button onClick={() => genAttestation(loc)} style={{ ...S.btnPrimary, padding: '9px 18px', fontSize: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <button onClick={() => genAttestation(loc, session.user.companyName)} style={{ ...S.btnPrimary, padding: '9px 18px', fontSize: 14, display: 'flex', alignItems: 'center', gap: 7 }}>
                           📄 Générer attestation
                         </button>
                       </div>

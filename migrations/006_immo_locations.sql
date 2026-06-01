@@ -41,3 +41,4 @@ CREATE INDEX IF NOT EXISTS idx_immo_locations_created ON immo_locations(created_
 ALTER TABLE immo_locations ADD COLUMN IF NOT EXISTS adresse       TEXT DEFAULT '';
 ALTER TABLE immo_locations ADD COLUMN IF NOT EXISTS client_prenom TEXT NOT NULL DEFAULT '';
 ALTER TABLE immo_locations ADD COLUMN IF NOT EXISTS client_numero TEXT DEFAULT '';
+ALTER TABLE immo_locations ADD COLUMN IF NOT EXISTS date_debut    DATE DEFAULT CURRENT_DATE;
