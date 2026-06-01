@@ -395,7 +395,7 @@ export default function PatronDashboard() {
     if (tab === 'salaires') { loadEmployees(); loadProducts(); loadSales(); loadSalaryPayment(); }
     if (tab === 'devis')    { /* nothing to preload */ }
     if (tab === 'registre')   { loadGarageQuotes(); }
-    if (tab === 'locations' || tab === 'reg_immo') { loadImmoLocations(); loadEmployees(); }
+    if (tab === 'locations' || tab === 'reg_immo') { loadImmoLocations(); loadEmployees(); fetch('/immo_biens.json').then(r=>r.json()).then(d=>setImmoBiens(d)).catch(()=>{}); }
     if (tab === 'biens') {
       fetch('/immo_biens.json').then(r=>r.json()).then(d=>setImmoBiens(d)).catch(()=>{});
     }
