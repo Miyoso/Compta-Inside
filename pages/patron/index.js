@@ -239,7 +239,8 @@ export default function PatronDashboard() {
   const [immoLoading,   setImmoLoading]   = useState(false);
   const [immoBiens,     setImmoBiens]     = useState([]);
   const [immoForm, setImmoForm] = useState({
-    employee_id: '', bien_id: '', bien_nom: '', client_nom: '',
+    employee_id: '', bien_id: '', bien_nom: '', adresse: '',
+    client_prenom: '', client_nom: '', client_numero: '',
     tier_stock: 1000, nb_jours: 1, notes: ''
   });
   const [immoSearch, setImmoSearch] = useState(''); // {msg, onConfirm}
@@ -2562,12 +2563,15 @@ export default function PatronDashboard() {
 
             const handleImmoSubmit = async (e) => {
               e.preventDefault();
-              if (!immoForm.employee_id || !immoForm.bien_id || !immoForm.client_nom || nbJ < 1) return;
+              if (!immoForm.employee_id || !immoForm.bien_id || !immoForm.client_prenom || !immoForm.client_nom || nbJ < 1) return;
               const payload = {
                 employee_id: immoForm.employee_id,
                 bien_id: parseInt(immoForm.bien_id),
                 bien_nom: bien?.nom || immoForm.bien_nom,
+                adresse: immoForm.adresse.trim(),
+                client_prenom: immoForm.client_prenom.trim(),
                 client_nom: immoForm.client_nom.trim(),
+                client_numero: immoForm.client_numero.trim(),
                 tier_stock: immoForm.tier_stock,
                 nb_jours: nbJ,
                 prix_jour: prixJour,
@@ -2579,7 +2583,7 @@ export default function PatronDashboard() {
               if (r.ok) {
                 const d = await r.json();
                 showToast(`✅ Location enregistrée — $${d.prix_total?.toLocaleString('fr-FR')}`);
-                setImmoForm({ employee_id: immoForm.employee_id, bien_id: '', bien_nom: '', client_nom: '', tier_stock: 1000, nb_jours: 1, notes: '' });
+                setImmoForm({ employee_id: immoForm.employee_id, bien_id: '', bien_nom: '', adresse: '', client_prenom: '', client_nom: '', client_numero: '', tier_stock: 1000, nb_jours: 1, notes: '' });
                 setImmoSearch('');
                 loadImmoLocations();
               } else {
@@ -2609,10 +2613,25 @@ export default function PatronDashboard() {
                         {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
                       </select>
                     </div>
-                    {/* Client */}
+                    {/* Client prénom */}
                     <div>
-                      <label style={S.label}>Nom du client (IC)</label>
-                      <input value={immoForm.client_nom} onChange={e=>setImmoForm(f=>({...f, client_nom: e.target.value}))} required placeholder="Ex: John Dupont" style={S.input} />
+                      <label style={S.label}>Prénom du client</label>
+                      <input value={immoForm.client_prenom} onChange={e=>setImmoForm(f=>({...f, client_prenom: e.target.value}))} required placeholder="Ex: John" style={S.input} />
+                    </div>
+                    {/* Client nom */}
+                    <div>
+                      <label style={S.label}>Nom du client</label>
+                      <input value={immoForm.client_nom} onChange={e=>setImmoForm(f=>({...f, client_nom: e.target.value}))} required placeholder="Ex: Dupont" style={S.input} />
+                    </div>
+                    {/* Numéro IC */}
+                    <div>
+                      <label style={S.label}>N° téléphone / IC</label>
+                      <input value={immoForm.client_numero} onChange={e=>setImmoForm(f=>({...f, client_numero: e.target.value}))} placeholder="Ex: 555-0142" style={S.input} />
+                    </div>
+                    {/* Adresse du bien */}
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={S.label}>Adresse du bien (IC)</label>
+                      <input value={immoForm.adresse} onChange={e=>setImmoForm(f=>({...f, adresse: e.target.value}))} placeholder="Ex: 1 Alta St, Rockford Hills" style={S.input} />
                     </div>
                     {/* Bien */}
                     <div style={{ gridColumn: '1 / -1' }}>
@@ -2673,7 +2692,7 @@ export default function PatronDashboard() {
                     </div>
                   )}
 
-                  <button type="submit" disabled={!bien || !immoForm.employee_id || !immoForm.client_nom || nbJ < 1} style={{ marginTop: 20, ...S.btnPrimary, opacity: (!bien || !immoForm.employee_id || !immoForm.client_nom || nbJ < 1) ? 0.4 : 1 }}>
+                  <button type="submit" disabled={!bien || !immoForm.employee_id || !immoForm.client_prenom || !immoForm.client_nom || nbJ < 1} style={{ marginTop: 20, ...S.btnPrimary, opacity: (!bien || !immoForm.employee_id || !immoForm.client_prenom || !immoForm.client_nom || nbJ < 1) ? 0.4 : 1 }}>
                     ✅ Enregistrer la location
                   </button>
                 </form>
@@ -2684,7 +2703,8 @@ export default function PatronDashboard() {
                   <div key={loc.id} style={{ background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.1)', borderRadius: 12, padding: '14px 18px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                     <div>
                       <div style={{ fontWeight: 700, color: '#d0b8f8', fontSize: 15 }}>{loc.bien_nom}</div>
-                      <div style={{ color: '#8a72c0', fontSize: 13 }}>Client: {loc.client_nom} · {loc.nb_jours}j · {loc.tier_stock}kg · par {loc.employee_name}</div>
+                      <div style={{ color: '#8a72c0', fontSize: 13 }}>{loc.client_prenom} {loc.client_nom}{loc.client_numero ? ` · ${loc.client_numero}` : ''} · {loc.nb_jours}j · {loc.tier_stock}kg · par {loc.employee_name}</div>
+                      {loc.adresse && <div style={{ color: '#4a3490', fontSize: 12 }}>📍 {loc.adresse}</div>}
                       <div style={{ color: '#5a4490', fontSize: 12 }}>{new Date(loc.created_at).toLocaleDateString('fr-FR')}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -2749,7 +2769,7 @@ export default function PatronDashboard() {
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid rgba(124,58,237,0.2)' }}>
-                            {['Date','Employé','Bien','Client','Palier','Jours','Prix/j','Total','Bénéfice','Taxe',''].map(h => (
+                            {['Date','Employé','Bien','Client','N° IC','Adresse','Palier','Jours','Prix/j','Total','Bénéfice','Taxe',''].map(h => (
                               <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#5a4490', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.7, whiteSpace: 'nowrap' }}>{h}</th>
                             ))}
                           </tr>
@@ -2760,7 +2780,9 @@ export default function PatronDashboard() {
                               <td style={{ padding: '10px 12px', color: '#8a72c0', whiteSpace: 'nowrap' }}>{new Date(loc.created_at).toLocaleDateString('fr-FR')}</td>
                               <td style={{ padding: '10px 12px', color: '#d0b8f8', fontWeight: 600 }}>{loc.employee_name}</td>
                               <td style={{ padding: '10px 12px', color: '#f4eeff' }}>{loc.bien_nom}</td>
-                              <td style={{ padding: '10px 12px', color: '#d0b8f8' }}>{loc.client_nom}</td>
+                              <td style={{ padding: '10px 12px', color: '#d0b8f8', whiteSpace: 'nowrap' }}>{loc.client_prenom} {loc.client_nom}</td>
+                              <td style={{ padding: '10px 12px', color: '#8a72c0', fontSize: 13 }}>{loc.client_numero || '—'}</td>
+                              <td style={{ padding: '10px 12px', color: '#5a4490', fontSize: 12 }}>{loc.adresse || '—'}</td>
                               <td style={{ padding: '10px 12px', color: '#c084fc', textAlign: 'right' }}>{loc.tier_stock}kg</td>
                               <td style={{ padding: '10px 12px', color: '#c084fc', textAlign: 'right' }}>{loc.nb_jours}</td>
                               <td style={{ padding: '10px 12px', color: '#c084fc', textAlign: 'right', whiteSpace: 'nowrap' }}>${parseFloat(loc.prix_jour).toLocaleString('fr-FR')}</td>
@@ -2778,7 +2800,7 @@ export default function PatronDashboard() {
                         </tbody>
                         <tfoot>
                           <tr style={{ borderTop: '2px solid rgba(124,58,237,0.3)' }}>
-                            <td colSpan={7} style={{ padding: '12px 12px', color: '#7c3aed', fontWeight: 800, fontSize: 13 }}>TOTAUX</td>
+                            <td colSpan={9} style={{ padding: '12px 12px', color: '#7c3aed', fontWeight: 800, fontSize: 13 }}>TOTAUX</td>
                             <td style={{ padding: '12px 12px', color: '#a78bfa', fontWeight: 900, textAlign: 'right' }}>${immoLocations.reduce((s,l)=>s+parseFloat(l.prix_total),0).toLocaleString('fr-FR')}</td>
                             <td style={{ padding: '12px 12px', color: '#4ade80', fontWeight: 900, textAlign: 'right' }}>${immoLocations.reduce((s,l)=>s+parseFloat(l.benefice_agence),0).toLocaleString('fr-FR')}</td>
                             <td style={{ padding: '12px 12px', color: '#f87171', fontWeight: 900, textAlign: 'right' }}>${immoLocations.reduce((s,l)=>s+parseFloat(l.taxe_reversee),0).toLocaleString('fr-FR')}</td>

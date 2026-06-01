@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS immo_locations (
   employee_id     INTEGER NOT NULL REFERENCES users(id),
   bien_id         INTEGER NOT NULL,
   bien_nom        TEXT NOT NULL,
+  adresse         TEXT DEFAULT '',
+  client_prenom   TEXT NOT NULL DEFAULT '',
   client_nom      TEXT NOT NULL,
+  client_numero   TEXT DEFAULT '',
   tier_stock      INTEGER NOT NULL,        -- palier de stockage : 1000 / 500 / 300 / 100 / 50
   nb_jours        INTEGER NOT NULL,
   prix_jour       NUMERIC(12,2) NOT NULL,
@@ -33,3 +36,8 @@ CREATE INDEX IF NOT EXISTS idx_immo_locations_created ON immo_locations(created_
 
 -- Version simple TEXT sans contrainte (adapter selon votre schéma) :
 -- Aucune action nécessaire si company_type est de type TEXT sans contrainte.
+
+-- ── Si la table existe déjà, ajouter les nouvelles colonnes : ─────────────
+ALTER TABLE immo_locations ADD COLUMN IF NOT EXISTS adresse       TEXT DEFAULT '';
+ALTER TABLE immo_locations ADD COLUMN IF NOT EXISTS client_prenom TEXT NOT NULL DEFAULT '';
+ALTER TABLE immo_locations ADD COLUMN IF NOT EXISTS client_numero TEXT DEFAULT '';

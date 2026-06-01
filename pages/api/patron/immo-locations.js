@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const locations = await sql`
       SELECT l.id, u.name AS employee_name, l.employee_id,
-             l.bien_id, l.bien_nom, l.client_nom,
+             l.bien_id, l.bien_nom, l.adresse, l.client_prenom, l.client_nom, l.client_numero,
              l.tier_stock, l.nb_jours,
              l.prix_jour::float, l.prix_total::float,
              l.taxe_pct::float, l.marge_pct::float,
@@ -30,12 +30,12 @@ export default async function handler(req, res) {
   // POST — enregistrer une location
   if (req.method === 'POST') {
     const {
-      employee_id, bien_id, bien_nom, client_nom,
+      employee_id, bien_id, bien_nom, adresse, client_prenom, client_nom, client_numero,
       tier_stock, nb_jours, prix_jour,
       taxe_pct, marge_pct, notes
     } = req.body;
 
-    if (!employee_id || !bien_id || !bien_nom || !client_nom || !tier_stock || !nb_jours || !prix_jour) {
+    if (!employee_id || !bien_id || !bien_nom || !client_prenom || !client_nom || !tier_stock || !nb_jours || !prix_jour) {
       return res.status(400).json({ error: 'Champs obligatoires manquants.' });
     }
 
@@ -47,11 +47,11 @@ export default async function handler(req, res) {
 
     const [loc] = await sql`
       INSERT INTO immo_locations
-        (company_id, employee_id, bien_id, bien_nom, client_nom,
+        (company_id, employee_id, bien_id, bien_nom, adresse, client_prenom, client_nom, client_numero,
          tier_stock, nb_jours, prix_jour, prix_total,
          taxe_pct, marge_pct, benefice_agence, taxe_reversee, notes)
       VALUES
-        (${companyId}, ${employee_id}, ${bien_id}, ${bien_nom}, ${client_nom},
+        (${companyId}, ${employee_id}, ${bien_id}, ${bien_nom}, ${adresse || ''}, ${client_prenom}, ${client_nom}, ${client_numero || ''},
          ${tier_stock}, ${nb_jours}, ${prix_jour}, ${prix_total},
          ${taxe_pct}, ${marge_pct}, ${benefice_agence}, ${taxe_reversee}, ${notes || ''})
       RETURNING id
