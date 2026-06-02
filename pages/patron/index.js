@@ -239,7 +239,7 @@ export default function PatronDashboard() {
   const [immoLoading,   setImmoLoading]   = useState(false);
   const [immoBiens,     setImmoBiens]     = useState([]);
   const [immoForm, setImmoForm] = useState({
-    employee_id: '', bien_id: '', bien_nom: '', adresse: '',
+    bien_id: '', bien_nom: '', adresse: '',
     client_prenom: '', client_nom: '', client_numero: '',
     tier_stock: 1000, nb_jours: 1, notes: ''
   });
@@ -2657,9 +2657,9 @@ export default function PatronDashboard() {
 
             const handleImmoSubmit = async (e) => {
               e.preventDefault();
-              if (!immoForm.employee_id || !immoForm.bien_id || !immoForm.client_prenom || !immoForm.client_nom || nbJ < 1) return;
+              if (!immoForm.bien_id || !immoForm.client_prenom || !immoForm.client_nom || nbJ < 1) return;
               const payload = {
-                employee_id: immoForm.employee_id,
+                employee_id: session.user.id,
                 bien_id: parseInt(immoForm.bien_id),
                 bien_nom: bien?.nom || immoForm.bien_nom,
                 adresse: immoForm.adresse.trim(),
@@ -2677,7 +2677,7 @@ export default function PatronDashboard() {
               if (r.ok) {
                 const d = await r.json();
                 showToast(`✅ Location enregistrée — $${d.prix_total?.toLocaleString('fr-FR')}`);
-                setImmoForm({ employee_id: immoForm.employee_id, bien_id: '', bien_nom: '', adresse: '', client_prenom: '', client_nom: '', client_numero: '', tier_stock: 1000, nb_jours: 1, notes: '' });
+                setImmoForm({ bien_id: '', bien_nom: '', adresse: '', client_prenom: '', client_nom: '', client_numero: '', tier_stock: 1000, nb_jours: 1, notes: '' });
                 setImmoSearch('');
                 loadImmoLocations();
               } else {
@@ -2699,13 +2699,12 @@ export default function PatronDashboard() {
                 <h2 style={S.sectionTitle}>🏠 Nouvelle Location</h2>
                 <form onSubmit={handleImmoSubmit} style={{ background: 'linear-gradient(145deg,#110e28,#181430)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: '20px 24px', marginBottom: 24 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    {/* Employé */}
+                    {/* Employé (verrouillé sur le compte connecté) */}
                     <div>
                       <label style={S.label}>Employé</label>
-                      <select value={immoForm.employee_id} onChange={e=>setImmoForm(f=>({...f, employee_id: e.target.value}))} required style={S.input}>
-                        <option value="">— Choisir —</option>
-                        {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
-                      </select>
+                      <div style={{...S.input, display:'flex', alignItems:'center', color:'#d0b8f8', background:'rgba(255,255,255,0.03)', cursor:'default'}}>
+                        {session.user.name}
+                      </div>
                     </div>
                     {/* Client prénom */}
                     <div>
